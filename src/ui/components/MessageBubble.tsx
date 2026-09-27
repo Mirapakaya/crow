@@ -393,7 +393,7 @@ export const MessageBubble = memo(function MessageBubble({
               }}
             >
               {t('chat.deleteLocal')}
-              <span className="hint">{t('chat.deleteLocalHint')}</span>
+              <span className="block text-xs text-[var(--text-muted)]">{t('chat.deleteLocalHint')}</span>
             </button>
             {/* Only our own messages: asking a peer to delete something they
                 wrote is not ours to do, and their client would refuse. */}
@@ -401,14 +401,14 @@ export const MessageBubble = memo(function MessageBubble({
               <button
                 type="button"
                 role="menuitem"
-                className="menuitem-danger"
+                className="text-[var(--danger)]"
                 onClick={() => {
                   setMenuAt(null)
                   onDeleteForEveryone(message)
                 }}
               >
                 {t('chat.deleteEveryone')}
-                <span className="hint">{t('chat.deleteEveryoneHint')}</span>
+                <span className="block text-xs text-[var(--text-muted)]">{t('chat.deleteEveryoneHint')}</span>
               </button>
             ) : null}
           </Popover>
@@ -416,9 +416,9 @@ export const MessageBubble = memo(function MessageBubble({
       </div>
 
       {message.status === 'failed' ? (
-        <div className="bubble-failed">
-          <span className="danger-text small">{t('chat.failed')}</span>
-          <button type="button" className="btn btn-ghost small" onClick={() => onRetry(message)}>
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-[var(--danger)]">{t('chat.failed')}</span>
+          <button type="button" className="text-[var(--text-muted)] hover:text-[var(--text)] text-xs font-medium" onClick={() => onRetry(message)}>
             {t('chat.retrySend')}
           </button>
         </div>

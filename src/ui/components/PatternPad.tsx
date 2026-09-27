@@ -1,5 +1,6 @@
 import { useRef, useState, type PointerEvent } from 'react'
 import { useT } from '../../i18n'
+import { Button } from '../../components/ui/button'
 
 const DOTS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 
@@ -13,11 +14,6 @@ const centre = (dot: number) => ({ x: 50 + ((dot - 1) % 3) * 100, y: 50 + Math.f
  * The grid runs left to right in every language. A pattern is a shape, and a
  * Persian interface mirroring it would turn the shape someone set in English
  * into a different one.
- *
- * Each dot is a button, so keyboards and screen readers choose them one at a
- * time and finish with the button beneath. A pointer's own clicks are not
- * counted twice: only a click with no pointer behind it (`detail` 0) chooses
- * a dot.
  */
 export function PatternPad({
   label,
@@ -46,13 +42,10 @@ export function PatternPad({
     if (code) onDone(code)
   }
 
-  /** Where the pointer is in drawing space, and the dot it is over, if any. */
   const locate = (event: PointerEvent) => {
     const box = (pad.current as HTMLDivElement).getBoundingClientRect()
     const x = ((event.clientX - box.left) / box.width) * 300
     const y = ((event.clientY - box.top) / box.height) * 300
-    // Near enough a centre to mean it, and far enough that a line between two
-    // dots does not catch a third by its corner.
     const dot = DOTS.find((candidate) => {
       const at = centre(candidate)
       return Math.hypot(at.x - x, at.y - y) < 36
@@ -64,8 +57,6 @@ export function PatternPad({
     if (disabled) return
     event.preventDefault()
     try {
-      // Keeps the stroke when a finger strays off the pad. Some webviews
-      // refuse it; drawing works without, as long as it stays on the pad.
       event.currentTarget.setPointerCapture(event.pointerId)
     } catch {
       // Drawn without capture.
@@ -95,7 +86,7 @@ export function PatternPad({
   const line = points.map((point) => `${point.x},${point.y}`).join(' ')
 
   return (
-    <div className="stack-sm">
+    <div className="flex flex-col gap-3">
       <div
         ref={pad}
         className="pattern-pad"
@@ -130,13 +121,13 @@ export function PatternPad({
         </div>
       </div>
       {path.length > 0 && !pointer ? (
-        <div className="row center" style={{ gap: 'var(--space-2)', justifyContent: 'center' }}>
-          <button type="button" className="btn btn-ghost small" onClick={() => choose([])}>
+        <div className="flex items-center justify-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => choose([])}>
             {t('lock.patternClear')}
-          </button>
-          <button type="button" className="btn btn-outline small" onClick={finish}>
+          </Button>
+          <Button variant="outline" size="sm" onClick={finish}>
             {t('lock.patternDone')}
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>

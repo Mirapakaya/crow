@@ -157,19 +157,19 @@ export const CallBubble = memo(function CallBubble({
               }}
             >
               {t('chat.deleteLocal')}
-              <span className="hint">{t('calls.deleteLocalHint')}</span>
+              <span className="block text-xs text-[var(--text-muted)]">{t('calls.deleteLocalHint')}</span>
             </button>
             <button
               type="button"
               role="menuitem"
-              className="menuitem-danger"
+              className="text-[var(--danger)]"
               onClick={() => {
                 setMenuAt(null)
                 onDeleteForEveryone(message)
               }}
             >
               {t('chat.deleteEveryone')}
-              <span className="hint">{t('chat.deleteEveryoneHint')}</span>
+              <span className="block text-xs text-[var(--text-muted)]">{t('chat.deleteEveryoneHint')}</span>
             </button>
           </Popover>
         ) : null}

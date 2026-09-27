@@ -7,12 +7,6 @@ import { MonitorIcon, MoonIcon, SunIcon } from './Icons'
 /**
  * Language and theme switches for the screens shown before the vault opens.
  *
- * These two settings also live in the encrypted settings record, but they have
- * to be reachable from the welcome, onboarding, and lock screens as well:
- * someone who cannot read English should not have to guess their way through
- * an unfamiliar unlock form to find the language menu, and a user who prefers a
- * light interface should not be shown a dark one every time the app locks.
- *
  * Both write through {@link useApp.setDisplayPreference}, which persists to the
  * vault when it is open and to the small unencrypted display cache when it is
  * not.
@@ -30,7 +24,7 @@ export function DisplayControls() {
   ]
 
   return (
-    <div className="entry-controls" role="group" aria-label={t('settings.displayControls')}>
+    <div className="flex flex-wrap items-center gap-3" role="group" aria-label={t('settings.displayControls')}>
       <LanguageSwitch value={locale} onChange={(next) => void setDisplayPreference({ locale: next })} />
       <SegmentedControl
         compact
@@ -43,12 +37,6 @@ export function DisplayControls() {
   )
 }
 
-/**
- * Segmented while the list is short enough to read at a glance, a select once
- * it is not. The threshold is what fits beside the theme switch on a 320px
- * screen; adding a fourth locale changes the control, not this component's
- * callers.
- */
 const SEGMENT_LIMIT = 3
 
 function LanguageSwitch({ value, onChange }: { value: LocaleCode; onChange: (next: LocaleCode) => void }) {
@@ -57,7 +45,7 @@ function LanguageSwitch({ value, onChange }: { value: LocaleCode; onChange: (nex
   if (LOCALE_CODES.length > SEGMENT_LIMIT) {
     return (
       <select
-        className="select select-compact"
+        className="flex h-8 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-2 text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
         aria-label={t('settings.language')}
         value={value}
         onChange={(event) => onChange(event.target.value as LocaleCode)}
@@ -77,7 +65,6 @@ function LanguageSwitch({ value, onChange }: { value: LocaleCode; onChange: (nex
       value={value}
       options={LOCALE_CODES.map((code) => ({
         value: code,
-        // The short form is drawn; the full endonym is what gets announced.
         label: LOCALE_SHORT_NAMES[code],
         title: LOCALE_NAMES[code],
       }))}
