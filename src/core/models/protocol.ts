@@ -32,6 +32,7 @@
  */
 
 import { CALL_END_REASONS, type CallEndReason, type CallMedia } from './call'
+import { orderTag } from './timeline'
 
 export const KIND_CHAT = 14
 export const KIND_FILE = 15
@@ -590,10 +591,18 @@ export const KIND_MLS_WELCOME = 444
  * message rebuilt from storage — to resend after a lost commit race — has the
  * id it had the first time. No `p` tags: the group is the MLS group.
  */
-export function groupChatTags(shape: { ts: number; replyTo?: string; rootId?: string }): string[][] {
+export function groupChatTags(shape: {
+  ts: number
+  order?: number
+  replyTo?: string
+  rootId?: string
+}): string[][] {
   const tags: string[][] = []
   if (shape.replyTo) tags.push(...threadTags(shape.rootId ?? shape.replyTo, shape.replyTo))
   tags.push(timestampTag(shape.ts))
+  // Where it sorts (ADR-063); absent on a message from before keys existed,
+  // whose rumor is rebuilt without it and so keeps its id.
+  if (shape.order !== undefined) tags.push(orderTag(shape.order))
   return tags
 }
 

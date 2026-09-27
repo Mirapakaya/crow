@@ -15,6 +15,7 @@ import {
 import { createLogger } from '../util/log'
 import { isCallRecord } from '../models/call'
 import type { AppSettings, Contact, Conversation, IdentityRecord, Message, RelayEntry } from '../models/types'
+import { orderOf } from '../models/timeline'
 import { recoveryKey } from './keyslots'
 import type { VaultRepo } from './repo'
 
@@ -383,6 +384,9 @@ export async function importVault(
       summary.conversations += 1
     }
 
+    // Each conversation's causal clock moves past what the backup brings in,
+    // so nothing sent after restoring can sort above it (ADR-063).
+    const reached = new Map<string, { ts: number; order: number }>()
     for (const message of payload.messages) {
       const convoId = idByOldId.get(message.convoId)
       if (!convoId) continue
@@ -391,8 +395,11 @@ export async function importVault(
       // this build writes is left behind rather than shown garbled.
       if (message.call !== undefined && !isCallRecord(message.call)) continue
       await repo.putMessage({ ...message, convoId })
+      const was = reached.get(convoId) ?? { ts: 0, order: 0 }
+      reached.set(convoId, { ts: Math.max(was.ts, message.ts), order: Math.max(was.order, orderOf(message)) })
       summary.messages += 1
     }
+    for (const [convoId, newest] of reached) await repo.bumpConversation(convoId, newest, false)
   }
 
   for (const relay of payload.relays) {

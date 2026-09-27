@@ -90,7 +90,14 @@ export interface Conversation {
    * outside the address book started, which is shown as a request.
    */
   accepted: boolean
+  /** When the newest entry was sent, by its author's clock: what the list shows, and sorts by. */
   lastActivity: number
+  /**
+   * The conversation's causal clock: past every entry it has held (ADR-063).
+   * Absent on one from before keys existed, whose clock starts at
+   * `lastActivity`.
+   */
+  clock?: number
   unread: number
   pinned: boolean
   /** Unsent text, kept so switching conversations does not lose a half-typed message. */
@@ -125,8 +132,18 @@ export interface Message {
   convoId: string
   direction: MessageDirection
   status: MessageStatus
-  /** Exact epoch ms. Only ever read after decryption. */
+  /**
+   * When its author sent it, by their clock, in UTC epoch ms: what is shown,
+   * in the reader's time zone. Only ever read after decryption.
+   */
   ts: number
+  /**
+   * Where it sorts: the conversation's causal clock when it was sent (ADR-063).
+   * At least `ts`, and past everything its author had seen in the
+   * conversation. Absent on entries stored before it existed, which sort by
+   * `ts` — see `orderOf`.
+   */
+  order?: number
   /** Hour-truncated epoch ms, mirrored into the row index. */
   tsCoarse: number
   body: string
@@ -168,6 +185,15 @@ export interface Message {
    * when everyone has read it — and this is where "read by 2 of 5" comes from.
    */
   receipts?: Record<string, MessageStatus>
+  /**
+   * When each member's copy last moved on, in the member's own time: what
+   * "read at 12:40" in the message's details reads from, for a group.
+   */
+  receiptsAt?: Record<string, number>
+  /** When the one person it was sent to said their device had it. */
+  deliveredAt?: number
+  /** When they said they had read it. */
+  readAt?: number
   /**
    * The group name this message carried, kept so a retry rebuilds the rumor
    * exactly — and therefore with the same id — even if the group has been

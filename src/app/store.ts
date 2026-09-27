@@ -271,9 +271,16 @@ interface AppState {
   sendSticker: (sticker: Sticker) => Promise<void>
   openSticker: (sticker: Sticker) => Promise<string | null>
   retryMessage: (messageId: string) => Promise<void>
-  deleteMessageLocally: (messageId: string) => Promise<void>
-  /** Delete here and ask the peer to delete their copy too. */
-  deleteMessageForEveryone: (messageId: string) => Promise<void>
+  /**
+   * Delete messages in the open conversation: here alone, or here and — by
+   * asking their devices — for everyone else in it too.
+   */
+  deleteMessages: (ids: readonly string[], scope: 'me' | 'everyone') => Promise<void>
+  /**
+   * Send copies of messages to another conversation, in the order they were
+   * said. A copy, not a quotation: it names no one it came from (ADR-061).
+   */
+  forwardMessages: (ids: readonly string[], to: ChatAddress) => Promise<void>
   setTyping: (active: boolean) => void
 
   /** Call someone in the address book. */
@@ -822,26 +829,62 @@ export const useApp = create<AppState>((set, get) => ({
     if (address) await get().loadMessages(address)
   },
 
-  async deleteMessageForEveryone(messageId) {
+  async deleteMessages(ids, scope) {
     const address = get().activeChat
-    if (!address || !messenger) return
     try {
-      await messenger.redactMessage(address, messageId)
-      await get().loadMessages(address)
-      await get().refreshConversations()
+      for (const id of ids) {
+        if (scope === 'everyone' && address && messenger) await messenger.redactMessage(address, id)
+        // Local delete takes the payload with it when nothing else refers to
+        // it, so "delete" does not quietly leave megabytes on the device — and
+        // leaves a tombstone, so a copy still on its way does not bring it back.
+        else if (messenger) await messenger.deleteLocally(id)
+        else await repo.deleteMessageAndPayload(id)
+      }
     } catch (err) {
       get().toast(err instanceof Error ? err.message : String(err), 'danger')
     }
+    if (address) await get().loadMessages(address)
+    await get().refreshConversations()
   },
 
-  async deleteMessageLocally(messageId) {
-    // Local delete takes the payload with it when nothing else refers to it,
-    // so "delete" does not quietly leave megabytes on the device — and leaves
-    // a tombstone, so a copy still on its way does not bring it back.
-    if (messenger) await messenger.deleteLocally(messageId)
-    else await repo.deleteMessageAndPayload(messageId)
-    const address = get().activeChat
-    if (address) await get().loadMessages(address)
+  async forwardMessages(ids, to) {
+    if (!messenger) return
+    const wanted = new Set(ids)
+    const messages = get().messages.filter((message) => wanted.has(message.id) && !message.call)
+    let skipped = 0
+    for (const message of messages) {
+      try {
+        const attachment = message.attachment
+        if (!attachment) {
+          await messenger.sendMessage(to, message.body)
+          continue
+        }
+        // Sent afresh, sealed under a new key for its new readers: the bytes
+        // must all be here, and a payload still arriving is left out.
+        const bytes = await messenger.readAttachment(attachment)
+        if (!bytes) {
+          skipped++
+          continue
+        }
+        await messenger.sendAttachment(to, {
+          bytes,
+          kind: attachment.kind,
+          mime: attachment.mime,
+          caption: message.body,
+          ...(attachment.name ? { name: attachment.name } : {}),
+          ...(attachment.durationMs ? { durationMs: attachment.durationMs } : {}),
+          ...(attachment.waveform ? { waveform: attachment.waveform } : {}),
+          ...(attachment.width ? { width: attachment.width } : {}),
+          ...(attachment.height ? { height: attachment.height } : {}),
+          ...(attachment.preview ? { preview: attachment.preview } : {}),
+        })
+      } catch (err) {
+        log.warn('could not forward a message', err)
+        skipped++
+      }
+    }
+    if (skipped > 0)
+      get().toast(translate(get().settings.locale, 'chat.forwardSkipped', { n: skipped }), 'danger')
     await get().refreshConversations()
   },
 

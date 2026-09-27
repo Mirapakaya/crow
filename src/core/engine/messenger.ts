@@ -76,6 +76,7 @@ import type { MlsHost, Readiness } from '../mls/host'
 import type { MlsRuntime } from '../mls/runtime'
 import type { DirectState } from '../transport/webrtc/directSession'
 import { DEFAULT_DM_RELAYS, DEFAULT_ICE_SERVERS } from '../transport/defaultRelays'
+import { carriedOrder, orderOf, orderTag } from '../models/timeline'
 import { normalizeRelayList } from '../transport/relayUrl'
 
 const log = createLogger('engine')
@@ -204,6 +205,8 @@ interface Arrival extends Room {
 /** Everything about a chat message that its tags are built from. */
 interface ChatShape {
   ts: number
+  /** Where it sorts (ADR-063). Absent on a message stored before keys existed, whose rumor had none. */
+  order?: number
   replyTo?: string
   rootId?: string
   subject?: string
@@ -222,6 +225,7 @@ interface ChatShape {
  */
 function chatTags(members: readonly string[], shape: ChatShape): string[][] {
   const tags = [...recipientTags(members), timestampTag(shape.ts)]
+  if (shape.order !== undefined) tags.push(orderTag(shape.order))
   if (shape.subject) tags.push(subjectTag(shape.subject))
   if (shape.attachment) tags.push(attachmentTag(shape.attachment))
   if (shape.poll) tags.push(...pollTags(shape.poll))
@@ -232,6 +236,7 @@ function chatTags(members: readonly string[], shape: ChatShape): string[][] {
 
 const shapeOf = (message: Message): ChatShape => ({
   ts: message.ts,
+  ...(message.order !== undefined ? { order: message.order } : {}),
   ...(message.replyTo ? { replyTo: message.replyTo } : {}),
   ...(message.rootId ? { rootId: message.rootId } : {}),
   ...(message.subject ? { subject: message.subject } : {}),
@@ -327,6 +332,12 @@ export class Messenger {
    * the contact, and these are re-learned next session if still needed.
    */
   #learnedRelays = new Map<string, string[]>()
+  /**
+   * The key each call was opened at, by call id: the caller's own, or the one
+   * its offer carried. Both sides record the call there, and it is only needed
+   * until then (ADR-063).
+   */
+  #callOrders = new Map<string, number>()
   #learning = new Set<string>()
   #receiptTimer: ReturnType<typeof setTimeout> | null = null
   /**
@@ -778,7 +789,11 @@ export class Messenger {
     if (await this.#repo.isWithdrawn(rumor.id, rumor.pubkey)) return
 
     const { isSelfCopy } = arrival
+    // When the author sent it, by their clock — never the wrap's time, which
+    // NIP-59 backdates at random — and where it sorts, which they carried
+    // (ADR-062, ADR-063).
     const ts = preciseTimestamp(rumor.tags, rumor.created_at)
+    const order = carriedOrder(rumor.tags, ts, Date.now())
     const thread = threadFromTags(rumor.tags)
     const subject = arrival.peer ? null : subjectFromTags(rumor.tags)
     let conversation: Conversation
@@ -797,6 +812,7 @@ export class Messenger {
       // delivered as far as this device is concerned.
       status: isSelfCopy ? 'sent' : 'delivered',
       ts,
+      order,
       tsCoarse: 0,
       body: rumor.content,
       authorPubkey: rumor.pubkey,
@@ -832,7 +848,7 @@ export class Messenger {
      */
     const watched = !isSelfCopy && this.#isViewing(conversation.id)
     await this.#repo.putMessage(message)
-    await this.#repo.bumpConversation(conversation.id, message.ts, !isSelfCopy && !watched)
+    await this.#repo.bumpConversation(conversation.id, message, !isSelfCopy && !watched)
 
     const updated = (await this.#repo.getConversation(conversation.id)) ?? conversation
     this.events.emit('message', { message, conversation: updated })
@@ -901,11 +917,13 @@ export class Messenger {
   async #handleControl(peerPubkey: string, frame: ControlFrame, rumor: Rumor): Promise<void> {
     switch (frame.t) {
       case 'receipt': {
+        // The recipient's own time for it, as their device stamped it.
+        const at = preciseTimestamp(rumor.tags, rumor.created_at)
         for (const ref of frame.refs) {
-          const updated = await this.#acknowledge(ref, peerPubkey, frame.state)
+          const updated = await this.#acknowledge(ref, peerPubkey, frame.state, at)
           if (updated) this.events.emit('messageUpdated', updated)
         }
-        if (frame.state === 'read') await this.#markEarlierRead(peerPubkey, frame.refs)
+        if (frame.state === 'read') await this.#markEarlierRead(peerPubkey, frame.refs, at)
         break
       }
 
@@ -948,8 +966,9 @@ export class Messenger {
 
       case 'redact': {
         // Honoured only for what this peer may withdraw: what they wrote, and
-        // a call they were in. Without that check, anyone who can reach your
-        // inbox could delete your own words out of your own conversation.
+        // anything in the conversation between the two of you. Without that
+        // check, anyone who can reach your inbox — a stranger, or one member
+        // of a group — could delete your words from other conversations.
         let removed = 0
         for (const id of frame.refs) {
           // A withdrawal also covers reactions, which is how taking one back
@@ -1006,15 +1025,20 @@ export class Messenger {
    * mark it delivered or read. In a group it moves that one member's state,
    * and the message's own status follows the least advanced member.
    */
-  async #acknowledge(id: string, from: string, state: 'delivered' | 'read'): Promise<Message | null> {
+  async #acknowledge(
+    id: string,
+    from: string,
+    state: 'delivered' | 'read',
+    at: number,
+  ): Promise<Message | null> {
     const message = await this.#repo.getMessage(id)
     // A call record shares its id with the offer that opened the call, which
     // the peer knows — but it is a note on this device, not something sent.
     if (message?.direction !== 'out' || message.call) return null
     if (!(await this.#isParticipant(message.convoId, from))) return null
     return message.receipts
-      ? this.#repo.markRecipients(id, [from], state)
-      : this.#repo.advanceMessageStatus(id, state)
+      ? this.#repo.markRecipients(id, [from], state, at)
+      : this.#repo.advanceMessageStatus(id, state, at)
   }
 
   async #isParticipant(convoId: string, pubkey: string): Promise<boolean> {
@@ -1028,28 +1052,29 @@ export class Messenger {
    * N has been read too. Marking them individually would need one receipt per
    * message. In a group it is only that reader's copies that are marked.
    */
-  async #markEarlierRead(from: string, refs: string[]): Promise<void> {
+  async #markEarlierRead(from: string, refs: string[], at: number): Promise<void> {
     const newestByConvo = new Map<string, number>()
     for (const ref of refs) {
       const message = await this.#repo.getMessage(ref)
       if (message?.direction !== 'out' || !(await this.#isParticipant(message.convoId, from))) continue
-      newestByConvo.set(message.convoId, Math.max(newestByConvo.get(message.convoId) ?? 0, message.ts))
+      newestByConvo.set(message.convoId, Math.max(newestByConvo.get(message.convoId) ?? 0, orderOf(message)))
     }
     for (const [convoId, newest] of newestByConvo) {
       const earlier = (await this.#repo.listMessages(convoId, 500)).filter(
-        (message) => message.direction === 'out' && !message.call && message.ts <= newest,
+        (message) => message.direction === 'out' && !message.call && orderOf(message) <= newest,
       )
       const direct = earlier.filter((message) => !message.receipts && message.status !== 'read')
       for (const updated of await this.#repo.advanceMessageStatuses(
         direct.map((message) => message.id),
         'read',
+        at,
       )) {
         this.events.emit('messageUpdated', updated)
       }
       for (const message of earlier) {
         const was = message.receipts?.[from]
         if (was === undefined || was === 'read') continue
-        const updated = await this.#repo.markRecipients(message.id, [from], 'read')
+        const updated = await this.#repo.markRecipients(message.id, [from], 'read', at)
         if (updated) this.events.emit('messageUpdated', updated)
       }
     }
@@ -1207,10 +1232,19 @@ export class Messenger {
     extras: { replyTo?: string; attachment?: Attachment; poll?: PollSpec; checklist?: ChecklistSpec },
   ): Promise<Message> {
     if (!this.#secretKey) throw new Error('messenger is not running')
+    // When it was sent, in UTC epoch ms, for showing; and where it sorts: past
+    // everything this conversation has seen, however this clock is set
+    // (ADR-062, ADR-063).
     const sentAt = Date.now()
+    const conversation = room.peer
+      ? await this.#repo.ensureConversation(this.#pubkey, room.peer)
+      : await this.#repo.getConversation(room.convoId)
+    if (!conversation) throw new Error('no such group')
+    const order = await this.#repo.tickClock(conversation.id, sentAt)
     const rootId = extras.replyTo ? await this.#threadRoot(extras.replyTo) : null
     const shape: ChatShape = {
       ts: sentAt,
+      order,
       ...(extras.replyTo ? { replyTo: extras.replyTo } : {}),
       ...(extras.replyTo && rootId ? { rootId } : {}),
       ...(room.subject ? { subject: room.subject } : {}),
@@ -1227,18 +1261,15 @@ export class Messenger {
       },
       this.#secretKey,
     )
-    const conversation = room.peer
-      ? await this.#repo.ensureConversation(this.#pubkey, room.peer)
-      : await this.#repo.getConversation(room.convoId)
-    if (!conversation) throw new Error('no such group')
 
-    const { ts: _ts, ...stored } = shape
+    const { ts: _ts, order: _order, ...stored } = shape
     const message: Message = {
       id: rumor.id,
       convoId: conversation.id,
       direction: 'out',
       status: 'queued',
       ts: sentAt,
+      order,
       tsCoarse: 0,
       body: content,
       authorPubkey: this.#pubkey,
@@ -1247,7 +1278,7 @@ export class Messenger {
       via: 'relay',
     }
     await this.#repo.putMessage(message)
-    await this.#repo.bumpConversation(conversation.id, message.ts, false)
+    await this.#repo.bumpConversation(conversation.id, message, false)
 
     await this.#repo.enqueue({
       id: rumor.id,
@@ -1327,14 +1358,16 @@ export class Messenger {
    * before a single chunk had.
    */
   /**
-   * Delete a message here and ask the peer to delete their copy.
+   * Delete a message here and ask everyone else in the conversation to delete
+   * their copy.
    *
-   * Only our own messages, and calls: asking someone to delete something they
-   * wrote is not ours to ask, and their client refuses it anyway. A call has
-   * no author — it happened to both people — so either of them may take it
-   * out of the conversation for both. The request is queued durably, so a
-   * peer who is offline honours it when they next connect rather than keeping
-   * the message forever because they happened to miss one event.
+   * Between two people, anything in their conversation — either of them may
+   * take any message out of it for both, as Telegram lets them (ADR-061). A
+   * conversation is theirs alike; a call, which has no author, always was. In
+   * a group only what we wrote: a group has no one whose conversation it is.
+   * The request is queued durably, so a peer who is offline honours it when
+   * they next connect rather than keeping the message forever because they
+   * happened to miss one event.
    *
    * This is a tombstone, not an erasure. A modified client can ignore it and a
    * relay may still hold the wrap; the UI says so rather than promising more.
@@ -1342,7 +1375,7 @@ export class Messenger {
   async redactMessage(address: ChatAddress, messageId: string): Promise<void> {
     const message = await this.#repo.getMessage(messageId)
     if (!message) return
-    if (message.authorPubkey !== this.#pubkey && !message.call) {
+    if (message.authorPubkey !== this.#pubkey && !message.call && isGroupAddress(address)) {
       throw new Error('cannot unsend a message you did not write')
     }
     const secure = await this.#secureGroup(address)
@@ -1383,17 +1416,19 @@ export class Messenger {
 
   /**
    * Whether `peerPubkey` may take `message` out of this conversation: what
-   * they wrote, anywhere, and a call they were in.
+   * they wrote, anywhere, and anything in the conversation between the two of
+   * us — ours included, and a call (ADR-061).
    *
-   * A call record is written by each device for itself, under the id of the
-   * offer that opened the call, so on the caller's side it names the caller as
-   * its author. The check is therefore where it is kept — the direct
-   * conversation with this very peer, which is the only place a call with
-   * them can be — rather than who is named on it.
+   * The check is where the message is kept, not who is named on it: the
+   * direct conversation with this very peer. A call record, written by each
+   * device for itself, names the caller as its author on the caller's side,
+   * and a message we wrote names us — both are the peer's to remove from a
+   * conversation that is theirs as much as ours. A group message stays its
+   * author's alone.
    */
   #mayWithdraw(peerPubkey: string, message: Message): boolean {
     if (message.authorPubkey === peerPubkey) return true
-    return !!message.call && message.convoId === this.#repo.conversationId(this.#pubkey, peerPubkey)
+    return message.convoId === this.#repo.conversationId(this.#pubkey, peerPubkey)
   }
 
   /**
@@ -1411,12 +1446,14 @@ export class Messenger {
     if (!conversation || conversation.unread === 0) return
     const window = Math.min(conversation.unread + 200, 1000)
     const recent = await this.#repo.listMessages(message.convoId, window)
-    const newer = recent.filter((m) => m.id !== message.id && m.ts > message.ts && countsAsUnread(m)).length
+    const newer = recent.filter(
+      (m) => m.id !== message.id && orderOf(m) > orderOf(message) && countsAsUnread(m),
+    ).length
     if (newer >= conversation.unread) return
     // A listing that stopped short of the withdrawn entry may have left newer
     // ones unseen. Leave the count alone rather than guess it down.
     const oldest = recent[0]
-    if (recent.length === window && oldest && oldest.ts > message.ts) return
+    if (recent.length === window && oldest && orderOf(oldest) > orderOf(message)) return
     await this.#repo.uncountUnread(message.convoId)
   }
 
@@ -1893,7 +1930,7 @@ export class Messenger {
   async #sendControl(
     to: string | readonly string[],
     frame: ControlFrame,
-    opts: { directOnly?: boolean; viaDirect?: boolean; durable?: boolean } = {},
+    opts: { directOnly?: boolean; viaDirect?: boolean; durable?: boolean; tags?: string[][] } = {},
   ): Promise<string | null> {
     if (!this.#secretKey || !this.#running) return null
     const recipients = typeof to === 'string' ? [to] : [...to]
@@ -1901,7 +1938,11 @@ export class Messenger {
     // naming all of them and one wrap each — never the direct channel.
     const peerPubkey = recipients.length === 1 ? (recipients[0] as string) : null
     const rumor = createRumor(
-      { kind: KIND_CONTROL, content: encodeControlFrame(frame), tags: recipientTags(recipients) },
+      {
+        kind: KIND_CONTROL,
+        content: encodeControlFrame(frame),
+        tags: [...recipientTags(recipients), ...(opts.tags ?? [])],
+      },
       this.#secretKey,
     )
 
@@ -2345,6 +2386,12 @@ export class Messenger {
       // or recorded and since deleted, which must not ring it back to life.
       if (await this.#repo.hasMessage(callId)) return
       if (await this.#callWithdrawn(peerPubkey, callId)) return
+      // The call sits where the caller opened it, and whatever this side says
+      // from now on sorts after it (ADR-063).
+      const order = carriedOrder(rumor.tags, at, Date.now())
+      this.#callOrders.set(callId, order)
+      const conversation = await this.#repo.ensureConversation(this.#pubkey, peerPubkey)
+      await this.#repo.bumpConversation(conversation.id, { ts: at, order }, false)
       if (Date.now() - at > CALL_RING_WINDOW_MS) {
         await this.recordCall(peerPubkey, callId, 'in', { media: frame.media, outcome: 'missed' }, at)
         return
@@ -2367,8 +2414,18 @@ export class Messenger {
     // signal the other would drop without a word.
     const echoed = parseControlFrame(encodeControlFrame(frame))
     if (!echoed || echoed.t !== 'rtc' || !isCallFrame(echoed)) throw new Error('malformed call signal')
-    const id = await this.#sendControl(peerPubkey, frame, { viaDirect: false })
+    // An opening offer carries the key the call is entered at, on both sides.
+    let order: number | undefined
+    if (isOpeningOffer(echoed)) {
+      const conversation = await this.#repo.ensureConversation(this.#pubkey, peerPubkey)
+      order = await this.#repo.tickClock(conversation.id, Date.now())
+    }
+    const id = await this.#sendControl(peerPubkey, frame, {
+      viaDirect: false,
+      ...(order !== undefined ? { tags: [orderTag(order)] } : {}),
+    })
     if (!id) throw new Error('messenger is not running')
+    if (order !== undefined) this.#callOrders.set(id, order)
     return id
   }
 
@@ -2393,12 +2450,17 @@ export class Messenger {
     if (await this.#repo.hasMessage(id)) return
     if (await this.#callWithdrawn(peerPubkey, id)) return
     const conversation = await this.#repo.ensureConversation(this.#pubkey, peerPubkey)
+    // At the key the call was opened at — the same on both sides — or, for a
+    // call whose offer this session never saw, at its own time.
+    const order = this.#callOrders.get(id) ?? at
+    this.#callOrders.delete(id)
     const message: Message = {
       id,
       convoId: conversation.id,
       direction,
       status: direction === 'out' ? 'sent' : 'delivered',
       ts: at,
+      order,
       tsCoarse: 0,
       body: '',
       authorPubkey: direction === 'out' ? this.#pubkey : peerPubkey,
@@ -2406,7 +2468,7 @@ export class Messenger {
     }
     const unread = record.outcome === 'missed' && !this.#isViewing(conversation.id)
     await this.#repo.putMessage(message)
-    await this.#repo.bumpConversation(conversation.id, at, unread)
+    await this.#repo.bumpConversation(conversation.id, message, unread)
     const updated = (await this.#repo.getConversation(conversation.id)) ?? conversation
     this.events.emit('message', { message, conversation: updated })
     this.events.emit('conversationsChanged', undefined)

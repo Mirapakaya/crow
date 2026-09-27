@@ -2,7 +2,7 @@ import { finalizeEvent, generateSecretKey, getEventHash, getPublicKey } from 'no
 import { schnorr } from '@noble/curves/secp256k1.js'
 import type { Event as NostrEvent, UnsignedEvent } from 'nostr-tools/core'
 import * as nip44 from 'nostr-tools/nip44'
-import { nowSec } from '../util/time'
+import { MAX_CLOCK_AHEAD_MS, nowSec } from '../util/time'
 import { hexToBytes, isHex32, randomInt, wipe } from '../util/bytes'
 
 /**
@@ -42,7 +42,7 @@ const FUZZ_WINDOW_SEC = 2 * 24 * 60 * 60
 const MAX_CONTENT_CHARS = 512 * 1024
 
 /** How far out of step a peer's clock may be before we treat a rumor as bogus. */
-const MAX_CLOCK_SKEW_SEC = 24 * 60 * 60
+const MAX_CLOCK_SKEW_SEC = MAX_CLOCK_AHEAD_MS / 1000
 
 export interface Rumor extends UnsignedEvent {
   readonly id: string

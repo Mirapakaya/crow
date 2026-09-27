@@ -8,6 +8,7 @@ import {
   preciseTimestamp,
   threadFromTags,
 } from '../models/protocol'
+import { carriedOrder } from '../models/timeline'
 import type { Conversation, Message, OutboxItem } from '../models/types'
 import type { PublishOutcome } from '../transport/relayPool'
 import type { InnerEvent, MlsHost } from './host'
@@ -34,6 +35,8 @@ export class GroupChat {
   async send(conversation: Conversation, content: string, replyTo?: string): Promise<Message> {
     this.#assertMember(conversation)
     const sentAt = Date.now()
+    // Past everything the group has seen, however this clock is set (ADR-063).
+    const order = await this.host.repo.tickClock(conversation.id, sentAt)
     const rootId = replyTo ? await this.host.threadRoot(replyTo) : null
     const message: Message = {
       id: '',
@@ -41,6 +44,7 @@ export class GroupChat {
       direction: 'out',
       status: 'queued',
       ts: sentAt,
+      order,
       tsCoarse: 0,
       body: content,
       authorPubkey: this.host.pubkey,
@@ -51,7 +55,7 @@ export class GroupChat {
     const rumor = this.#chatRumor(message)
     message.id = rumor.id
     await this.host.repo.putMessage(message)
-    await this.host.repo.bumpConversation(conversation.id, sentAt, false)
+    await this.host.repo.bumpConversation(conversation.id, message, false)
     this.host.emit('message', { message, conversation })
     this.host.emit('conversationsChanged', undefined)
     await this.#queue(conversation.id, rumor.id, rumor)
@@ -163,12 +167,14 @@ export class GroupChat {
     if (await repo.isWithdrawn(event.id, event.pubkey)) return
     const thread = threadFromTags(event.tags)
     const incoming = event.pubkey !== this.host.pubkey
+    const ts = preciseTimestamp(event.tags, event.created_at)
     const message: Message = {
       id: event.id,
       convoId: conversation.id,
       direction: incoming ? 'in' : 'out',
       status: incoming ? 'delivered' : 'sent',
-      ts: preciseTimestamp(event.tags, event.created_at),
+      ts,
+      order: carriedOrder(event.tags, ts, Date.now()),
       tsCoarse: 0,
       body: event.content,
       authorPubkey: event.pubkey,
@@ -179,7 +185,7 @@ export class GroupChat {
     // Read on arrival if it is on screen, as in any conversation (ADR-039).
     const unread = incoming && !this.host.isViewing(conversation.id)
     await repo.putMessage(message)
-    await repo.bumpConversation(conversation.id, message.ts, unread)
+    await repo.bumpConversation(conversation.id, message, unread)
     this.host.emit('message', {
       message,
       conversation: {
@@ -232,6 +238,7 @@ export class GroupChat {
         content: message.body,
         tags: groupChatTags({
           ts: message.ts,
+          ...(message.order !== undefined ? { order: message.order } : {}),
           ...(message.replyTo ? { replyTo: message.replyTo } : {}),
           ...(message.rootId ? { rootId: message.rootId } : {}),
         }),

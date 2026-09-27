@@ -376,7 +376,7 @@ export class CallManager {
           .signal(peer, { v: PROTOCOL_VERSION, t: 'rtc', kind: 'bye', call: callId, reason: 'busy' })
           .catch((err: unknown) => log.warn('could not send busy', err))
         void this.#env
-          .record(peer, callId, 'in', { media: frame.media, outcome: 'missed' }, Math.min(at, Date.now()))
+          .record(peer, callId, 'in', { media: frame.media, outcome: 'missed' }, at)
           .catch((err: unknown) => log.warn('could not record a missed call', err))
         return
       }

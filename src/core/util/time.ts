@@ -3,6 +3,13 @@ export const MINUTE = 60 * SECOND
 export const HOUR = 60 * MINUTE
 export const DAY = 24 * HOUR
 
+/**
+ * How far ahead of this device's clock another's may run and still be
+ * believed: a rumor dated further ahead is refused, and a causal key beyond it
+ * is not taken (ADR-063).
+ */
+export const MAX_CLOCK_AHEAD_MS = DAY
+
 /** Unix seconds — the unit Nostr events use everywhere. */
 export const nowSec = (): number => Math.floor(Date.now() / 1000)
 

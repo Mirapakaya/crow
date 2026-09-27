@@ -8,6 +8,7 @@ import {
   withdrawnId,
 } from '../crypto/vaultCrypto'
 import type { InteractiveUpdate } from '../models/interactive'
+import { byTimeline, nextOrder, orderOf } from '../models/timeline'
 import { coarsenMs, DAY, HOUR } from '../util/time'
 import type { NegentropyItem } from '../transport/negentropy'
 import { toNpub } from '../identity/keys'
@@ -118,9 +119,20 @@ const SEEN_DELETE_BATCH = 2000
 
 /** The sealed half of a conversation row. */
 type ConversationBody = Partial<
-  Pick<Conversation, 'kind' | 'members' | 'subject' | 'subjectAt' | 'accepted' | 'draft' | 'mls'>
+  Pick<Conversation, 'kind' | 'members' | 'subject' | 'subjectAt' | 'accepted' | 'draft' | 'mls' | 'clock'>
 > &
   Pick<Conversation, 'peerPubkey'>
+
+/** A conversation's causal clock, starting at its newest entry for one from before keys existed. */
+const clockOf = (conversation: Conversation): number => conversation.clock ?? conversation.lastActivity
+
+/** What a receipt records beside the status it moves a message to. */
+function receiptTime(status: MessageStatus, at: number | undefined): Partial<Message> {
+  if (at === undefined) return {}
+  if (status === 'delivered') return { deliveredAt: at }
+  if (status === 'read') return { readAt: at }
+  return {}
+}
 
 /**
  * Typed access to the encrypted vault.
@@ -290,6 +302,7 @@ export class VaultRepo {
       accepted: body.accepted ?? true,
       draft: body.draft,
       ...(body.mls ? { mls: body.mls } : {}),
+      ...(body.clock !== undefined ? { clock: body.clock } : {}),
       lastActivity: row.lastActivity,
       unread: row.unread,
       pinned: row.pinned === 1,
@@ -500,15 +513,40 @@ export class VaultRepo {
     })
   }
 
-  async bumpConversation(id: string, at: number, incrementUnread: boolean): Promise<void> {
+  /**
+   * Note an entry stored in a conversation: the list shows it as the newest
+   * when its author sent it last, and the causal clock moves past its key
+   * (ADR-063) — whether it was sent here, arrived, or was restored.
+   */
+  async bumpConversation(
+    id: string,
+    entry: { ts: number; order?: number },
+    incrementUnread: boolean,
+  ): Promise<void> {
     await this.vault.transaction(async () => {
       const existing = await this.getConversation(id)
       if (!existing) return
       await this.writeConversation({
         ...existing,
-        lastActivity: Math.max(existing.lastActivity, at),
+        lastActivity: Math.max(existing.lastActivity, entry.ts),
+        clock: Math.max(clockOf(existing), orderOf(entry)),
         unread: incrementUnread ? existing.unread + 1 : existing.unread,
       })
+    })
+  }
+
+  /**
+   * The key for an entry sent in a conversation now: this clock, or just past
+   * everything the conversation has seen (ADR-063). Taken and stored in one
+   * transaction, so two sends never share a key.
+   */
+  async tickClock(id: string, now: number): Promise<number> {
+    return this.vault.transaction(async () => {
+      const existing = await this.getConversation(id)
+      if (!existing) throw new Error('no such conversation')
+      const order = nextOrder(now, clockOf(existing))
+      await this.writeConversation({ ...existing, clock: order })
+      return order
     })
   }
 
@@ -592,7 +630,10 @@ export class VaultRepo {
       convoId,
       dir: direction,
       status,
-      tsCoarse: coarsenMs(message.ts),
+      // Bucketed by where it sorts, not when it was sent: a page is read
+      // newest-first by key, and a reply from a clock running behind is newer
+      // than its time says.
+      tsCoarse: coarsenMs(orderOf(message)),
       enc: this.vault.sealRecord(body, aad('messages', id)),
     })
   }
@@ -612,30 +653,42 @@ export class VaultRepo {
    *
    * Walks the `[convoId+tsCoarse]` index backwards and stops once it has enough
    * rows, so opening a conversation with years of history decrypts a screenful
-   * rather than all of it. The index only knows hour buckets, so ordering
-   * within a bucket is settled after decryption, on the exact timestamps — the
-   * over-read below covers the boundary.
+   * rather than all of it. The index holds the hour of each entry's key, and
+   * inside one hour IndexedDB orders rows by their blinded id — at random. So
+   * the hour the walk stops in is read whole, as is the hour `before` falls in:
+   * cut at a row count instead, a busy hour gave a random part of itself, with
+   * older messages shown and newer ones missing (ADR-061). The exact order,
+   * by key, is settled after decryption (ADR-063); `before` is a key too.
    */
-  async listMessages(convoId: string, limit = 200, beforeTs?: number): Promise<Message[]> {
+  async listMessages(convoId: string, limit = 200, before?: number): Promise<Message[]> {
     this.assertUnlocked()
-    const upperBound = beforeTs === undefined ? Dexie.maxKey : coarsenMs(beforeTs) + HOUR
-    // Over-read so messages sharing the boundary hour cannot be dropped by the
-    // cut, and so `beforeTs` filtering has spare rows to work with. Clamped
-    // because IndexedDB rejects a limit outside unsigned-long range.
-    const fetchCount = Math.min(Math.max(1, limit) + 64, MAX_QUERY_LIMIT)
-    const rows = await this.db.messages
-      .where('[convoId+tsCoarse]')
-      .between([convoId, Dexie.minKey], [convoId, upperBound], true, true)
+    const count = Math.min(Math.max(1, limit), MAX_QUERY_LIMIT)
+    const index = () => this.db.messages.where('[convoId+tsCoarse]')
+    const hour = (tsCoarse: number) => index().equals([convoId, tsCoarse]).toArray()
+
+    const top = before === undefined ? undefined : coarsenMs(before)
+    const walked = await index()
+      .between([convoId, Dexie.minKey], [convoId, top ?? Dexie.maxKey], true, top === undefined)
       .reverse()
-      .limit(fetchCount)
+      .limit(count)
       .toArray()
+    const edge = walked.length === count ? walked[walked.length - 1]?.tsCoarse : undefined
+
+    const rows = new Map<string, MessageRow>()
+    for (const row of [
+      ...(top === undefined ? [] : await hour(top)),
+      ...walked,
+      ...(edge === undefined ? [] : await hour(edge)),
+    ]) {
+      rows.set(row.id, row)
+    }
 
     const decoded: Message[] = []
-    for (const row of rows) {
+    for (const row of rows.values()) {
       const message = this.decodeMessage(row)
-      if (message && (beforeTs === undefined || message.ts < beforeTs)) decoded.push(message)
+      if (message && (before === undefined || orderOf(message) < before)) decoded.push(message)
     }
-    decoded.sort((a, b) => a.ts - b.ts || a.id.localeCompare(b.id))
+    decoded.sort(byTimeline)
     return decoded.slice(Math.max(0, decoded.length - limit))
   }
 
@@ -651,7 +704,7 @@ export class VaultRepo {
     const decoded = rows
       .map((row) => this.decodeMessage(row))
       .filter((message): message is Message => message !== null)
-    decoded.sort((a, b) => a.ts - b.ts || a.id.localeCompare(b.id))
+    decoded.sort(byTimeline)
     return decoded
   }
 
@@ -669,14 +722,18 @@ export class VaultRepo {
     })
   }
 
-  async advanceMessageStatus(id: string, status: MessageStatus): Promise<Message | null> {
+  /**
+   * Move a message forward to `status`. A receipt passes `at`, the time the
+   * recipient's device stamped it, kept as when it was delivered or read.
+   */
+  async advanceMessageStatus(id: string, status: MessageStatus, at?: number): Promise<Message | null> {
     return this.vault.transaction(async () => {
       const current = await this.getMessage(id)
       if (!current) return null
       if (STATUS_RANK[status] <= STATUS_RANK[current.status] && current.status !== 'failed') {
         return current
       }
-      const next = { ...current, status }
+      const next = { ...current, status, ...receiptTime(status, at) }
       await this.putMessage(next)
       return next
     })
@@ -689,7 +746,7 @@ export class VaultRepo {
    * backlog meant one vault transaction and one IndexedDB write per message.
    * One pass, one write.
    */
-  async advanceMessageStatuses(ids: string[], status: MessageStatus): Promise<Message[]> {
+  async advanceMessageStatuses(ids: string[], status: MessageStatus, at?: number): Promise<Message[]> {
     if (ids.length === 0) return []
     return this.vault.transaction(async () => {
       const rows = await this.db.messages.bulkGet(ids)
@@ -701,14 +758,14 @@ export class VaultRepo {
         const current = this.decodeMessage(row)
         if (!current) continue
         if (STATUS_RANK[status] <= STATUS_RANK[current.status] && current.status !== 'failed') continue
-        const next = { ...current, status }
+        const next = { ...current, status, ...receiptTime(status, at) }
         const { id, convoId, direction, status: nextStatus, tsCoarse: _tsCoarse, ...body } = next
         writes.push({
           id,
           convoId,
           dir: direction,
           status: nextStatus,
-          tsCoarse: coarsenMs(next.ts),
+          tsCoarse: coarsenMs(orderOf(next)),
           enc: this.vault.sealRecord(body, aad('messages', id)),
         })
         updated.push(next)
@@ -732,11 +789,13 @@ export class VaultRepo {
     id: string,
     pubkeys: readonly string[],
     status: MessageStatus,
+    at?: number,
   ): Promise<Message | null> {
     return this.vault.transaction(async () => {
       const current = await this.getMessage(id)
       if (!current?.receipts) return null
       const receipts = { ...current.receipts }
+      const receiptsAt = { ...current.receiptsAt }
       const settled = STATUS_RANK.sent
       let changed = false
       for (const pubkey of pubkeys) {
@@ -746,10 +805,16 @@ export class VaultRepo {
         const beforeSending = STATUS_RANK[status] < settled && STATUS_RANK[was] < settled
         if (!forward && !beforeSending) continue
         receipts[pubkey] = status
+        if (at !== undefined) receiptsAt[pubkey] = at
         changed = true
       }
       if (!changed) return current
-      const next = { ...current, receipts, status: aggregateStatus(receipts) }
+      const next = {
+        ...current,
+        receipts,
+        status: aggregateStatus(receipts),
+        ...(Object.keys(receiptsAt).length > 0 ? { receiptsAt } : {}),
+      }
       await this.putMessage(next)
       return next
     })
