@@ -3,7 +3,6 @@ import { useI18n, LOCALE_NAMES } from '../../i18n'
 import { useNavigate, useRoute, type Route } from '../../app/router'
 import { Avatar } from '../components/primitives'
 import {
-  ArrowLeft,
   ChevronRight,
   Globe,
   Lock,
@@ -15,7 +14,6 @@ import {
   Phone,
 } from 'lucide-react'
 import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Switch } from '../../components/ui/switch'
 import { SegmentedControl } from '../components/SegmentedControl'
