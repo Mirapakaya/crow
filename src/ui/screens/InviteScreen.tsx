@@ -2,18 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../../app/store'
 import { useT } from '../../i18n'
 import { useNavigate } from '../../app/router'
-import { Avatar, Banner } from '../components/primitives'
+import { Avatar } from '../components/primitives'
 import { decodeInvite, isInviteStale, type Invite } from '../../core/identity/invite'
 import { shortNpub, toNpub } from '../../core/identity/keys'
 import { relayLabel } from '../../core/transport/relayUrl'
+import { Button } from '../../components/ui/button'
+import { AlertTriangle, Shield, MessageSquare } from 'lucide-react'
 
-/**
- * Landing screen for `#/i/<payload>` links.
- *
- * The payload lives in the URL fragment, which the browser never sends to the
- * web server — so following an invite link reveals nothing to whoever hosts
- * the app, only to whoever you got the link from.
- */
 export function InviteScreen({ payload }: { payload: string }) {
   const t = useT()
   const navigate = useNavigate()
@@ -31,8 +26,6 @@ export function InviteScreen({ payload }: { payload: string }) {
     }
   }, [payload])
 
-  // Strip the invite out of the address bar once handled, so it does not sit in
-  // history or get re-shared by accident.
   useEffect(() => {
     if ('error' in decoded) return
     if (decoded.invite.pubkey === identity?.pubkey) navigate({ name: 'chats' }, true)
@@ -40,12 +33,14 @@ export function InviteScreen({ payload }: { payload: string }) {
 
   if ('error' in decoded) {
     return (
-      <div className="screen-scroll">
-        <div className="container stack">
-          <Banner tone="danger">{t('contacts.invalidInvite')}</Banner>
-          <button className="btn btn-outline btn-block" onClick={() => navigate({ name: 'chats' }, true)}>
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+        <div className="mx-auto w-full max-w-[28rem] flex flex-col gap-4 p-4">
+          <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--danger-soft)] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--danger)]">
+            {t('contacts.invalidInvite')}
+          </div>
+          <Button variant="outline" className="w-full" onClick={() => navigate({ name: 'chats' }, true)}>
             {t('common.close')}
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -72,45 +67,52 @@ export function InviteScreen({ payload }: { payload: string }) {
   }
 
   return (
-    <div className="screen-scroll">
-      <div className="container stack center" style={{ maxWidth: '28rem', paddingBlock: 'var(--space-6)' }}>
-        <div style={{ display: 'grid', placeItems: 'center' }}>
-          <Avatar name={name} seed={invite.pubkey} size="lg" />
-        </div>
-        <h1 style={{ fontSize: 'var(--step-2)' }}>{name}</h1>
-        <code className="mono faint" style={{ wordBreak: 'break-all' }}>
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+      <div className="mx-auto w-full max-w-[28rem] flex flex-col items-center gap-4 p-4 py-6 text-center">
+        <Avatar name={name} seed={invite.pubkey} size="lg" />
+        <h1 className="text-xl font-bold tracking-tight text-[var(--text)]">{name}</h1>
+        <code className="font-mono text-xs text-[var(--text-faint)] break-all">
           {toNpub(invite.pubkey)}
         </code>
 
         {invite.relays.length > 0 ? (
-          <p className="faint">{invite.relays.map(relayLabel).join(' · ')}</p>
+          <p className="text-[0.75rem] text-[var(--text-faint)]">{invite.relays.map(relayLabel).join(' · ')}</p>
         ) : null}
 
-        {isInviteStale(invite) ? <Banner tone="warning">{t('contacts.staleInvite')}</Banner> : null}
+        {isInviteStale(invite) ? (
+          <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)]">
+            <AlertTriangle size={16} />
+            {t('contacts.staleInvite')}
+          </div>
+        ) : null}
 
         {existing?.accepted ? (
           <>
-            <Banner tone="accent">{t('contacts.alreadyAdded')}</Banner>
-            <button
-              className="btn btn-primary btn-block"
+            <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-sm text-[var(--accent-text)]">
+              {t('contacts.alreadyAdded')}
+            </div>
+            <Button
+              className="w-full"
               onClick={() => navigate({ name: 'chat', peer: invite.pubkey }, true)}
             >
+              <MessageSquare size={16} />
               {t('nav.chats')}
-            </button>
+            </Button>
           </>
         ) : (
-          <button className="btn btn-primary btn-block" disabled={busy} onClick={() => void accept()}>
+          <Button className="w-full" disabled={busy} onClick={() => void accept()}>
             {t('contacts.add')}
-          </button>
+          </Button>
         )}
 
-        <button className="btn btn-ghost btn-block" onClick={() => navigate({ name: 'chats' }, true)}>
+        <Button variant="ghost" className="w-full" onClick={() => navigate({ name: 'chats' }, true)}>
           {t('common.cancel')}
-        </button>
+        </Button>
 
-        <Banner tone="accent">
-          <span className="small">{t('chat.verifyPromptBody')}</span>
-        </Banner>
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-xs text-[var(--accent-text)]">
+          <Shield size={14} />
+          {t('chat.verifyPromptBody')}
+        </div>
       </div>
     </div>
   )

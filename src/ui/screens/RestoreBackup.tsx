@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useT } from '../../i18n'
-import { Field, Spinner } from '../components/primitives'
+import { Spinner } from '../components/primitives'
 import { EntryLayout } from '../components/EntryLayout'
 import { LAZY_CHUNKS } from '../lazyViews'
 import { getRepo, getVault, useApp } from '../../app/store'
@@ -8,17 +8,11 @@ import type { SlotEnrolment } from '../../core/vault/vault'
 import type { ExportPayload } from '../../core/vault/exportImport'
 import { useAccessText } from '../access/accessText'
 import { ProtectionChooser } from '../access/protection'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Textarea } from '../../components/ui/textarea'
+import { Label } from '../../components/ui/label'
 
-/**
- * Restore a vault from an encrypted backup file, before any identity exists.
- *
- * Two steps. First the file is opened, with the passphrase it was made with or
- * — for a file from a build with keyslots — the recovery phrase of the
- * identity inside it, so a new device needs nothing but the file and the
- * twelve words (ADR-054). Then this device is set up to open the way the
- * person chooses, exactly as a new identity would be, and the backup is merged
- * into the new vault.
- */
 export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
   const t = useT()
   const text = useAccessText()
@@ -51,14 +45,10 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
     if (!payload) return
     const { importVault } = await LAZY_CHUNKS.vaultTransfer()
     const vault = getVault()
-    // A vault left open without an identity — an earlier attempt that stopped
-    // part-way — gains the new way in rather than being made twice.
     if (vault.isUnlocked) await vault.addSlot(protection)
     else await vault.create(protection)
     const summary = await importVault(getRepo(), payload, { adoptIdentity: true })
     toast(t('settings.importDone', { messages: summary.messages, contacts: summary.contacts }))
-    // A reload is the simplest way to get the store to re-run its boot path
-    // against the vault that now has an identity.
     location.reload()
   }
 
@@ -66,36 +56,33 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
     return (
       <EntryLayout>
         <ProtectionChooser recoveryNote={Boolean(payload.identity?.mnemonic)} onChoose={restore} />
-        <button className="btn btn-ghost btn-block" onClick={onCancel}>
+        <Button variant="ghost" className="w-full" onClick={onCancel}>
           {t('common.cancel')}
-        </button>
+        </Button>
       </EntryLayout>
     )
   }
 
   return (
     <EntryLayout>
-      <div className="stack-sm">
-        <h1>{t('settings.importBackup')}</h1>
-        <p className="muted">{t('settings.exportBackupBody')}</p>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-xl font-bold tracking-tight text-[var(--text)]">{t('settings.importBackup')}</h1>
+        <p className="text-sm text-[var(--text-muted)]">{t('settings.exportBackupBody')}</p>
       </div>
 
-      <Field label={t('settings.importChoose')}>
-        <input
-          className="input"
+      <div className="flex flex-col gap-1.5">
+        <Label>{t('settings.importChoose')}</Label>
+        <Input
           type="file"
           accept=".json,application/json"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
         />
-      </Field>
+      </div>
 
-      <Field
-        label={withRecovery ? text('restorePhrase') : text('restoreFilePassphrase')}
-        error={error ?? undefined}
-      >
+      <div className="flex flex-col gap-1.5">
+        <Label>{withRecovery ? text('restorePhrase') : text('restoreFilePassphrase')}</Label>
         {withRecovery ? (
-          <textarea
-            className="textarea mono"
+          <Textarea
             dir="ltr"
             autoCapitalize="none"
             autoCorrect="off"
@@ -106,10 +93,10 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
               setSecret(event.target.value)
               setError(null)
             }}
+            className="font-mono"
           />
         ) : (
-          <input
-            className="input"
+          <Input
             type="password"
             autoComplete="off"
             value={secret}
@@ -119,9 +106,13 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
             }}
           />
         )}
-      </Field>
-      <button
-        className="btn btn-ghost small"
+        {error ? (
+          <p className="text-sm text-[var(--danger)]" role="alert">{error}</p>
+        ) : null}
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => {
           setWithRecovery((value) => !value)
           setSecret('')
@@ -129,18 +120,18 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
         }}
       >
         {withRecovery ? text('fileWithPassphrase') : text('fileWithRecovery')}
-      </button>
+      </Button>
 
-      <button
-        className="btn btn-primary btn-block"
+      <Button
+        className="w-full"
         disabled={!file || !secret.trim() || busy}
         onClick={() => void open()}
       >
         {busy ? <Spinner label={t('common.working')} /> : t('common.next')}
-      </button>
-      <button className="btn btn-ghost btn-block" onClick={onCancel} disabled={busy}>
+      </Button>
+      <Button variant="ghost" className="w-full" onClick={onCancel} disabled={busy}>
         {t('common.cancel')}
-      </button>
+      </Button>
     </EntryLayout>
   )
 }
