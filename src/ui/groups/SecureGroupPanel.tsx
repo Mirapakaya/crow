@@ -8,6 +8,8 @@ import { Avatar, Banner } from '../components/primitives'
 import { LockIcon, PlusIcon, RefreshIcon, ShieldCheckIcon, TrashIcon } from '../components/Icons'
 import { displayName } from '../screens/ChatList'
 import { explainFailure, useSecureText } from './secureText'
+import { Button } from '../../components/ui/button'
+import { cn } from '../../lib/utils'
 
 /**
  * RFC 9420's epoch authenticator, as people can read it aloud: the first 80
@@ -76,13 +78,13 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
 
   if (mls.left) {
     return (
-      <div className="stack">
+      <div className="flex flex-col gap-4">
         <Banner tone="warning">
-          <span className="grow">{text('left')}</span>
+          <span className="flex-1">{text('left')}</span>
         </Banner>
-        <button
-          type="button"
-          className="btn btn-danger-soft btn-block"
+        <Button
+          variant="outline"
+          className="w-full border-[var(--danger)] text-[var(--danger)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
           onClick={() => {
             if (!confirm(text('deleteConfirm'))) return
             void deleteConversation(group.id).then(() => navigate({ name: 'chats' }, true))
@@ -90,48 +92,52 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
         >
           <TrashIcon size={16} />
           {text('deleteHistory')}
-        </button>
+        </Button>
       </div>
     )
   }
 
   return (
-    <div className="stack">
-      <div className="card stack-sm">
-        <div className="row" style={{ gap: 'var(--space-2)' }}>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4">
+        <div className="flex items-center gap-2">
           <LockIcon size={16} />
-          <strong>{text('badge')}</strong>
+          <strong className="text-sm text-[var(--text)]">{text('badge')}</strong>
         </div>
-        <p className="hint">{text('explainer')}</p>
-        <div className="stack-sm" aria-live="polite">
-          <span className="section-title">{text('code')}</span>
-          <code className="security-code" dir="ltr">
+        <p className="text-xs text-[var(--text-muted)]">{text('explainer')}</p>
+        <div className="flex flex-col gap-2" aria-live="polite">
+          <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--text-muted)] [dir=rtl_&]:normal-case">{text('code')}</span>
+          <code className="rounded-[var(--radius-md)] bg-[var(--surface-2)] px-3 py-2 text-sm font-mono text-[var(--text)]" dir="ltr">
             {formatSecurityCode(mls.code)}
           </code>
-          <span className="hint tabular">{text('generation', { n: mls.epoch })}</span>
-          <p className="hint">{text('codeHint')}</p>
+          <span className="text-xs text-[var(--text-muted)] tabular-nums">{text('generation', { n: mls.epoch })}</span>
+          <p className="text-xs text-[var(--text-muted)]">{text('codeHint')}</p>
         </div>
-        <p className="small">{text('refreshed', { when: relative(mls.refreshedAt, locale) })}</p>
-        <button
-          type="button"
-          className="btn btn-ghost small"
+        <p className="text-xs text-[var(--text)]">{text('refreshed', { when: relative(mls.refreshedAt, locale) })}</p>
+        <Button
+          variant="ghost"
+          size="sm"
           disabled={busy}
           onClick={() => void run({ rotate: true })}
         >
           <RefreshIcon size={14} />
           {busy ? text('working') : text('refreshNow')}
-        </button>
+        </Button>
       </div>
 
-      <div className="card-section">
+      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
         {identity ? (
-          <div className="list-row">
+          <div className="flex w-full items-center gap-3 px-4 py-3">
             <Avatar name={identity.name} seed={identity.pubkey} src={identity.avatar} size="sm" />
-            <span className="grow truncate">
+            <span className="flex-1 min-w-0 truncate">
               <bdi>{identity.name}</bdi>
             </span>
-            {amAdmin ? <span className="badge">{text('admin')}</span> : null}
-            <span className="hint">{t('groups.you')}</span>
+            {amAdmin ? (
+              <span className="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.6875rem] font-medium text-[var(--text-muted)]">
+                {text('admin')}
+              </span>
+            ) : null}
+            <span className="text-xs text-[var(--text-muted)]">{t('groups.you')}</span>
           </div>
         ) : null}
         {[...group.members]
@@ -142,19 +148,24 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
             const contact = contacts.get(pubkey)
             const name = displayName(contact, pubkey)
             return (
-              <div key={pubkey} className="list-row">
+              <div key={pubkey} className="flex w-full items-center gap-3 px-4 py-3 border-t border-[var(--border-subtle)]">
                 <Avatar name={name} seed={pubkey} src={contact?.avatar} size="sm" />
-                <span className="grow truncate">
+                <span className="flex-1 min-w-0 truncate">
                   <bdi>{name}</bdi>
                 </span>
                 {contact?.verification === 'verified' ? (
                   <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
                 ) : null}
-                {mls.admins.includes(pubkey) ? <span className="badge">{text('admin')}</span> : null}
+                {mls.admins.includes(pubkey) ? (
+                  <span className="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.6875rem] font-medium text-[var(--text-muted)]">
+                    {text('admin')}
+                  </span>
+                ) : null}
                 {amAdmin ? (
-                  <button
-                    type="button"
-                    className="btn btn-ghost small danger-text"
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-[var(--danger)] hover:text-[var(--danger)]"
                     disabled={busy}
                     aria-label={`${text('remove')} ${name}`}
                     onClick={() => {
@@ -162,7 +173,7 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
                     }}
                   >
                     {text('remove')}
-                  </button>
+                  </Button>
                 ) : null}
               </div>
             )
@@ -171,19 +182,22 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
 
       {amAdmin ? (
         adding ? (
-          <div className="stack-sm">
-            <p className="hint">{addable.length > 0 ? text('addHint') : text('nobodyToAdd')}</p>
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-[var(--text-muted)]">{addable.length > 0 ? text('addHint') : text('nobodyToAdd')}</p>
             {addable.length > 0 ? (
-              <div className="card-section" role="group" aria-label={text('add')}>
+              <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden" role="group" aria-label={text('add')}>
                 {addable.map((contact) => {
                   const on = chosen.includes(contact.pubkey)
                   const name = displayName(contact, contact.pubkey)
                   const blocked = !on && chosen.length >= room
                   return (
-                    <label key={contact.pubkey} className={`list-row${blocked ? ' is-disabled' : ''}`}>
+                    <label key={contact.pubkey} className={cn(
+                      'flex w-full items-center gap-3 px-4 py-3 border-t border-[var(--border-subtle)] first:border-t-0',
+                      blocked && 'opacity-50 pointer-events-none',
+                    )}>
                       <input
                         type="checkbox"
-                        className="checkbox"
+                        className="size-4 rounded-[var(--radius-sm)] border-[var(--border-strong)] bg-[var(--surface)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-2"
                         checked={on}
                         aria-label={name}
                         disabled={blocked}
@@ -194,7 +208,7 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
                         }
                       />
                       <Avatar name={name} seed={contact.pubkey} src={contact.avatar} size="sm" />
-                      <span className="grow truncate">
+                      <span className="flex-1 min-w-0 truncate">
                         <bdi>{name}</bdi>
                       </span>
                     </label>
@@ -202,10 +216,9 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
                 })}
               </div>
             ) : null}
-            <div className="row" style={{ gap: 'var(--space-2)' }}>
-              <button
-                type="button"
-                className="btn btn-primary grow"
+            <div className="flex gap-2">
+              <Button
+                className="flex-1"
                 disabled={busy || chosen.length === 0}
                 onClick={() =>
                   void run({ add: chosen }, () => {
@@ -215,28 +228,28 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
                 }
               >
                 {busy ? text('finding') : text('addChosen', { n: chosen.length })}
-              </button>
-              <button type="button" className="btn btn-ghost" onClick={() => setAdding(false)}>
+              </Button>
+              <Button variant="ghost" onClick={() => setAdding(false)}>
                 {t('common.cancel')}
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            className="btn btn-ghost btn-block"
+          <Button
+            variant="ghost"
+            className="w-full"
             disabled={room <= 0}
             onClick={() => setAdding(true)}
           >
             <PlusIcon size={16} />
             {text('add')}
-          </button>
+          </Button>
         )
       ) : null}
 
-      <button
-        type="button"
-        className="btn btn-danger-soft btn-block"
+      <Button
+        variant="outline"
+        className="w-full border-[var(--danger)] text-[var(--danger)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
         disabled={busy}
         onClick={() => {
           const note = amAdmin && group.members.length > 0 ? `\n\n${text('leaveAdmin')}` : ''
@@ -245,7 +258,7 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
         }}
       >
         {text('leave')}
-      </button>
+      </Button>
     </div>
   )
 }

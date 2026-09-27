@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useT, type TranslateFn } from '../../i18n'
-import { Field, Spinner } from '../components/primitives'
+import { Spinner } from '../components/primitives'
 import { PatternPad } from '../components/PatternPad'
 import { capitalize, gateName, unlockError } from '../biometric'
 import { useAccessText, type AccessTextFn } from './accessText'
@@ -19,7 +19,11 @@ import {
 } from '../../core/crypto/biometricEnrol'
 import { canOpenInstantly, isValidPin, normalizePin } from '../../core/vault/keyslots'
 import type { SlotEnrolment } from '../../core/vault/vault'
-import './access.css'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import { Progress } from '../../components/ui/progress'
+import { cn } from '../../lib/utils'
 
 export const MIN_PASSPHRASE = 10
 
@@ -74,20 +78,21 @@ export function PassphraseFields({
   ] as string
   return (
     <>
-      <Field label={text('passphrase')} hint={text('passphraseHint')}>
-        <input
-          className="input"
+      <div className="flex flex-col gap-1.5">
+        <Label>{text('passphrase')}</Label>
+        <Input
           type="password"
           autoFocus
           autoComplete="new-password"
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />
-      </Field>
+        <span className="text-xs text-[var(--text-muted)]">{text('passphraseHint')}</span>
+      </div>
       {value ? <StrengthMeter score={score} label={label} caption={text('passphraseStrength')} /> : null}
-      <Field label={text('passphraseConfirm')} error={error ?? undefined}>
-        <input
-          className="input"
+      <div className="flex flex-col gap-1.5">
+        <Label>{text('passphraseConfirm')}</Label>
+        <Input
           type="password"
           autoComplete="new-password"
           value={confirm}
@@ -96,7 +101,10 @@ export function PassphraseFields({
             if (event.key === 'Enter') onSubmit()
           }}
         />
-      </Field>
+        {error ? (
+          <span className="text-sm text-[var(--danger)]" role="alert">{error}</span>
+        ) : null}
+      </div>
     </>
   )
 }
@@ -110,15 +118,31 @@ export function PassphraseFields({
  */
 function StrengthMeter({ score, label, caption }: { score: 0 | 1 | 2 | 3; label: string; caption: string }) {
   const tone = score >= 2 ? 'good' : score === 1 ? 'fair' : 'weak'
+  const barColor: Record<string, string> = {
+    weak: 'bg-[var(--danger)]',
+    fair: 'bg-[var(--warning)]',
+    good: 'bg-[var(--success)]',
+  }
+  const textColor: Record<string, string> = {
+    weak: 'text-[var(--danger)]',
+    fair: 'text-[var(--warning)]',
+    good: 'text-[var(--success)]',
+  }
   return (
-    <div className="stack-sm">
-      <div className="strength-meter" data-tone={tone} aria-hidden="true">
+    <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-4 gap-1">
         {[0, 1, 2, 3].map((index) => (
-          <span key={index} data-filled={index <= score ? 'true' : 'false'} />
+          <span
+            key={index}
+            className={cn(
+              'h-0.5 rounded-full transition-colors',
+              index <= score ? barColor[tone] : 'bg-[var(--surface-3)]',
+            )}
+          />
         ))}
       </div>
-      <span className="hint">
-        {caption}: <strong className={`strength-label strength-${tone}`}>{label}</strong>
+      <span className="text-xs text-[var(--text-muted)]">
+        {caption}: <strong className={textColor[tone]}>{label}</strong>
       </span>
     </div>
   )
@@ -151,7 +175,6 @@ export function useBiometricEnrolment(): (
   const pending = useRef<GateCredential | null>(null)
   return async (authenticator) => {
     const waiting = pending.current
-    // Asked for somewhere else instead: the half-made one is not wanted.
     if (waiting && waiting.authenticator !== authenticator) forgetBiometric(waiting.credentialId)
     const made = waiting?.authenticator === authenticator ? waiting : null
     pending.current = null
@@ -187,7 +210,6 @@ export function biometricBlocked(
 
 /** What went wrong setting a gate up, in terms of what to do next. */
 export function explainBiometric(err: unknown, text: AccessTextFn, t: TranslateFn, method: string): string {
-  // Made, and only the confirming ask did not happen: one more tap finishes.
   if (err instanceof GateCancelledError && err.made) return capitalize(text('bioFinish', { method }))
   if (err instanceof GateRefusedError) {
     return capitalize(text(err.reason === 'unverified' ? 'bioUnverifiedSetup' : 'bioFailed', { method }))
@@ -222,34 +244,40 @@ export function PinFields({
   onSubmit: () => void
 }) {
   const text = useAccessText()
-  const input = {
-    className: 'input pin-input',
-    type: 'password',
-    dir: 'ltr',
-    inputMode: 'numeric',
+  const inputProps = {
+    type: 'password' as const,
+    dir: 'ltr' as const,
+    inputMode: 'numeric' as const,
     maxLength: 16,
-    autoComplete: 'off',
-  } as const
+    autoComplete: 'off' as const,
+    className: 'font-mono tracking-[0.2em]',
+  }
   return (
     <>
-      <Field label={text('pin')} hint={text('pinHint')}>
-        <input
-          {...input}
+      <div className="flex flex-col gap-1.5">
+        <Label>{text('pin')}</Label>
+        <Input
+          {...inputProps}
           autoFocus
           value={value}
           onChange={(event) => onChange(digitsOnly(event.target.value))}
         />
-      </Field>
-      <Field label={text('pinConfirm')} error={error ?? undefined}>
-        <input
-          {...input}
+        <span className="text-xs text-[var(--text-muted)]">{text('pinHint')}</span>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label>{text('pinConfirm')}</Label>
+        <Input
+          {...inputProps}
           value={confirm}
           onChange={(event) => onConfirmChange(digitsOnly(event.target.value))}
           onKeyDown={(event) => {
             if (event.key === 'Enter') onSubmit()
           }}
         />
-      </Field>
+        {error ? (
+          <span className="text-sm text-[var(--danger)]" role="alert">{error}</span>
+        ) : null}
+      </div>
     </>
   )
 }
@@ -270,8 +298,8 @@ export function PatternSetup({
   const [error, setError] = useState<string | null>(null)
   const prompt = first ? text('patternAgain') : text('patternDraw')
   return (
-    <div className="stack-sm">
-      <p className="small muted center">{prompt}</p>
+    <div className="flex flex-col gap-3">
+      <p className="text-xs text-center text-[var(--text-muted)]">{prompt}</p>
       <PatternPad
         label={prompt}
         disabled={disabled}
@@ -290,21 +318,21 @@ export function PatternSetup({
         }}
       />
       {error ? (
-        <p className="error-text center" role="alert">
+        <p className="text-sm text-center text-[var(--danger)]" role="alert">
           {error}
         </p>
       ) : null}
       {first ? (
-        <button
-          type="button"
-          className="btn btn-ghost small"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => {
             setFirst(null)
             setError(null)
           }}
         >
           {text('patternRestart')}
-        </button>
+        </Button>
       ) : null}
     </div>
   )
@@ -342,7 +370,6 @@ export function ProtectionChooser({
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState(0)
 
-  // Nothing is chosen until it is known whether biometrics are here.
   const choice: Choice | null =
     picked ??
     (support === null ? null : support.platform === 'yes' ? 'biometric' : recoveryNote ? 'pin' : 'passphrase')
@@ -405,7 +432,6 @@ export function ProtectionChooser({
       disabled: Boolean(blocked),
     })
   }
-  // Where the device's own cannot guard it, a security key can.
   if (support?.securityKey && support.platform !== 'yes') {
     options.push({ value: 'security-key', title: text('choiceKey'), body: text('choiceKeyBody') })
   }
@@ -421,20 +447,18 @@ export function ProtectionChooser({
   }
 
   const errorLine = error ? (
-    <p className="error-text" role="alert">
+    <p className="text-sm text-[var(--danger)]" role="alert">
       {error}
     </p>
   ) : null
 
   const heading = (
-    <div className="stack-sm">
-      <h1>{text('protectTitle')}</h1>
-      <p className="muted">{text('protectBody')}</p>
+    <div className="flex flex-col gap-2">
+      <h1 className="text-xl font-semibold text-[var(--text)]">{text('protectTitle')}</h1>
+      <p className="text-sm text-[var(--text-muted)]">{text('protectBody')}</p>
     </div>
   )
 
-  // Held until it is known whether biometrics are here: the card would
-  // otherwise arrive above the others and move them under a finger.
   if (!choice) {
     return (
       <>
@@ -448,19 +472,30 @@ export function ProtectionChooser({
     <>
       {heading}
 
-      <div className="choice-list" role="radiogroup" aria-label={text('protectTitle')}>
+      <div className="grid gap-2" role="radiogroup" aria-label={text('protectTitle')}>
         {options.map((option) => (
           <button
             key={option.value}
             type="button"
             role="radio"
-            className="choice"
+            className={cn(
+              'flex w-full flex-col gap-1 rounded-[var(--radius-lg)] border px-4 py-3 text-left transition-colors',
+              choice === option.value
+                ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                : 'border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)]',
+              option.disabled && choice !== option.value && 'cursor-not-allowed',
+            )}
             aria-checked={choice === option.value}
             disabled={busy || option.disabled}
             onClick={() => pick(option.value)}
           >
-            <span className="choice-title">{option.title}</span>
-            <span className="small muted">{option.body}</span>
+            <span className={cn(
+              'text-sm font-medium',
+              option.disabled && choice !== option.value ? 'text-[var(--text-muted)]' : 'text-[var(--text)]',
+            )}>
+              {option.title}
+            </span>
+            <span className="text-xs text-[var(--text-muted)]">{option.body}</span>
           </button>
         ))}
       </div>
@@ -493,21 +528,19 @@ export function ProtectionChooser({
       )}
 
       {busy && choice !== 'biometric' && choice !== 'instant' ? (
-        <div className="progress">
-          <div style={{ width: `${Math.round(progress * 100)}%` }} />
-        </div>
+        <Progress value={Math.round(progress * 100)} />
       ) : null}
 
       {choice === 'biometric' || choice === 'security-key' ? (
-        <p className="hint">{capitalize(text('twoPrompts', { method }))}</p>
+        <p className="text-xs text-[var(--text-muted)]">{capitalize(text('twoPrompts', { method }))}</p>
       ) : null}
 
-      {recoveryNote ? <p className="hint">{text('recoveryNote')}</p> : null}
+      {recoveryNote ? <p className="text-xs text-[var(--text-muted)]">{text('recoveryNote')}</p> : null}
 
       {choice === 'pattern' ? null : (
-        <button className="btn btn-primary btn-block" disabled={busy} onClick={() => void go()}>
+        <Button className="w-full" disabled={busy} onClick={() => void go()}>
           {busy ? <Spinner label={t('common.working')} /> : t('common.next')}
-        </button>
+        </Button>
       )}
     </>
   )
