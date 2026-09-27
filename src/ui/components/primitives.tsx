@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Users, X } from 'lucide-react'
+import { CloseIcon, ContactsIcon } from './Icons'
 import { useT } from '../../i18n'
-import { cn } from '../../lib/utils'
+import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 /** Deterministic avatar colour from a public key — stable across devices. */
 export function avatarColor(seed: string): string {
   let hash = 0
   for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
+  // Fixed saturation and lightness keep contrast with white text predictable.
   return `hsl(${Math.abs(hash) % 360} 46% 42%)`
 }
 
@@ -26,14 +30,17 @@ export function initials(name: string): string {
  * one is recognisable.
  */
 export function GroupAvatar({ seed, size = 'md' }: { seed: string; size?: 'sm' | 'md' | 'lg' }) {
-  const sizeClass = size === 'sm' ? 'size-8 text-xs' : size === 'lg' ? 'size-12 text-lg' : 'size-10 text-sm'
   return (
     <div
-      className={cn('flex items-center justify-center rounded-full font-semibold text-white shrink-0', sizeClass)}
+      className={cn(
+        'avatar avatar-group',
+        size === 'sm' && 'avatar-sm',
+        size === 'lg' && 'avatar-lg',
+      )}
       style={{ background: avatarColor(seed) }}
       aria-hidden="true"
     >
-      <Users size={size === 'lg' ? 30 : size === 'sm' ? 15 : 19} />
+      <ContactsIcon size={size === 'lg' ? 30 : size === 'sm' ? 15 : 19} />
     </div>
   )
 }
@@ -49,17 +56,26 @@ export function Avatar({
   src?: string
   size?: 'sm' | 'md' | 'lg'
 }) {
-  const sizeClass = size === 'sm' ? 'size-8 text-xs' : size === 'lg' ? 'size-12 text-lg' : 'size-10 text-sm'
   if (src) {
     return (
-      <div className={cn('flex items-center justify-center rounded-full overflow-hidden shrink-0', sizeClass)}>
-        <img src={src} alt="" className="size-full object-cover" />
+      <div
+        className={cn(
+          'avatar',
+          size === 'sm' && 'avatar-sm',
+          size === 'lg' && 'avatar-lg',
+        )}
+      >
+        <img src={src} alt="" />
       </div>
     )
   }
   return (
     <div
-      className={cn('flex items-center justify-center rounded-full font-semibold text-white shrink-0 select-none', sizeClass)}
+      className={cn(
+        'avatar',
+        size === 'sm' && 'avatar-sm',
+        size === 'lg' && 'avatar-lg',
+      )}
       style={{ background: avatarColor(seed) }}
       aria-hidden="true"
     >
@@ -70,18 +86,11 @@ export function Avatar({
 
 export function Spinner({ label }: { label?: string }) {
   return (
-    <span className="inline-flex items-center gap-2">
-      <span className="size-4 animate-spin rounded-full border-2 border-[var(--text-muted)] border-t-transparent" />
-      {label ? <span className="text-xs text-[var(--text-muted)]">{label}</span> : null}
+    <span className="flex items-center gap-2">
+      <span className="spinner" />
+      {label ? <span className="text-sm text-text-muted">{label}</span> : null}
     </span>
   )
-}
-
-const BANNER_TONES: Record<string, string> = {
-  info: 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text)]',
-  warning: 'bg-[var(--warning-soft)] border-[color-mix(in_srgb,var(--warning)_28%,transparent)] text-[var(--warning)]',
-  danger: 'bg-[var(--danger-soft)] border-[color-mix(in_srgb,var(--danger)_28%,transparent)] text-[var(--danger)]',
-  accent: 'bg-[var(--accent-soft)] border-[var(--accent-border)] text-[var(--accent-text)]',
 }
 
 export function Banner({
@@ -93,7 +102,10 @@ export function Banner({
 }) {
   return (
     <div
-      className={cn('flex items-start gap-2.5 rounded-[var(--radius-md)] border px-3 py-2.5 text-sm', BANNER_TONES[tone])}
+      className={cn(
+        'banner',
+        tone !== 'info' && `banner-${tone}`,
+      )}
       role={tone === 'danger' ? 'alert' : undefined}
     >
       {children}
@@ -113,15 +125,15 @@ export function Field({
   children: ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      {label ? <label className="text-sm font-medium text-[var(--text)]">{label}</label> : null}
+    <div className="flex flex-col gap-1">
+      {label ? <Label>{label}</Label> : null}
       {children}
       {error ? (
-        <span className="text-sm text-[var(--danger)]" role="alert">
+        <span className="text-xs text-danger" role="alert">
           {error}
         </span>
       ) : hint ? (
-        <span className="text-xs text-[var(--text-muted)]">{hint}</span>
+        <span className="text-xs text-text-muted">{hint}</span>
       ) : null}
     </div>
   )
@@ -130,18 +142,23 @@ export function Field({
 /**
  * Accessible modal: focus moves in on open and returns on close, Escape
  * dismisses, and a click on the backdrop dismisses. Focus is trapped so
- * keyboard users cannot tab into the inert page behind it.
+ * keyboard users cannot tab into the inert page behind it. Focus lands on the
+ * element marked `data-autofocus` when there is one — a question whose answers
+ * destroy something starts on the one that does not.
  */
 export function Modal({
   title,
   onClose,
   children,
   labelledBy = 'modal-title',
+  closable = true,
 }: {
   title: string
   onClose: () => void
   children: ReactNode
   labelledBy?: string
+  /** False for a question, whose own answers include not going ahead. */
+  closable?: boolean
 }) {
   const t = useT()
   const ref = useRef<HTMLDivElement>(null)
@@ -153,7 +170,7 @@ export function Modal({
     const focusable = node?.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     )
-    focusable?.[0]?.focus()
+    ;(node?.querySelector<HTMLElement>('[data-autofocus]') ?? focusable?.[0])?.focus()
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -188,30 +205,21 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay)]"
+      className="modal-backdrop"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
     >
-      <div
-        className="relative w-full max-w-md mx-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-xl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={labelledBy}
-        ref={ref}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 id={labelledBy} className="text-lg font-semibold text-[var(--text)]">
+      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={labelledBy} ref={ref}>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h2 id={labelledBy} className="text-[var(--step-1)]">
             {title}
           </h2>
-          <button
-            type="button"
-            className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)]"
-            onClick={onClose}
-            aria-label={t('common.close')}
-          >
-            <X size={16} />
-          </button>
+          {closable ? (
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.close')}>
+              <CloseIcon />
+            </Button>
+          ) : null}
         </div>
         {children}
       </div>
@@ -232,48 +240,38 @@ export function Toggle({
   description?: string
   disabled?: boolean
 }) {
+  const switchId = `toggle-${label.replace(/\s+/g, '-').toLowerCase()}`
+  const descId = description ? `${switchId}-desc` : undefined
   return (
-    <label
-      className={cn(
-        'flex items-center justify-between gap-3 px-4 py-3',
-        disabled ? 'cursor-not-allowed' : 'cursor-pointer',
-      )}
+    <div
+      className="flex items-center justify-between gap-3 px-4 py-3"
+      style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
     >
-      <span className="flex-1 min-w-0">
-        <span className="block text-sm font-medium text-[var(--text)]">{label}</span>
+      <Label htmlFor={switchId} className="flex-1 min-w-0 cursor-pointer">
+        <span className="block font-medium">{label}</span>
         {description ? (
-          <span className="block mt-0.5 text-xs text-[var(--text-muted)]">{description}</span>
+          <span className="block text-xs text-text-muted mt-0.5">{description}</span>
         ) : null}
-      </span>
-      <button
-        role="switch"
-        type="button"
-        aria-checked={checked}
+      </Label>
+      <Switch
+        id={switchId}
+        checked={checked}
+        onCheckedChange={onChange}
         disabled={disabled}
-        onClick={() => { if (!disabled) onChange(!checked) }}
-        className={cn(
-          'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors',
-          checked ? 'bg-[var(--accent)]' : 'bg-[var(--surface-3)]',
-          disabled && 'opacity-50',
-        )}
-      >
-        <span
-          className={cn(
-            'pointer-events-none block size-4 rounded-full bg-white shadow-sm transition-transform',
-            checked ? 'translate-x-4' : 'translate-x-0',
-          )}
-        />
-      </button>
-    </label>
+        aria-describedby={descId}
+      />
+    </div>
   )
 }
 
 export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 px-4 py-12 text-center">
-      <h3 className="text-base font-semibold text-[var(--text)]">{title}</h3>
+    <div className="empty">
+      <h3>{title}</h3>
       {body ? (
-        <p className="text-sm text-[var(--text-muted)] max-w-md">{body}</p>
+        <p className="text-sm text-text-muted" style={{ maxWidth: '28rem' }}>
+          {body}
+        </p>
       ) : null}
       {action}
     </div>
@@ -284,7 +282,7 @@ export function EmptyState({ title, body, action }: { title: string; body?: stri
 export function CopyButton({
   value,
   label,
-  className = '',
+  className,
 }: {
   value: string
   label?: string
@@ -293,12 +291,10 @@ export function CopyButton({
   const t = useT()
   const [copied, setCopied] = useCopyState()
   return (
-    <button
+    <Button
       type="button"
-      className={cn(
-        'inline-flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-hover)] transition-colors',
-        className,
-      )}
+      variant="outline"
+      className={className}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(value)
@@ -310,7 +306,7 @@ export function CopyButton({
       }}
     >
       {copied ? t('common.copied') : (label ?? t('common.copy'))}
-    </button>
+    </Button>
   )
 }
 

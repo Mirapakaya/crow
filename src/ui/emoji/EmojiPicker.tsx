@@ -4,10 +4,25 @@ import { useI18n } from '../../i18n'
 import { LAZY_CHUNKS } from '../lazyViews'
 import type { Sticker, StickerPack } from '../../core/models/types'
 import { EMOJI_GROUPS } from './emojiSet'
-import { Button } from '../../components/ui/button'
-import { cn } from '../../lib/utils'
+import { Button } from '@/components/ui/button'
+import './picker.css'
+
+/**
+ * The emoji and sticker picker.
+ *
+ * Everything under `src/ui/emoji/` is built as the `lazy-emoji` chunk: it is
+ * excluded from the service worker's precache and fetched the first time
+ * somebody opens the picker, then served from the runtime cache forever after.
+ * Most conversations never open it, and the install budget is what decides how
+ * long a cold start takes on a slow connection.
+ *
+ * Stickers are vault-local. The images are sealed and chunked by the same code
+ * that carries an attachment, and sending one sends an ordinary image — so the
+ * person receiving it needs no pack, and nothing is ever fetched from a host.
+ */
 
 export interface EmojiPickerProps {
+  /** Reactions take a single emoji; composing also offers stickers. */
   mode: 'reaction' | 'compose'
   onPickEmoji: (emoji: string) => void
   onPickSticker?: (sticker: Sticker) => void
@@ -21,19 +36,16 @@ export default function EmojiPicker({ mode, onPickEmoji, onPickSticker }: EmojiP
   const [tab, setTab] = useState<Tab>('emoji')
 
   return (
-    <div className="flex flex-col" role="group" aria-label={t('emoji.title')}>
+    <div className="picker" role="group" aria-label={t('emoji.title')}>
       {mode === 'compose' ? (
-        <div className="flex border-b border-[var(--border)]" role="tablist" aria-label={t('emoji.title')}>
+        <div className="picker-tabs" role="tablist" aria-label={t('emoji.title')}>
           <button
             type="button"
             role="tab"
             id="picker-tab-emoji"
             aria-selected={tab === 'emoji'}
             aria-controls="picker-panel"
-            className={cn(
-              'flex-1 px-3 py-2 text-sm font-medium transition-colors',
-              tab === 'emoji' ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]' : 'text-[var(--text-muted)]',
-            )}
+            className={tab === 'emoji' ? 'picker-tab active' : 'picker-tab'}
             onClick={() => setTab('emoji')}
           >
             {t('emoji.tabEmoji')}
@@ -44,10 +56,7 @@ export default function EmojiPicker({ mode, onPickEmoji, onPickSticker }: EmojiP
             id="picker-tab-stickers"
             aria-selected={tab === 'stickers'}
             aria-controls="picker-panel"
-            className={cn(
-              'flex-1 px-3 py-2 text-sm font-medium transition-colors',
-              tab === 'stickers' ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]' : 'text-[var(--text-muted)]',
-            )}
+            className={tab === 'stickers' ? 'picker-tab active' : 'picker-tab'}
             onClick={() => setTab('stickers')}
           >
             {t('emoji.tabStickers')}
@@ -76,14 +85,16 @@ function EmojiGrid({ onPick }: { onPick: (emoji: string) => void }) {
   return (
     <>
       {EMOJI_GROUPS.map((group) => (
-        <section key={group.key} className="flex flex-col">
-          <h3 className="px-2 py-1 text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--text-muted)] [dir=rtl_&]:normal-case">{t(group.key)}</h3>
-          <div className="grid grid-cols-8 gap-0.5 p-1">
+        <section key={group.key} className="picker-group">
+          <h3 className="picker-heading">{t(group.key)}</h3>
+          <div className="picker-grid">
             {group.emoji.map((emoji) => (
               <button
                 key={emoji}
                 type="button"
-                className="flex items-center justify-center rounded-[var(--radius-sm)] p-1.5 text-xl hover:bg-[var(--surface-hover)] transition-colors"
+                className="picker-emoji"
+                // The character is the label: a screen reader announces the
+                // emoji's own name, which is better than anything invented here.
                 onClick={() => onPick(emoji)}
               >
                 {emoji}
@@ -111,6 +122,7 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
       const { prepareImage } = await LAZY_CHUNKS.media()
       const images: { bytes: Uint8Array; mime: string; width: number; height: number }[] = []
       for (const file of [...files].slice(0, 60)) {
+        // Re-encoded like any other picture, which also drops EXIF.
         const prepared = await prepareImage(file)
         if (prepared) {
           images.push({
@@ -137,19 +149,19 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
   }
 
   return (
-    <div className="flex flex-col gap-2 p-2">
+    <div className="picker-stickers">
       {packs.length === 0 ? (
-        <p className="text-xs text-[var(--text-muted)] text-center py-4">{t('emoji.noPacks')}</p>
+        <p className="text-sm text-text-muted picker-empty">{t('emoji.noPacks')}</p>
       ) : (
         packs.map((pack) => (
-          <section key={pack.id} className="flex flex-col gap-1">
-            <h3 className="flex items-center justify-between px-1 py-1 text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-              <span dir="auto" className="[dir=rtl_&]:normal-case">{pack.name}</span>
+          <section key={pack.id} className="picker-group">
+            <h3 className="picker-heading">
+              <span dir="auto">{pack.name}</span>
               <Button variant="ghost" size="sm" onClick={() => void deletePack(pack.id)}>
                 {t('emoji.removePack')}
               </Button>
             </h3>
-            <div className="grid grid-cols-4 gap-1">
+            <div className="picker-grid stickers">
               {pack.stickers.map((sticker) => (
                 <StickerButton key={sticker.id} sticker={sticker} onPick={onPick} />
               ))}
@@ -158,20 +170,22 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
         ))
       )}
 
-      <div className="flex items-center gap-2 self-start">
-        <Button variant="ghost" size="sm" disabled={busy} onClick={() => fileRef.current?.click()}>
-          {busy ? t('emoji.importing') : t('emoji.addPack')}
+      <label className="picker-import">
+        <Button variant="ghost" size="sm" asChild>
+          <span>
+            {busy ? t('emoji.importing') : t('emoji.addPack')}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              disabled={busy}
+              onChange={(event) => void onFiles(event.target.files)}
+            />
+          </span>
         </Button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          disabled={busy}
-          onChange={(event) => void onFiles(event.target.files)}
-        />
-      </div>
+      </label>
     </div>
   )
 }
@@ -191,8 +205,8 @@ function StickerButton({ sticker, onPick }: { sticker: Sticker; onPick?: (sticke
   }, [openSticker, sticker])
 
   return (
-    <button type="button" className="flex items-center justify-center rounded-[var(--radius-md)] p-1 hover:bg-[var(--surface-hover)] transition-colors" onClick={() => onPick?.(sticker)} disabled={!url}>
-      {url ? <img src={url} alt="" loading="lazy" className="size-full object-cover" /> : <span className="size-10 animate-pulse rounded-[var(--radius-sm)] bg-[var(--surface-2)]" />}
+    <button type="button" className="picker-sticker" onClick={() => onPick?.(sticker)} disabled={!url}>
+      {url ? <img src={url} alt="" loading="lazy" /> : <span className="picker-sticker-loading" />}
     </button>
   )
 }

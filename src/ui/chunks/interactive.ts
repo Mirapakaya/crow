@@ -4,6 +4,7 @@
  * renders as its plain-text content — exactly what a client without polls
  * shows. See `src/ui/lazyViews.tsx`.
  */
+import '../interactive/interactive.css'
 export { PollCard } from '../interactive/PollCard'
 export { ChecklistCard } from '../interactive/ChecklistCard'
 export { PollComposer, ChecklistComposer } from '../interactive/Composers'

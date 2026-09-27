@@ -29,6 +29,7 @@ export const LAZY_CHUNKS = {
   groups: () => import('./chunks/groups'),
   interactive: () => import('./chunks/interactive'),
   media: () => import('./chunks/media'),
+  conversation: () => import('./chunks/conversation'),
   /*
    * Backup export and import, loaded when the button is pressed. Both the
    * settings chunk and the access chunk use it; imported statically by both,
@@ -75,3 +76,6 @@ export const PollComposer = lazy(() => LAZY_CHUNKS.interactive().then((m) => ({ 
 export const ChecklistComposer = lazy(() =>
   LAZY_CHUNKS.interactive().then((m) => ({ default: m.ChecklistComposer })),
 )
+
+export const ForwardSheet = lazy(() => LAZY_CHUNKS.conversation().then((m) => ({ default: m.ForwardSheet })))
+export const MessageInfo = lazy(() => LAZY_CHUNKS.conversation().then((m) => ({ default: m.MessageInfo })))

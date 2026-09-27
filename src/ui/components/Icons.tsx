@@ -191,6 +191,28 @@ export const ReplyIcon = (p: IconProps) => (
   </DirectionalIcon>
 )
 
+/** Reply's mirror: the message goes on, to somewhere else. */
+export const ForwardIcon = (p: IconProps) => (
+  <DirectionalIcon {...p}>
+    <path d="m15 17 5-5-5-5" />
+    <path d="M4 18v-2a4 4 0 0 1 4-4h12" />
+  </DirectionalIcon>
+)
+
+export const InfoIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5M12 8h.01" />
+  </Icon>
+)
+
+/** Down to the newest message. */
+export const ArrowDownIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 5v14M6 13l6 6 6-6" />
+  </Icon>
+)
+
 export const MoreIcon = (p: IconProps) => (
   <Icon {...p}>
     <circle cx="12" cy="5" r="1" />
