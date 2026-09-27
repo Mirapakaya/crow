@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
-import { Field, Modal, Toggle } from '../components/primitives'
+import { Modal, Toggle } from '../components/primitives'
 import { CloseIcon, PlusIcon } from '../components/Icons'
 import { makeChecklist, makePoll, MAX_QUESTION_CHARS } from '../../core/models/interactive'
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS, MAX_POLL_OPTIONS } from '../../core/models/protocol'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
 
 /**
  * Write a poll or a checklist and send it to the open conversation.
@@ -25,7 +28,6 @@ function Lines({
 }: {
   values: string[]
   onChange: (values: string[]) => void
-  /** Rows that cannot be removed: a poll with one option is not a choice. */
   min: number
   max: number
   label: string
@@ -34,36 +36,36 @@ function Lines({
 }) {
   const { t } = useI18n()
   return (
-    <fieldset className="stack-sm composer-lines">
-      <legend className="label">{label}</legend>
+    <fieldset className="flex flex-col gap-2">
+      <legend className="text-sm font-medium text-[var(--text)]">{label}</legend>
       {values.map((value, index) => (
-        <div key={index} className="row">
-          <input
-            className="input grow"
+        <div key={index} className="flex items-center gap-2">
+          <Input
             dir="auto"
             value={value}
             maxLength={MAX_ITEM_CHARS}
             placeholder={placeholder(index + 1)}
             aria-label={placeholder(index + 1)}
+            className="flex-1"
             onChange={(event) => onChange(values.map((v, i) => (i === index ? event.target.value : v)))}
           />
           {values.length > min ? (
-            <button
-              type="button"
-              className="btn btn-icon"
+            <Button
+              variant="ghost"
+              size="icon"
               aria-label={t('interactive.removeRow')}
               onClick={() => onChange(values.filter((_, i) => i !== index))}
             >
               <CloseIcon size={16} />
-            </button>
+            </Button>
           ) : null}
         </div>
       ))}
       {values.length < max ? (
-        <button type="button" className="btn btn-ghost small" onClick={() => onChange([...values, ''])}>
+        <Button variant="ghost" size="sm" onClick={() => onChange([...values, ''])}>
           <PlusIcon size={15} />
           {addLabel}
-        </button>
+        </Button>
       ) : null}
     </fieldset>
   )
@@ -79,8 +81,6 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false)
 
   const send = async () => {
-    // The two things a person can get wrong here, said in their language.
-    // `makePoll` checks again — and everything else — on the way out.
     if (!question.trim()) return setError(t('interactive.needQuestion'))
     if (options.filter((option) => option.trim()).length < 2) return setError(t('interactive.needOptions'))
     let poll
@@ -99,15 +99,15 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={t('interactive.newPoll')} onClose={onClose} labelledBy="poll-composer-title">
       <form
-        className="stack"
+        className="flex flex-col gap-4"
         onSubmit={(event) => {
           event.preventDefault()
           void send()
         }}
       >
-        <Field label={t('interactive.question')} error={error ?? undefined}>
-          <input
-            className="input"
+        <div className="flex flex-col gap-1.5">
+          <Label>{t('interactive.question')}</Label>
+          <Input
             dir="auto"
             value={question}
             maxLength={MAX_QUESTION_CHARS}
@@ -117,7 +117,8 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
               setError(null)
             }}
           />
-        </Field>
+          {error ? <span className="text-sm text-[var(--danger)]" role="alert">{error}</span> : null}
+        </div>
         <Lines
           values={options}
           onChange={(next) => {
@@ -131,9 +132,9 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
           addLabel={t('interactive.addOption')}
         />
         <Toggle label={t('interactive.multi')} checked={multi} onChange={setMulti} />
-        <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
+        <Button type="submit" className="w-full" disabled={busy}>
           {t('interactive.send')}
-        </button>
+        </Button>
       </form>
     </Modal>
   )
@@ -166,15 +167,15 @@ export function ChecklistComposer({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={t('interactive.newChecklist')} onClose={onClose} labelledBy="checklist-composer-title">
       <form
-        className="stack"
+        className="flex flex-col gap-4"
         onSubmit={(event) => {
           event.preventDefault()
           void send()
         }}
       >
-        <Field label={t('interactive.title')} error={error ?? undefined}>
-          <input
-            className="input"
+        <div className="flex flex-col gap-1.5">
+          <Label>{t('interactive.title')}</Label>
+          <Input
             dir="auto"
             value={title}
             maxLength={MAX_QUESTION_CHARS}
@@ -184,7 +185,8 @@ export function ChecklistComposer({ onClose }: { onClose: () => void }) {
               setError(null)
             }}
           />
-        </Field>
+          {error ? <span className="text-sm text-[var(--danger)]" role="alert">{error}</span> : null}
+        </div>
         <Lines
           values={items}
           onChange={(next) => {
@@ -197,9 +199,9 @@ export function ChecklistComposer({ onClose }: { onClose: () => void }) {
           placeholder={(n) => t('interactive.item', { n })}
           addLabel={t('interactive.addItem')}
         />
-        <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
+        <Button type="submit" className="w-full" disabled={busy}>
           {t('interactive.send')}
-        </button>
+        </Button>
       </form>
     </Modal>
   )

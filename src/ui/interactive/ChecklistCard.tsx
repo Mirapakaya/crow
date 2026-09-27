@@ -3,6 +3,9 @@ import { useI18n } from '../../i18n'
 import { foldChecklist, type ChecklistSpec, type InteractiveUpdate } from '../../core/models/interactive'
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS } from '../../core/models/protocol'
 import { PlusIcon } from '../components/Icons'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { cn } from '../../lib/utils'
 
 export interface ChecklistCardProps {
   checklist: ChecklistSpec
@@ -37,27 +40,30 @@ export function ChecklistCard({
   const headingId = `list-${messageId}`
 
   return (
-    <div className="checklist" role="group" aria-labelledby={headingId}>
-      <div className="row-between">
-        <span className="poll-question" id={headingId} dir="auto">
+    <div className="flex flex-col gap-2" role="group" aria-labelledby={headingId}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-medium text-[var(--text)]" id={headingId} dir="auto">
           {checklist.title}
         </span>
-        <span className="hint tabular">{t('interactive.progress', { done, total: entries.length })}</span>
+        <span className="text-xs text-[var(--text-muted)] tabular-nums">{t('interactive.progress', { done, total: entries.length })}</span>
       </div>
-      <ul className="checklist-items">
+      <ul className="flex flex-col gap-1">
         {entries.map((entry) => (
           <li key={entry.id}>
             <label
-              className={entry.done ? 'checklist-item done' : 'checklist-item'}
+              className={cn(
+                'flex items-center gap-2.5 py-1 text-sm',
+                entry.done && 'text-[var(--text-muted)] line-through',
+              )}
               title={entry.by ? t('interactive.tickedBy', { name: nameOf(entry.by) }) : undefined}
             >
               <input
                 type="checkbox"
-                className="checkbox checkbox-sm"
+                className="size-4 rounded-[var(--radius-sm)] border-[var(--border-strong)] bg-[var(--surface)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-2"
                 checked={entry.done}
                 onChange={(event) => onCheck(entry.id, event.target.checked)}
               />
-              <span className="grow" dir="auto">
+              <span className="flex-1 min-w-0" dir="auto">
                 {entry.label}
               </span>
             </label>
@@ -66,7 +72,7 @@ export function ChecklistCard({
       </ul>
       {entries.length < MAX_CHECKLIST_ITEMS ? (
         <form
-          className="checklist-add"
+          className="flex items-center gap-2"
           onSubmit={(event) => {
             event.preventDefault()
             const label = draft.trim()
@@ -75,23 +81,24 @@ export function ChecklistCard({
             setDraft('')
           }}
         >
-          <input
-            className="input"
+          <Input
             dir="auto"
             value={draft}
             maxLength={MAX_ITEM_CHARS}
             placeholder={t('interactive.newItemPlaceholder')}
             aria-label={t('interactive.addItem')}
+            className="flex-1"
             onChange={(event) => setDraft(event.target.value)}
           />
-          <button
+          <Button
             type="submit"
-            className="btn btn-icon"
+            variant="ghost"
+            size="icon"
             aria-label={t('interactive.addItem')}
             disabled={!draft.trim()}
           >
             <PlusIcon size={16} />
-          </button>
+          </Button>
         </form>
       ) : null}
     </div>

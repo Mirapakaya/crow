@@ -3,6 +3,7 @@ import encodeQR from 'qr'
 import { frameLoop, frontalCamera, QRCanvas } from 'qr/dom.js'
 import { useT } from '../../i18n'
 import { Banner } from './primitives'
+import { Button } from '../../components/ui/button'
 import { createLogger } from '../../core/util/log'
 
 const log = createLogger('qr')
@@ -17,7 +18,6 @@ const log = createLogger('qr')
 export function QrCode({ value, label }: { value: string; label?: string }) {
   const svg = useMemo(() => {
     try {
-      // Error level M survives a fingerprint or a slight fold and still scans.
       return encodeQR(value, 'svg', { ecc: 'medium', border: 2 })
     } catch (err) {
       log.warn('failed to encode QR', err)
@@ -27,7 +27,7 @@ export function QrCode({ value, label }: { value: string; label?: string }) {
 
   if (!svg) return null
   return (
-    <div className="qr-frame" role="img" aria-label={label ?? 'QR code'}>
+    <div className="flex justify-center p-4" role="img" aria-label={label ?? 'QR code'}>
       <div dangerouslySetInnerHTML={{ __html: svg }} />
     </div>
   )
@@ -40,8 +40,7 @@ export type ScanState = 'idle' | 'starting' | 'scanning' | 'denied' | 'unavailab
  *
  * Frames never leave the page: they are decoded in JavaScript from a canvas.
  * The stream is stopped on unmount, on a successful scan, and when the tab is
- * hidden — a camera left running in a background tab is exactly the kind of
- * thing a privacy app must not do.
+ * hidden.
  */
 export function QrScanner({
   onResult,
@@ -58,8 +57,6 @@ export function QrScanner({
     let cancelled = false
     let stop: (() => void) | null = null
     let camera: Awaited<ReturnType<typeof frontalCamera>> | null = null
-    // Frames are drawn into an offscreen canvas and decoded there; nothing is
-    // uploaded and no preview canvas is attached to the DOM.
     const canvas = new QRCanvas()
 
     const start = async () => {
@@ -116,17 +113,17 @@ export function QrScanner({
   }, [onResult])
 
   return (
-    <div className="stack">
+    <div className="flex flex-col gap-4">
       <div className="scanner-frame">
         <video ref={videoRef} playsInline muted aria-label={t('contacts.scan')} />
         {state === 'scanning' ? <div className="scanner-reticle" /> : null}
       </div>
       {state === 'denied' ? <Banner tone="warning">{t('contacts.cameraDenied')}</Banner> : null}
       {state === 'unavailable' ? <Banner tone="warning">{t('contacts.cameraUnavailable')}</Banner> : null}
-      {state === 'starting' ? <p className="muted center small">{t('common.loading')}…</p> : null}
-      <button type="button" className="btn btn-outline btn-block" onClick={onCancel}>
+      {state === 'starting' ? <p className="text-xs text-center text-[var(--text-muted)]">{t('common.loading')}…</p> : null}
+      <Button variant="outline" className="w-full" onClick={onCancel}>
         {t('common.cancel')}
-      </button>
+      </Button>
     </div>
   )
 }
