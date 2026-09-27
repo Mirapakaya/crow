@@ -1,116 +1,85 @@
-/**
- * Byte-level utilities for Crow.
- *
- * All cryptographic data flows through these helpers so that
- * encoding mismatches are confined to a single file.
- */
+import { base64url, base64, hex } from '@scure/base'
 
-// ── Hex ─────────────────────────────────────────────────────────
+const encoder = new TextEncoder()
+const decoder = new TextDecoder('utf-8', { fatal: true })
 
-/** Convert a byte array to a lowercase hex string. */
-export function bytesToHex(bytes: Uint8Array): string {
-  let out = '';
-  for (let i = 0; i < bytes.length; i++) {
-    out += bytes[i].toString(16).padStart(2, '0');
-  }
-  return out;
-}
+export const utf8ToBytes = (s: string): Uint8Array => encoder.encode(s)
+export const bytesToUtf8 = (b: Uint8Array): string => decoder.decode(b)
 
-/** Convert a hex string (with or without `0x` prefix) to a byte array. */
-export function hexToBytes(hex: string): Uint8Array {
-  const clean = hex.startsWith('0x') ? hex.slice(2) : hex;
-  if (clean.length % 2 !== 0) {
-    throw new Error('hexToBytes: odd-length hex string');
-  }
-  const bytes = new Uint8Array(clean.length / 2);
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(clean.substring(i * 2, i * 2 + 2), 16);
-  }
-  return bytes;
-}
+export const bytesToHex = (b: Uint8Array): string => hex.encode(b)
+export const hexToBytes = (s: string): Uint8Array => hex.decode(s.toLowerCase())
 
-// ── Base64 (standard) ───────────────────────────────────────────
+export const bytesToB64url = (b: Uint8Array): string => base64url.encode(b).replace(/=+$/, '')
+export const b64urlToBytes = (s: string): Uint8Array =>
+  base64url.decode(s + '='.repeat((4 - (s.length % 4)) % 4))
 
-/** Encode a byte array as standard Base64 (with `+` and `/`). */
-export function bytesToBase64(bytes: Uint8Array): string {
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
+export const bytesToB64 = (b: Uint8Array): string => base64.encode(b)
+export const b64ToBytes = (s: string): Uint8Array => base64.decode(s)
 
-/** Decode a standard Base64 string to a byte array. */
-export function base64ToBytes(b64: string): Uint8Array {
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
-
-// ── Base64url ───────────────────────────────────────────────────
-
-/** Encode a byte array as Base64url (no padding, URL-safe). */
-export function bytesToBase64url(bytes: Uint8Array): string {
-  return bytesToBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-/** Decode a Base64url string to a byte array. */
-export function base64urlToBytes(b64url: string): Uint8Array {
-  // Restore standard Base64 padding / characters.
-  let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
-  const pad = b64.length % 4;
-  if (pad === 2) b64 += '==';
-  else if (pad === 3) b64 += '=';
-  return base64ToBytes(b64);
-}
-
-// ── Concatenation / comparison ──────────────────────────────────
-
-/** Concatenate multiple byte arrays into a single `Uint8Array`. */
 export function concatBytes(...arrays: Uint8Array[]): Uint8Array {
-  const total = arrays.reduce((sum, a) => sum + a.length, 0);
-  const result = new Uint8Array(total);
-  let offset = 0;
+  let total = 0
+  for (const a of arrays) total += a.length
+  const out = new Uint8Array(total)
+  let offset = 0
   for (const a of arrays) {
-    result.set(a, offset);
-    offset += a.length;
+    out.set(a, offset)
+    offset += a.length
   }
-  return result;
+  return out
+}
+
+/** Overwrite a secret buffer in place. Best-effort: JS gives no real guarantees. */
+export function wipe(...arrays: (Uint8Array | undefined | null)[]): void {
+  for (const a of arrays) if (a) a.fill(0)
+}
+
+/** Length-independent comparison for equal-length buffers; used on MACs and keys. */
+export function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= (a[i] as number) ^ (b[i] as number)
+  return diff === 0
 }
 
 /**
- * Constant-time byte comparison.
- *
- * Always compares the full length regardless of where the first
- * difference occurs, to avoid timing side-channels.
+ * IndexedDB hands back ArrayBuffer in some engines and Uint8Array in others,
+ * and structured-clone round trips can widen the view. Normalise on read.
  */
-export function areEqual(a: Uint8Array, b: Uint8Array): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a[i] ^ b[i];
-  }
-  return diff === 0;
+export function toBytes(value: unknown): Uint8Array {
+  if (value instanceof Uint8Array) return value
+  if (value instanceof ArrayBuffer) return new Uint8Array(value)
+  if (ArrayBuffer.isView(value)) return new Uint8Array(value.buffer, value.byteOffset, value.byteLength)
+  throw new Error('expected binary vault field')
+}
+
+export function isHex32(s: unknown): s is string {
+  return typeof s === 'string' && /^[0-9a-f]{64}$/.test(s)
 }
 
 /**
- * Overwrite a byte array with zeros.
- *
- * Use this to clear sensitive material (keys, plaintext) from memory
- * as soon as it is no longer needed.
+ * Maximum bytes `crypto.getRandomValues` will fill in one call, per the Web
+ * Crypto spec. Asking for more throws QuotaExceededError rather than returning
+ * short, so anything larger has to be filled a block at a time.
  */
-export function zeroMemory(bytes: Uint8Array): void {
-  bytes.fill(0);
+const RANDOM_BLOCK = 65_536
+
+export function randomBytes(n: number): Uint8Array {
+  const out = new Uint8Array(n)
+  for (let offset = 0; offset < n; offset += RANDOM_BLOCK) {
+    crypto.getRandomValues(out.subarray(offset, Math.min(offset + RANDOM_BLOCK, n)))
+  }
+  return out
 }
 
-// ── Random ──────────────────────────────────────────────────────
-
-/** Generate `nBytes` cryptographically random bytes and return as hex. */
-export function randomHex(nBytes: number): string {
-  const bytes = new Uint8Array(nBytes);
-  crypto.getRandomValues(bytes);
-  return bytesToHex(bytes);
+/** Unbiased integer in [0, max) via rejection sampling. */
+export function randomInt(max: number): number {
+  if (!Number.isInteger(max) || max <= 0 || max > 0x1_00_00_00_00) throw new Error('randomInt: bad range')
+  const limit = Math.floor(0x1_00_00_00_00 / max) * max
+  const buf = new Uint32Array(1)
+  let v: number
+  do {
+    crypto.getRandomValues(buf)
+    v = buf[0] as number
+  } while (v >= limit)
+  return v % max
 }

@@ -1,80 +1,35 @@
-/**
- * Time utilities for Crow.
- *
- * All internal timestamps are **Unix milliseconds** unless a
- * function name explicitly says otherwise (`nowSec`, `clampToUnixSeconds`).
- */
+export const SECOND = 1000
+export const MINUTE = 60 * SECOND
+export const HOUR = 60 * MINUTE
+export const DAY = 24 * HOUR
 
-/** Current time in Unix milliseconds. */
-export function nowMs(): number {
-  return Date.now();
-}
-
-/** Current time in Unix seconds (truncated). */
-export function nowSec(): number {
-  return Math.floor(Date.now() / 1000);
-}
+/** Unix seconds — the unit Nostr events use everywhere. */
+export const nowSec = (): number => Math.floor(Date.now() / 1000)
 
 /**
- * Format a Unix-ms timestamp as an ISO 8601 string.
- *
- * @example formatTimestamp(1695800000000) // → "2023-09-27T06:13:20.000Z"
+ * Timestamps are indexed at hour granularity so that a device attacker who can
+ * read IndexedDB's index structures (but not the record ciphertexts) learns
+ * only roughly when a conversation was active. Exact times live inside the
+ * encrypted body.
  */
-export function formatTimestamp(ms: number): string {
-  return new Date(ms).toISOString();
-}
+export const coarsenMs = (ms: number): number => Math.floor(ms / HOUR) * HOUR
 
-/**
- * Check whether a Unix-ms timestamp is in the past.
- *
- * Useful for checking expiry on key packages, tokens, etc.
- */
-export function isExpired(timestamp: number): boolean {
-  return timestamp < Date.now();
-}
-
-/**
- * Return a human-readable "time ago" string for a Unix-ms timestamp.
- *
- * @example timeAgo(Date.now() - 180_000) // → "3 minutes ago"
- */
-export function timeAgo(ms: number): string {
-  const seconds = Math.floor((Date.now() - ms) / 1000);
-  if (seconds < 0) return 'just now';
-
-  const intervals: [number, string][] = [
-    [365 * 24 * 3600, 'year'],
-    [30 * 24 * 3600, 'month'],
-    [7 * 24 * 3600, 'week'],
-    [24 * 3600, 'day'],
-    [3600, 'hour'],
-    [60, 'minute'],
-    [1, 'second'],
-  ];
-
-  for (const [secs, label] of intervals) {
-    const count = Math.floor(seconds / secs);
-    if (count >= 1) {
-      return `${count} ${label}${count > 1 ? 's' : ''} ago`;
+export const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(signal.reason)
+    const t = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+    const onAbort = () => {
+      clearTimeout(t)
+      reject(signal?.reason)
     }
-  }
+    signal?.addEventListener('abort', onAbort, { once: true })
+  })
 
-  return 'just now';
-}
-
-/**
- * Ensure a value is a Unix **seconds** timestamp.
- *
- * If the value looks like milliseconds (> 10¹²), divide by 1000
- * and truncate.  Otherwise return as-is.
- *
- * This guards against accidentally mixing ms and s in APIs
- * that expect seconds (e.g. Nostr `created_at`).
- */
-export function clampToUnixSeconds(ms: number): number {
-  // 10^12 ≈ year 2001 in milliseconds; anything larger is almost certainly ms.
-  if (ms > 1e12) {
-    return Math.floor(ms / 1000);
-  }
-  return Math.floor(ms);
+/** Exponential backoff with full jitter, capped. */
+export function backoffDelay(attempt: number, base = 2 * SECOND, cap = 5 * MINUTE): number {
+  const exp = Math.min(cap, base * 2 ** Math.max(0, attempt))
+  return Math.floor(Math.random() * exp)
 }

@@ -1,227 +1,199 @@
-import { useState, useCallback } from 'react';
-import { t } from '@i18n';
+import { Suspense, useCallback, useMemo, useState } from 'react'
+import { useApp } from '../../app/store'
+import { useT } from '../../i18n'
+import { goBack, useNavigate } from '../../app/router'
+import { Banner, CopyButton, Field } from '../components/primitives'
+import { BackIcon, CameraIcon, QrIcon } from '../components/Icons'
+import { QrCode, QrScanner } from '../lazyViews'
+import { QrPlaceholder } from '../components/QrPlaceholder'
+import {
+  decodeInvite,
+  extractInvitePayload,
+  inviteLink,
+  isInviteStale,
+  type Invite,
+} from '../../core/identity/invite'
+import { parseProfilePointer } from '../../core/identity/keys'
 
-interface AddContactProps {
-  onAdded?: (pubKey: string) => void;
-  onBack?: () => void;
-}
+type Mode = 'share' | 'scan' | 'paste'
 
-const HEX_KEY_REGEX = /^[0-9a-fA-F]{64}$/;
+/**
+ * Contact exchange without a directory server.
+ *
+ * Three routes to the same place: show a QR in person, send a link over a
+ * channel you already trust, or paste a key. The QR encodes the full invite
+ * link so a generic camera app opens Crow directly.
+ */
+export function AddContact() {
+  const t = useT()
+  const navigate = useNavigate()
+  const identity = useApp((s) => s.identity)
+  const myInvite = useApp((s) => s.myInvite)
+  const contacts = useApp((s) => s.contacts)
+  const addContact = useApp((s) => s.addContact)
+  const toast = useApp((s) => s.toast)
 
-export default function AddContact({ onAdded, onBack }: AddContactProps) {
-  const [method, setMethod] = useState<'key' | 'qr' | 'link'>('key');
-  const [pubKeyInput, setPubKeyInput] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
-  const [addedKey, setAddedKey] = useState<string | null>(null);
+  const [mode, setMode] = useState<Mode>('share')
+  const [pasted, setPasted] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
-  const validateKey = useCallback((key: string): boolean => {
-    return HEX_KEY_REGEX.test(key);
-  }, []);
+  /*
+   * Signed once per choice of relays, not once per render. It used to be
+   * signed afresh on every render — every keystroke in the paste field — which
+   * was wasted work and a QR code that never held still. And the relay choice
+   * does change shortly after unlock: which relays are reachable is not known
+   * for the first second or two.
+   */
+  const inviteRelays = useApp((s) => s.inviteRelays)
+  const invite = useMemo(() => (identity ? myInvite(inviteRelays) : null), [myInvite, identity, inviteRelays])
+  const link = invite ? inviteLink(invite) : ''
 
-  const handleAdd = useCallback(async () => {
-    const key = pubKeyInput.trim();
-    if (!validateKey(key)) {
-      setError('Invalid public key — must be 64 hex characters');
-      return;
-    }
-    setError(null);
-    setIsAdding(true);
-    try {
-      // TODO: Call messengerEngine.addContact(key)
-      setAddedKey(key);
-      if (onAdded) onAdded(key);
-    } catch {
-      setError(t('errors.unknownError'));
-    } finally {
-      setIsAdding(false);
-    }
-  }, [pubKeyInput, validateKey, onAdded]);
+  const accept = useCallback(
+    async (raw: string) => {
+      setError(null)
+      const payload = extractInvitePayload(raw)
 
-  const handlePasteLink = useCallback(async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (HEX_KEY_REGEX.test(text.trim())) {
-        setPubKeyInput(text.trim());
-        setError(null);
+      // Either a signed invite (carries a name and relay hints) or a bare
+      // npub/nprofile, which carries less but is still perfectly usable.
+      let parsed: { pubkey: string; name: string; relays: string[] } | null = null
+
+      if (payload) {
+        let decoded: Invite
+        try {
+          decoded = decodeInvite(payload)
+        } catch {
+          setError(t('contacts.invalidInvite'))
+          return
+        }
+        if (isInviteStale(decoded)) toast(t('contacts.staleInvite'))
+        parsed = { pubkey: decoded.pubkey, name: decoded.name, relays: decoded.relays }
+      } else {
+        const pointer = parseProfilePointer(raw)
+        if (pointer) parsed = { pubkey: pointer.pubkey, name: '', relays: pointer.relays }
       }
-    } catch {
-      // clipboard read denied — ignore
-    }
-  }, []);
+
+      if (!parsed) {
+        setError(t('contacts.invalidInvite'))
+        return
+      }
+      const { pubkey, name, relays } = parsed
+
+      if (pubkey === identity?.pubkey) {
+        setError(t('contacts.cannotAddSelf'))
+        return
+      }
+      if (contacts.get(pubkey)?.accepted) {
+        setError(t('contacts.alreadyAdded'))
+        navigate({ name: 'chat', peer: pubkey })
+        return
+      }
+
+      await addContact({ pubkey, name, relays, source: 'invite' })
+      toast(t('contacts.added'))
+      navigate({ name: 'chat', peer: pubkey })
+    },
+    [addContact, contacts, identity?.pubkey, navigate, t, toast],
+  )
 
   return (
     <div className="screen">
-      <div className="header">
-        {onBack && (
-          <button className="btn btn-icon btn-ghost" onClick={onBack} aria-label={t('app.back')}>
-            ←
-          </button>
-        )}
-        <h1 className="header-title">{t('contacts.addContact')}</h1>
-      </div>
+      <header className="app-header">
+        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+          <BackIcon />
+        </button>
+        <h1 className="grow">{t('contacts.addTitle')}</h1>
+      </header>
 
       <div className="screen-scroll">
-        {/* Method tabs */}
-        <div className="settings-section">
-          <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
+        <div className="container stack" style={{ maxWidth: '32rem' }}>
+          <p className="muted">{t('contacts.addBody')}</p>
+
+          <div className="row" role="tablist" style={{ gap: 'var(--space-2)' }}>
             <button
-              className={`btn btn-sm ${method === 'key' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setMethod('key')}
+              role="tab"
+              aria-selected={mode === 'share'}
+              className={`btn grow ${mode === 'share' ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setMode('share')}
             >
-              🔑 {t('security.identityKey')}
+              <QrIcon size={16} />
+              {t('contacts.myInvite')}
             </button>
             <button
-              className={`btn btn-sm ${method === 'qr' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setMethod('qr')}
+              role="tab"
+              aria-selected={mode === 'scan'}
+              className={`btn grow ${mode === 'scan' ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setMode('scan')}
             >
-              📷 {t('contacts.scanQr')}
-            </button>
-            <button
-              className={`btn btn-sm ${method === 'link' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setMethod('link')}
-            >
-              🔗 {t('contacts.inviteLink')}
+              <CameraIcon size={16} />
+              {t('contacts.scan')}
             </button>
           </div>
 
-          {/* Paste public key */}
-          {method === 'key' && (
-            <div className="card">
-              <label className="input-label" htmlFor="add-contact-key">
-                {t('security.identityKey')}
-              </label>
-              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                <input
-                  id="add-contact-key"
-                  className={`input ${error ? 'input-error' : ''}`}
-                  type="text"
-                  value={pubKeyInput}
-                  onChange={(e) => {
-                    setPubKeyInput(e.target.value);
-                    setError(null);
-                  }}
-                  placeholder="e.g. a1b2c3d4… (64 hex chars)"
-                  maxLength={64}
-                  spellCheck={false}
-                  autoComplete="off"
-                  aria-label={t('security.identityKey')}
-                  style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}
-                />
-                <button
-                  className="btn btn-sm btn-secondary"
-                  onClick={handlePasteLink}
-                  aria-label="Paste from clipboard"
-                >
-                  📋
-                </button>
-              </div>
-              {error && <div className="input-error-text">{error}</div>}
-              <div className="input-hint">
-                Enter the 64-character hexadecimal public key of the contact you want to add.
-              </div>
-              <div style={{ marginTop: 'var(--space-3)' }}>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleAdd}
-                  disabled={!pubKeyInput.trim() || isAdding}
-                >
-                  {isAdding ? t('app.loading') : t('contacts.addContact')}
-                </button>
+          {mode === 'share' && invite ? (
+            <div className="stack">
+              <p className="muted small">{t('contacts.myInviteBody')}</p>
+              <Suspense fallback={<QrPlaceholder />}>
+                <QrCode value={link} label={t('contacts.myInvite')} />
+              </Suspense>
+              <div className="card stack-sm">
+                <code className="mono small" style={{ wordBreak: 'break-all' }}>
+                  {link}
+                </code>
+                <div className="row">
+                  <CopyButton value={link} className="btn btn-outline grow" />
+                  {typeof navigator !== 'undefined' && 'share' in navigator ? (
+                    <button
+                      className="btn btn-outline grow"
+                      onClick={() => {
+                        void navigator.share({ title: 'Crow', text: link }).catch(() => undefined)
+                      }}
+                    >
+                      {t('common.add')}
+                    </button>
+                  ) : null}
+                </div>
               </div>
             </div>
-          )}
+          ) : null}
 
-          {/* Scan QR (placeholder) */}
-          {method === 'qr' && (
-            <div className="card">
-              <div style={{ textAlign: 'center', padding: 'var(--space-8) 0' }}>
-                <div style={{ fontSize: 48, marginBottom: 'var(--space-3)' }}>📷</div>
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-                  {t('contacts.scanQr')}
-                </p>
-                <p
-                  style={{
-                    fontSize: 'var(--text-xs)',
-                    color: 'var(--text-tertiary)',
-                    marginTop: 'var(--space-2)',
-                  }}
-                >
-                  Camera access required — coming soon
-                </p>
-              </div>
+          {mode === 'scan' ? (
+            <div className="stack">
+              <p className="muted small">{t('contacts.scanBody')}</p>
+              <Suspense fallback={<QrPlaceholder scanner />}>
+                <QrScanner onResult={(text) => void accept(text)} onCancel={() => setMode('share')} />
+              </Suspense>
             </div>
-          )}
+          ) : null}
 
-          {/* Invite link (placeholder) */}
-          {method === 'link' && (
-            <div className="card">
-              <div style={{ textAlign: 'center', padding: 'var(--space-8) 0' }}>
-                <div style={{ fontSize: 48, marginBottom: 'var(--space-3)' }}>🔗</div>
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-                  {t('contacts.inviteLink')}
-                </p>
-                <p
-                  style={{
-                    fontSize: 'var(--text-xs)',
-                    color: 'var(--text-tertiary)',
-                    marginTop: 'var(--space-2)',
-                  }}
-                >
-                  Share your invite link — coming soon
-                </p>
-              </div>
-            </div>
-          )}
+          <div className="stack-sm">
+            <span className="section-title">{t('contacts.pasteInvite')}</span>
+            <Field error={error ?? undefined}>
+              <textarea
+                className="textarea"
+                dir="ltr"
+                style={{ minHeight: '4.5rem' }}
+                placeholder={t('contacts.pastePlaceholder')}
+                value={pasted}
+                onChange={(event) => {
+                  setPasted(event.target.value)
+                  setError(null)
+                }}
+              />
+            </Field>
+            <button
+              className="btn btn-primary btn-block"
+              disabled={!pasted.trim()}
+              onClick={() => void accept(pasted)}
+            >
+              {t('common.add')}
+            </button>
+          </div>
+
+          <Banner tone="accent">
+            <span className="small">{t('chat.verifyPromptBody')}</span>
+          </Banner>
         </div>
-
-        {/* Verify Contact — shown after adding */}
-        {addedKey && (
-          <div className="settings-section">
-            <h2 className="settings-section-title">{t('contacts.verifyContact')}</h2>
-            <div className="card">
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--space-2)',
-                  marginBottom: 'var(--space-3)',
-                }}
-              >
-                <span style={{ color: 'var(--unverified)', fontSize: 20 }}>🛡️</span>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                  {t('security.safetyNumber')}
-                </span>
-              </div>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 'var(--text-xs)',
-                  color: 'var(--text-secondary)',
-                  wordBreak: 'break-all',
-                  lineHeight: 'var(--leading-relaxed)',
-                  padding: 'var(--space-3)',
-                  backgroundColor: 'var(--bg-surface)',
-                  borderRadius: 'var(--radius-md)',
-                }}
-              >
-                {/* Placeholder safety number */}
-                12345 67890 12345 67890 12345 67890 12345 67890 12345 67890 12345 67890 12345 67890
-                12345 67890 12345 67890 12345 67890 12345 67890
-              </div>
-              <p
-                style={{
-                  fontSize: 'var(--text-xs)',
-                  color: 'var(--text-tertiary)',
-                  marginTop: 'var(--space-2)',
-                }}
-              >
-                Compare this number with your contact out-of-band to verify their identity.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
-  );
+  )
 }

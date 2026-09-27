@@ -1,39 +1,41 @@
-import { defineConfig } from 'vitest/config';
-import path from 'path';
+import { fileURLToPath, URL } from 'node:url'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./tests/helpers/setup.ts'],
-    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'lcov'],
-      include: ['src/core/**', 'src/security/**'],
-      exclude: ['src/core/models/**', 'src/core/util/logging.ts'],
-    },
-    fakeTimers: { toFake: ['setTimeout', 'setInterval', 'clearTimeout', 'clearInterval', 'Date'] },
+  // Mirror the build-time constants Vite injects, so modules that report the
+  // app version import cleanly under test.
+  define: {
+    __APP_VERSION__: JSON.stringify('0.0.0-test'),
+    __BUILD_TIME__: JSON.stringify('1970-01-01T00:00:00.000Z'),
   },
   resolve: {
-    alias: {
-      '@app': path.resolve(__dirname, 'src/app'),
-      '@components': path.resolve(__dirname, 'src/components'),
-      '@core': path.resolve(__dirname, 'src/core'),
-      '@crypto': path.resolve(__dirname, 'src/core/crypto'),
-      '@identity': path.resolve(__dirname, 'src/core/identity'),
-      '@vault': path.resolve(__dirname, 'src/core/vault'),
-      '@transport': path.resolve(__dirname, 'src/core/transport'),
-      '@engine': path.resolve(__dirname, 'src/core/engine'),
-      '@mls': path.resolve(__dirname, 'src/core/mls'),
-      '@calls': path.resolve(__dirname, 'src/core/calls'),
-      '@models': path.resolve(__dirname, 'src/core/models'),
-      '@util': path.resolve(__dirname, 'src/core/util'),
-      '@i18n': path.resolve(__dirname, 'src/i18n'),
-      '@security': path.resolve(__dirname, 'src/security'),
-      '@ui': path.resolve(__dirname, 'src/ui'),
-      '@media': path.resolve(__dirname, 'src/media'),
-      '@styles': path.resolve(__dirname, 'src/styles'),
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+  },
+  test: {
+    environment: 'node',
+    include: ['tests/**/*.test.ts'],
+    setupFiles: ['tests/setup.ts'],
+    testTimeout: 20_000,
+    coverage: {
+      provider: 'v8',
+      include: ['src/core/**/*.ts'],
+      exclude: ['src/core/**/*.worker.ts'],
+      reporter: [['text', { skipFull: true }], 'html'],
+      // Forward-secret groups, inbox sync, attachment transfer and every way
+      // the vault opens are held to every line and branch: a gap there is a
+      // path through the protocol, or into someone's messages, nobody has run.
+      thresholds: {
+        'src/core/mls/**': { 100: true },
+        'src/core/engine/inboxSync.ts': { 100: true },
+        'src/core/transport/negentropy.ts': { 100: true },
+        'src/core/engine/blobTransfer.ts': { 100: true },
+        'src/core/crypto/blobCrypto.ts': { 100: true },
+        'src/core/vault/vault.ts': { 100: true },
+        'src/core/vault/keyslots.ts': { 100: true },
+        'src/core/vault/exportImport.ts': { 100: true },
+        'src/core/crypto/biometricGate.ts': { 100: true },
+        'src/core/crypto/biometricEnrol.ts': { 100: true },
+      },
     },
   },
-});
+})

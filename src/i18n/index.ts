@@ -1,100 +1,93 @@
-// i18n barrel export + auto-registration
-import { I18n, i18n, t } from './i18n';
-export { I18n, i18n, t };
-export type { LocaleCode, LocaleEntry, TranslationDict } from './types';
+import { createContext, useContext } from 'react'
+import type { LocaleCode } from '../core/models/types'
+import { en, type Dictionary } from './en'
+import { fa } from './fa'
 
-// Import all locale dictionaries and metadata
-import { en, enMeta } from './locales/en';
-import { te, teMeta } from './locales/te';
-import { hi, hiMeta } from './locales/hi';
-import { ta, taMeta } from './locales/ta';
-import { ar, arMeta } from './locales/ar';
-import { zh, zhMeta } from './locales/zh';
-import { ja, jaMeta } from './locales/ja';
-import { ko, koMeta } from './locales/ko';
-import { es, esMeta } from './locales/es';
-import { de, deMeta } from './locales/de';
-import { fr, frMeta } from './locales/fr';
-import { ru, ruMeta } from './locales/ru';
-import { pt, ptMeta } from './locales/pt';
-import { ur, urMeta } from './locales/ur';
-import { bn, bnMeta } from './locales/bn';
-import { tr, trMeta } from './locales/tr';
-import { id, idMeta } from './locales/id';
-import { kn, knMeta } from './locales/kn';
-import { ml, mlMeta } from './locales/ml';
-import { mr, mrMeta } from './locales/mr';
-import { gu, guMeta } from './locales/gu';
-import { pa, paMeta } from './locales/pa';
-import { fa, faMeta } from './locales/fa';
-import { vi, viMeta } from './locales/vi';
-import { th, thMeta } from './locales/th';
-import { zhHant, zhHantMeta } from './locales/zh-Hant';
-import { it, itMeta } from './locales/it';
-import { nl, nlMeta } from './locales/nl';
-import { pl, plMeta } from './locales/pl';
-import { uk, ukMeta } from './locales/uk';
-import { ms, msMeta } from './locales/ms';
+export type { Dictionary }
 
-// Auto-register all locales with the singleton
-const instance = I18n.getInstance();
+export const DICTIONARIES: Record<LocaleCode, Dictionary> = { en, fa }
 
-instance.registerLocale('en', en, enMeta);
-instance.registerLocale('te', te, teMeta);
-instance.registerLocale('hi', hi, hiMeta);
-instance.registerLocale('ta', ta, taMeta);
-instance.registerLocale('ar', ar, arMeta);
-instance.registerLocale('zh', zh, zhMeta);
-instance.registerLocale('ja', ja, jaMeta);
-instance.registerLocale('ko', ko, koMeta);
-instance.registerLocale('es', es, esMeta);
-instance.registerLocale('de', de, deMeta);
-instance.registerLocale('fr', fr, frMeta);
-instance.registerLocale('ru', ru, ruMeta);
-instance.registerLocale('pt', pt, ptMeta);
-instance.registerLocale('ur', ur, urMeta);
-instance.registerLocale('bn', bn, bnMeta);
-instance.registerLocale('tr', tr, trMeta);
-instance.registerLocale('id', id, idMeta);
-instance.registerLocale('kn', kn, knMeta);
-instance.registerLocale('ml', ml, mlMeta);
-instance.registerLocale('mr', mr, mrMeta);
-instance.registerLocale('gu', gu, guMeta);
-instance.registerLocale('pa', pa, paMeta);
-instance.registerLocale('fa', fa, faMeta);
-instance.registerLocale('vi', vi, viMeta);
-instance.registerLocale('th', th, thMeta);
-instance.registerLocale('zh-Hant', zhHant, zhHantMeta);
-instance.registerLocale('it', it, itMeta);
-instance.registerLocale('nl', nl, nlMeta);
-instance.registerLocale('pl', pl, plMeta);
-instance.registerLocale('uk', uk, ukMeta);
-instance.registerLocale('ms', ms, msMeta);
+export const LOCALE_NAMES: Record<LocaleCode, string> = { en: 'English', fa: 'فارسی' }
 
-// Utility exports
-export function setLocale(code: string): void {
-  i18n.setLocale(code);
+/**
+ * Two-character labels for the compact language switch on the entry screens,
+ * written in each language's own script so a reader can find their own without
+ * knowing the others.
+ */
+export const LOCALE_SHORT_NAMES: Record<LocaleCode, string> = { en: 'EN', fa: 'فا' }
+
+/** Every shipped locale, in the order they are offered. */
+export const LOCALE_CODES = Object.keys(LOCALE_NAMES) as LocaleCode[]
+
+export const LOCALE_DIRECTION: Record<LocaleCode, 'ltr' | 'rtl'> = { en: 'ltr', fa: 'rtl' }
+
+/**
+ * Dotted key into the dictionary, e.g. `chat.placeholder`.
+ *
+ * Typed against the English dictionary so a missing or renamed key is a compile
+ * error rather than a string rendered raw in the UI.
+ */
+type Leaves<T> = {
+  [K in keyof T & string]: T[K] extends string ? K : `${K}.${Leaves<T[K]>}`
+}[keyof T & string]
+
+export type TranslationKey = Leaves<Dictionary>
+
+export type Interpolations = Record<string, string | number>
+
+function lookup(dictionary: Dictionary, key: string): string | undefined {
+  let node: unknown = dictionary
+  for (const part of key.split('.')) {
+    if (typeof node !== 'object' || node === null) return undefined
+    node = (node as Record<string, unknown>)[part]
+  }
+  return typeof node === 'string' ? node : undefined
 }
 
-export function getAvailableLocales(): LocaleEntry[] {
-  return i18n.getAvailableLocales();
+export function translate(locale: LocaleCode, key: TranslationKey, values?: Interpolations): string {
+  // Fall back to English rather than showing a raw key: an untranslated string
+  // is a small annoyance, a visible `settings.relayLatency` is a bug report.
+  const template = lookup(DICTIONARIES[locale], key) ?? lookup(en, key) ?? key
+  return interpolate(template, values)
 }
 
-export function isRTL(): boolean {
-  return i18n.isRTL();
+/**
+ * Fill `{name}` placeholders. Shared with the few lazy screens that carry
+ * their own words rather than growing the dictionaries every cold start
+ * downloads (ADR-046).
+ */
+export function interpolate(template: string, values?: Interpolations): string {
+  if (!values) return template
+  return template.replace(/\{(\w+)\}/g, (match, name: string) =>
+    name in values ? String(values[name]) : match,
+  )
 }
 
-export function formatDate(date: Date, options?: Intl.DateTimeFormatOptions): string {
-  return i18n.formatDate(date, options);
+export type TranslateFn = (key: TranslationKey, values?: Interpolations) => string
+
+export interface I18nContextValue {
+  locale: LocaleCode
+  dir: 'ltr' | 'rtl'
+  t: TranslateFn
 }
 
-export function formatRelativeTime(date: Date): string {
-  return i18n.formatRelativeTime(date);
-}
+export const I18nContext = createContext<I18nContextValue>({
+  locale: 'en',
+  dir: 'ltr',
+  t: (key, values) => translate('en', key, values),
+})
 
-export function formatNumber(n: number): string {
-  return i18n.formatNumber(n);
-}
+export const useI18n = (): I18nContextValue => useContext(I18nContext)
 
-// Re-import LocaleEntry for the utility exports above
-import type { LocaleEntry } from './types';
+export const useT = (): TranslateFn => useI18n().t
+
+/** Best-effort match of the browser's languages against what we ship. */
+export function detectLocale(): LocaleCode {
+  if (typeof navigator === 'undefined') return 'en'
+  for (const tag of navigator.languages ?? [navigator.language]) {
+    const base = tag?.toLowerCase().split('-')[0]
+    if (base === 'fa') return 'fa'
+    if (base === 'en') return 'en'
+  }
+  return 'en'
+}

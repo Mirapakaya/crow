@@ -1,44 +1,53 @@
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
-import reactPlugin from 'eslint-plugin-react';
-import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import reactHooks from 'eslint-plugin-react-hooks'
 
-export default [
+export default tseslint.config(
+  { ignores: ['dist', 'dev-dist', 'coverage', 'node_modules'] },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
-    files: ['src/**/*.{ts,tsx}', 'tests/**/*.{ts,tsx}'],
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: { ecmaVersion: 2022, sourceType: 'module' },
+    plugins: { 'react-hooks': reactHooks },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
+      'no-restricted-globals': [
+        'error',
+        { name: 'fetch', message: 'Crow never talks to HTTP origins it does not control. Use the relay pool.' },
+      ],
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+  {
+    // Repo tooling runs in Node, not the browser.
+    files: ['scripts/**/*.mjs', '*.config.{js,ts}'],
     languageOptions: {
-      parser: tsparser,
-      parserOptions: {
-        ecmaVersion: 2022,
-        sourceType: 'module',
-        ecmaFeatures: { jsx: true },
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        URL: 'readonly',
+        fetch: 'readonly',
+        crypto: 'readonly',
+        WebSocket: 'readonly',
+        AbortSignal: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        performance: 'readonly',
       },
     },
-    plugins: {
-      '@typescript-eslint': tseslint,
-      react: reactPlugin,
-      'react-hooks': reactHooksPlugin,
-    },
-    rules: {
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
-      'no-eval': 'error',
-      'no-implied-eval': 'error',
-      'no-new-func': 'error',
-      'no-unsafe-optional-chaining': 'error',
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      'react/react-in-jsx-scope': 'off',
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-    },
-    settings: {
-      react: { version: 'detect' },
-    },
+    rules: { 'no-console': 'off', 'no-restricted-globals': 'off' },
   },
   {
-    files: ['tests/**/*.{ts,tsx}'],
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-    },
+    files: ['tests/**/*.ts', 'src/core/util/log.ts'],
+    rules: { 'no-console': 'off', 'no-restricted-globals': 'off', '@typescript-eslint/no-explicit-any': 'off' },
   },
-];
+)

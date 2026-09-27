@@ -1,32 +1,31 @@
-import type { RelayInfo } from './types';
+import type { RelayStatus } from './relayPool'
 
-/** Maximum consecutive errors before a relay is considered dead. */
-const DEAD_CONSECUTIVE_ERRORS = 5;
+export type RelayVerdict = 'healthy' | 'degraded' | 'offline' | 'unused'
 
 /**
- * Derive a health verdict from relay runtime information.
+ * Reduce rolling relay counters to one of four words.
  *
- * - **healthy**: score > 70, latency < 2000 ms, currently connected
- * - **degraded**: score > 40, or latency ≥ 2000 ms
- * - **unhealthy**: score > 10
- * - **dead**: score ≤ 10, or more than 5 consecutive errors
+ * Blunt on purpose. Someone looking at the relay panel is answering a single
+ * question — "are my messages actually going anywhere?" — and a nuanced score
+ * does not help them decide whether to remove a relay.
+ *
+ * The case that matters most is `degraded`: relays that connect and serve reads
+ * happily but reject publishes from unknown keys (web-of-trust or NIP-05 gates)
+ * look perfectly fine until you notice the publish failures.
  */
-export function getRelayHealth(info: RelayInfo): 'healthy' | 'degraded' | 'unhealthy' | 'dead' {
-  // Dead: too many consecutive errors or extremely low score
-  if (info.errorCount > DEAD_CONSECUTIVE_ERRORS || info.score <= 10) {
-    return 'dead';
+export function verdictFor(status: RelayStatus | undefined): RelayVerdict {
+  if (!status) return 'unused'
+  const { health, state } = status
+  const attempts = health.publishOk + health.publishFail
+  if (attempts === 0 && health.connectOk === 0 && health.connectFail === 0 && health.readFail === 0) {
+    return 'unused'
   }
-
-  // Healthy: must be connected with good score and low latency
-  if (info.state === 'connected' && info.score > 70 && info.latency < 2000) {
-    return 'healthy';
-  }
-
-  // Degraded: score still acceptable but latency or connection is problematic
-  if (info.score > 40 || info.latency >= 2000) {
-    return 'degraded';
-  }
-
-  // Unhealthy: score between 10 and 40 with tolerable latency
-  return 'unhealthy';
+  // A refused subscription is decisive: this relay will never bring us mail,
+  // however well it accepts what we publish. Checked before the publish stats
+  // precisely because those would otherwise report it as healthy.
+  if (health.readFail > 0) return 'degraded'
+  if (state === 'offline' && health.publishOk === 0) return 'offline'
+  if (attempts > 0 && health.publishOk / attempts < 0.5) return 'degraded'
+  if (state === 'online' || health.publishOk > 0) return 'healthy'
+  return 'degraded'
 }

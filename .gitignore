@@ -1,9 +1,11 @@
-node_modules/
-dist/
+node_modules
+dist
+dev-dist
+coverage
+.DS_Store
 *.local
-.env
-.env.*
+.env*
 !.env.example
-coverage/
-*.tsbuildinfo
-.qwen/
+
+# Local editor/agent tooling
+.claude

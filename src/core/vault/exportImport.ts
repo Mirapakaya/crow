@@ -1,215 +1,415 @@
-import { hmac } from '@noble/hashes/hmac';
-import { sha256 } from '@noble/hashes/sha256';
-import { hkdf } from '@noble/hashes/hkdf';
-import type { Vault } from './vault';
-import type { KeySlotRecord, EncryptedRecord } from './db';
+import { assertKdfParams, DEFAULT_KDF_PARAMS, type KdfParams } from '../crypto/kdf'
+import { deriveKekOffThread } from '../crypto/kdfClient'
+import { open as openSealed, seal } from '../crypto/vaultCrypto'
+import { isValidMnemonic } from '../identity/keys'
+import {
+  b64ToBytes,
+  bytesToB64,
+  bytesToHex,
+  bytesToUtf8,
+  hexToBytes,
+  randomBytes,
+  utf8ToBytes,
+  wipe,
+} from '../util/bytes'
+import { createLogger } from '../util/log'
+import { isCallRecord } from '../models/call'
+import type { AppSettings, Contact, Conversation, IdentityRecord, Message, RelayEntry } from '../models/types'
+import { recoveryKey } from './keyslots'
+import type { VaultRepo } from './repo'
 
-const BACKUP_VERSION = 1;
+const log = createLogger('export')
 
-/** Wire format for vault backup. */
-interface BackupData {
-  version: number;
-  timestamp: number;
-  keyslots: Array<Record<string, unknown>>;
-  records: Array<Record<string, unknown>>;
-  hmac: string;
-}
+export const EXPORT_FORMAT = 'crow-vault-export'
+export const EXPORT_VERSION = 2
 
-// ────────────────────────────────────────────────────────────────────────────
-// Internal helpers
-// ────────────────────────────────────────────────────────────────────────────
-
-/** Derive the backup HMAC key from the master key via HKDF-SHA256. */
-function backupHmacKey(masterKey: Uint8Array): Uint8Array {
-  return hkdf(
-    sha256,
-    masterKey,
-    new TextEncoder().encode('crow-backup'),
-    new TextEncoder().encode('hmac-key'),
-    32,
-  );
-}
+const AAD_EXPORT_V1 = 'crow/export/v1'
+const AAD_EXPORT_V2 = 'crow/export/v2'
+const slotAad = (type: ExportSlot['type']): string => `${AAD_EXPORT_V2}|${type}`
 
 /**
- * Deterministic JSON serialization for HMAC computation.
- * Keys are sorted and binary fields have already been converted to number
- * arrays during export, so standard JSON.stringify is sufficient.
+ * Portable, encrypted backup — the whole multi-device and device-migration
+ * story.
+ *
+ * The file is encrypted under its own passphrase, independent of how the vault
+ * opens. That matters: a backup travels (cloud drive, USB stick, email to
+ * yourself) and should not inherit the threat model of a device. The KDF
+ * parameters travel with the file so it can still be opened years later by a
+ * build with different defaults.
+ *
+ * Since version 2 the payload is sealed under a random file key, and the key
+ * is sealed once for each way the file opens, like the vault's keyslots
+ * (ADR-054): the backup passphrase, and the recovery phrase when the identity
+ * has one. A new device can then restore the whole history from the file and
+ * the twelve words, without a second secret to have kept.
  */
-function computeBackupHmac(data: Omit<BackupData, 'hmac'>, key: Uint8Array): string {
-  const canonical = JSON.stringify({
-    version: data.version,
-    timestamp: data.timestamp,
-    keyslots: data.keyslots,
-    records: data.records,
-  });
-  const mac = hmac(sha256, key, new TextEncoder().encode(canonical));
-  return Array.from(mac)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+export interface ExportEnvelope {
+  format: typeof EXPORT_FORMAT
+  version: number
+  createdAt: number
+  /** Version 1: the payload is sealed directly under the passphrase. */
+  kdf?: KdfParams & { salt: string }
+  /** Version 2: the file key, sealed once for each way the file opens. */
+  slots?: ExportSlot[]
+  compression: 'gzip' | 'none'
+  /** base64 of version(1) || nonce(24) || ciphertext+tag */
+  payload: string
 }
 
-/** Convert a Uint8Array field to a plain number array for JSON. */
-function u8ToArray(u8: Uint8Array): number[] {
-  return Array.from(u8);
+export type ExportSlot =
+  | { type: 'passphrase'; kdf: KdfParams & { salt: string }; key: string }
+  | { type: 'recovery'; salt: string; key: string }
+
+/** What opens a backup: its passphrase, or the recovery phrase of the identity inside. */
+export type ExportSecret = string | { mnemonic: string }
+
+export interface ExportPayload {
+  identity: IdentityRecord | null
+  contacts: Contact[]
+  conversations: Conversation[]
+  messages: Message[]
+  relays: RelayEntry[]
+  settings: AppSettings
 }
 
-/** Convert a plain number array back to Uint8Array. */
-function arrayToU8(arr: number[] | unknown): Uint8Array {
-  if (arr instanceof Uint8Array) return arr;
-  if (Array.isArray(arr)) return new Uint8Array(arr as number[]);
-  throw new Error('Expected array or Uint8Array');
+export interface ImportSummary {
+  contacts: number
+  conversations: number
+  messages: number
+  relays: number
+  identityReplaced: boolean
 }
 
-/** Serialize a KeySlotRecord for JSON storage (binary → number[]). */
-function serializeSlot(s: KeySlotRecord): Record<string, unknown> {
-  return {
-    ...s,
-    salt: u8ToArray(s.salt),
-    wrappedKey: u8ToArray(s.wrappedKey),
-    verifier: u8ToArray(s.verifier),
-    verifierNonce: u8ToArray(s.verifierNonce),
-  };
+async function gzip(bytes: Uint8Array): Promise<{ data: Uint8Array; compression: 'gzip' | 'none' }> {
+  if (typeof CompressionStream !== 'function') return { data: bytes, compression: 'none' }
+  try {
+    const stream = new Blob([bytes as BlobPart]).stream().pipeThrough(new CompressionStream('gzip'))
+    return { data: new Uint8Array(await new Response(stream).arrayBuffer()), compression: 'gzip' }
+  } catch {
+    return { data: bytes, compression: 'none' }
+  }
 }
 
-/** Deserialize a JSON keyslot object back to a KeySlotRecord. */
-function deserializeSlot(s: Record<string, unknown>): KeySlotRecord {
-  return {
-    ...(s as Omit<KeySlotRecord, 'salt' | 'wrappedKey' | 'verifier' | 'verifierNonce'>),
-    salt: arrayToU8(s.salt),
-    wrappedKey: arrayToU8(s.wrappedKey),
-    verifier: arrayToU8(s.verifier),
-    verifierNonce: arrayToU8(s.verifierNonce),
-  };
+async function gunzip(bytes: Uint8Array, compression: 'gzip' | 'none'): Promise<Uint8Array> {
+  if (compression === 'none') return bytes
+  if (typeof DecompressionStream !== 'function') {
+    throw new Error('this browser cannot read compressed backups')
+  }
+  const stream = new Blob([bytes as BlobPart]).stream().pipeThrough(new DecompressionStream('gzip'))
+  return new Uint8Array(await new Response(stream).arrayBuffer())
 }
 
-/** Serialize an EncryptedRecord for JSON storage. */
-function serializeRecord(r: EncryptedRecord): Record<string, unknown> {
-  return {
-    ...r,
-    ciphertext: u8ToArray(r.ciphertext),
-    nonce: u8ToArray(r.nonce),
-  };
+export async function exportVault(
+  repo: VaultRepo,
+  passphrase: string,
+  opts: { includeMessages?: boolean; onProgress?: (fraction: number) => void } = {},
+): Promise<ExportEnvelope> {
+  const includeMessages = opts.includeMessages ?? true
+  const [identity, contacts, conversations, relays, settings] = await Promise.all([
+    repo.getIdentity(),
+    repo.listContacts(),
+    repo.listConversations(),
+    repo.listRelays(),
+    repo.getSettings(),
+  ])
+
+  const messages: Message[] = []
+  if (includeMessages) {
+    for (const conversation of conversations) {
+      // A backup that silently truncates history is worse than no backup.
+      messages.push(...(await repo.allMessages(conversation.id)))
+    }
+  }
+
+  const payload: ExportPayload = { identity, contacts, conversations, messages, relays, settings }
+  const { data, compression } = await gzip(utf8ToBytes(JSON.stringify(payload)))
+
+  const fileKey = randomBytes(32)
+  const salt = randomBytes(32)
+  const params = DEFAULT_KDF_PARAMS
+  const kek = await deriveKekOffThread(passphrase, salt, params, opts.onProgress)
+  try {
+    const slots: ExportSlot[] = [
+      {
+        type: 'passphrase',
+        kdf: { ...params, salt: bytesToHex(salt) },
+        key: sealKey(kek, fileKey, 'passphrase'),
+      },
+    ]
+    if (identity?.mnemonic && isValidMnemonic(identity.mnemonic)) {
+      const recoverySalt = randomBytes(32)
+      slots.push({
+        type: 'recovery',
+        salt: bytesToHex(recoverySalt),
+        key: sealKey(recoveryKey(identity.mnemonic, recoverySalt, 'backup'), fileKey, 'recovery'),
+      })
+    }
+    return {
+      format: EXPORT_FORMAT,
+      version: EXPORT_VERSION,
+      createdAt: Date.now(),
+      slots,
+      compression,
+      payload: bytesToB64(seal(fileKey, data, AAD_EXPORT_V2)),
+    }
+  } finally {
+    wipe(kek, fileKey)
+  }
 }
 
-/** Deserialize a JSON record object back to an EncryptedRecord. */
-function deserializeRecord(r: Record<string, unknown>): EncryptedRecord {
-  return {
-    ...(r as Omit<EncryptedRecord, 'ciphertext' | 'nonce'>),
-    ciphertext: arrayToU8(r.ciphertext),
-    nonce: arrayToU8(r.nonce),
-  };
+function sealKey(kek: Uint8Array, fileKey: Uint8Array, type: ExportSlot['type']): string {
+  try {
+    return bytesToB64(seal(kek, fileKey, slotAad(type)))
+  } finally {
+    wipe(kek)
+  }
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Public API
-// ────────────────────────────────────────────────────────────────────────────
+export class ImportError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ImportError'
+  }
+}
+
+const isHexString = (value: unknown): value is string =>
+  typeof value === 'string' && /^(?:[0-9a-f]{2})+$/.test(value)
+
+function checkSlot(slot: unknown): ExportSlot {
+  const candidate = slot as Partial<Record<string, unknown>> | null
+  if (candidate?.type === 'passphrase' && typeof candidate.key === 'string') {
+    const kdf = candidate.kdf as (KdfParams & { salt: string }) | undefined
+    if (kdf && isHexString(kdf.salt)) {
+      assertKdfParams(kdf)
+      return candidate as ExportSlot
+    }
+  }
+  if (candidate?.type === 'recovery' && typeof candidate.key === 'string' && isHexString(candidate.salt)) {
+    return candidate as ExportSlot
+  }
+  throw new ImportError('backup is missing required fields')
+}
+
+export function parseEnvelope(text: string): ExportEnvelope {
+  let value: unknown
+  try {
+    value = JSON.parse(text)
+  } catch {
+    throw new ImportError('this file is not a Crow backup')
+  }
+  if (typeof value !== 'object' || value === null) throw new ImportError('this file is not a Crow backup')
+  const envelope = value as Partial<ExportEnvelope>
+  if (envelope.format !== EXPORT_FORMAT) throw new ImportError('this file is not a Crow backup')
+  if (envelope.version !== 1 && envelope.version !== 2) {
+    throw new ImportError(`backup version ${String(envelope.version)} is not supported by this build`)
+  }
+  if (typeof envelope.payload !== 'string') throw new ImportError('backup is missing required fields')
+  if (envelope.version === 1) {
+    if (!envelope.kdf || typeof envelope.kdf.salt !== 'string') {
+      throw new ImportError('backup is missing required fields')
+    }
+    assertKdfParams(envelope.kdf)
+  } else {
+    if (!Array.isArray(envelope.slots) || envelope.slots.length === 0) {
+      throw new ImportError('backup is missing required fields')
+    }
+    envelope.slots = envelope.slots.map(checkSlot)
+  }
+  if (envelope.compression !== 'gzip' && envelope.compression !== 'none') {
+    throw new ImportError('unknown backup compression')
+  }
+  return envelope as ExportEnvelope
+}
+
+/** Whether the recovery phrase opens this backup. Files from before version 2 open only with their passphrase. */
+export const opensWithRecovery = (envelope: ExportEnvelope): boolean =>
+  envelope.slots?.some((slot) => slot.type === 'recovery') ?? false
+
+export async function decryptExport(
+  envelope: ExportEnvelope,
+  secret: ExportSecret,
+  onProgress?: (fraction: number) => void,
+): Promise<ExportPayload> {
+  const { key, aad } = await fileKeyFor(envelope, secret, onProgress)
+  try {
+    let plaintext: Uint8Array
+    try {
+      plaintext = openSealed(key, b64ToBytes(envelope.payload), aad)
+    } catch {
+      throw new ImportError('wrong passphrase, or the backup file is damaged')
+    }
+    return JSON.parse(bytesToUtf8(await gunzip(plaintext, envelope.compression))) as ExportPayload
+  } finally {
+    wipe(key)
+  }
+}
+
+/** The key the payload is sealed under, and the AAD it is bound to. */
+async function fileKeyFor(
+  envelope: ExportEnvelope,
+  secret: ExportSecret,
+  onProgress?: (fraction: number) => void,
+): Promise<{ key: Uint8Array; aad: string }> {
+  if (envelope.kdf) {
+    if (typeof secret !== 'string') {
+      throw new ImportError('this backup was made before recovery phrases could open one; use its passphrase')
+    }
+    const { salt, ...params } = envelope.kdf
+    return { key: await deriveKekOffThread(secret, hexToBytes(salt), params, onProgress), aad: AAD_EXPORT_V1 }
+  }
+  const type = typeof secret === 'string' ? 'passphrase' : 'recovery'
+  const slot = envelope.slots?.find((candidate) => candidate.type === type)
+  if (!slot) {
+    throw new ImportError(
+      type === 'recovery'
+        ? 'your recovery phrase does not open this backup; use its passphrase'
+        : 'this backup opens only with a recovery phrase',
+    )
+  }
+  let kek: Uint8Array
+  if (slot.type === 'passphrase') {
+    const { salt, ...params } = slot.kdf
+    kek = await deriveKekOffThread(secret as string, hexToBytes(salt), params, onProgress)
+  } else {
+    const { mnemonic } = secret as { mnemonic: string }
+    if (!isValidMnemonic(mnemonic)) throw new ImportError('that is not a valid recovery phrase')
+    kek = recoveryKey(mnemonic, hexToBytes(slot.salt), 'backup')
+  }
+  try {
+    return { key: openSealed(kek, b64ToBytes(slot.key), slotAad(slot.type)), aad: AAD_EXPORT_V2 }
+  } catch {
+    throw new ImportError(
+      slot.type === 'passphrase'
+        ? 'wrong passphrase, or the backup file is damaged'
+        : 'that recovery phrase does not open this backup',
+    )
+  } finally {
+    wipe(kek)
+  }
+}
 
 /**
- * Export the entire vault as an encrypted backup blob.
+ * Merge a backup into the current vault.
  *
- * The backup is a JSON document containing all keyslots and records.  Data is
- * already encrypted at rest; the backup adds an **HMAC-SHA256** integrity
- * check derived from the master key to detect tampering or corruption.
+ * Merge rather than replace: importing on a device that already has history
+ * should never destroy it. Messages are keyed by rumor id, so re-importing the
+ * same backup twice is a no-op — which is exactly the behaviour someone
+ * recovering from a mistake needs.
  *
- * @param vault  The singleton vault (must be unlocked).
- * @returns UTF-8 encoded JSON backup as `Uint8Array`.
- * @throws If the vault is locked.
- */
-export async function exportVault(vault: Vault): Promise<Uint8Array> {
-  if (!vault.isUnlocked()) throw new Error('Vault must be unlocked to export');
-
-  const masterKey = vault.getMasterKey();
-  const keyslots = await vault.db.keyslots.toArray();
-  const records = await vault.db.records.toArray();
-
-  const serializedSlots = keyslots.map(serializeSlot);
-  const serializedRecords = records.map(serializeRecord);
-
-  const payload: Omit<BackupData, 'hmac'> = {
-    version: BACKUP_VERSION,
-    timestamp: Date.now(),
-    keyslots: serializedSlots,
-    records: serializedRecords,
-  };
-
-  const hmacKey = backupHmacKey(masterKey);
-  const hmacValue = computeBackupHmac(payload, hmacKey);
-
-  const backup: BackupData = { ...payload, hmac: hmacValue };
-  return new TextEncoder().encode(JSON.stringify(backup));
-}
-
-/**
- * Restore vault contents from an encrypted backup blob.
- *
- * The vault **must** be in the `locked` state.  After parsing and integrity
- * verification, the keyslots and records from the backup replace any existing
- * data, and the vault is left in the **unlocked** state.
- *
- * @param vault       The singleton vault (must be locked).
- * @param data        Backup blob produced by {@link exportVault}.
- * @param credential  Credential matching one of the backup's keyslots.
- * @throws If the vault is not locked, the backup is corrupt, or the
- *         credential / HMAC check fails.
+ * The identity is only adopted when the vault has none. Overwriting a live
+ * identity would silently orphan every conversation already on the device.
  */
 export async function importVault(
-  vault: Vault,
-  data: Uint8Array,
-  credential: string,
-): Promise<void> {
-  if (vault.state !== 'locked') throw new Error('Vault must be locked to import');
-
-  let parsed: BackupData;
-  try {
-    parsed = JSON.parse(new TextDecoder().decode(data));
-  } catch {
-    throw new Error('Invalid backup format');
+  repo: VaultRepo,
+  payload: ExportPayload,
+  opts: { adoptIdentity?: boolean } = {},
+): Promise<ImportSummary> {
+  const summary: ImportSummary = {
+    contacts: 0,
+    conversations: 0,
+    messages: 0,
+    relays: 0,
+    identityReplaced: false,
   }
 
-  if (parsed.version !== BACKUP_VERSION) {
-    throw new Error(`Unsupported backup version: ${parsed.version}`);
+  const existingIdentity = await repo.getIdentity()
+  if (payload.identity && (!existingIdentity || opts.adoptIdentity)) {
+    await repo.putIdentity(payload.identity)
+    summary.identityReplaced = true
+  } else if (payload.identity && existingIdentity && existingIdentity.pubkey !== payload.identity.pubkey) {
+    throw new ImportError('this backup belongs to a different identity; import it into a fresh vault instead')
   }
 
-  // ── 1. Deserialize keyslots and write them to the DB ─────────────────
-
-  const keyslots = parsed.keyslots.map(deserializeSlot);
-
-  await vault.db.keyslots.clear();
-  await vault.db.records.clear();
-
-  for (const slot of keyslots) {
-    await vault.db.keyslots.add(slot);
+  for (const contact of payload.contacts) {
+    await repo.upsertContact(contact.pubkey, {
+      name: contact.name,
+      remoteName: contact.remoteName,
+      about: contact.about,
+      avatar: contact.avatar,
+      relays: contact.relays,
+      verification: contact.verification,
+      source: contact.source,
+      accepted: contact.accepted,
+      note: contact.note,
+      lastSeenAt: contact.lastSeenAt,
+      blocked: contact.blocked,
+    })
+    summary.contacts += 1
   }
 
-  // ── 2. Unlock with the imported keyslots ─────────────────────────────
+  const identityPubkey = payload.identity?.pubkey ?? existingIdentity?.pubkey
+  if (identityPubkey) {
+    // Conversation ids are blinded with this vault's index key, so they are
+    // recomputed rather than trusted from the file — from the people in the
+    // conversation, which is what a group's id is made of too. Mapping only
+    // `peerPubkey` once dropped every group message on restore, because a
+    // group has no single peer to map from.
+    const idByOldId = new Map<string, string>()
+    for (const conversation of payload.conversations) {
+      const members = conversation.members ?? []
+      let id: string
+      if (conversation.mls) {
+        // A forward-secret group's keys never leave the device they were made
+        // on — a second copy of a member's leaf would break the group for
+        // everyone — so its history comes back read-only, under its own id
+        // rather than merged into a small group of the same people.
+        id = repo.mlsConversationId(conversation.mls.group)
+        const live = await repo.getMlsGroup(id)
+        const existing = live ? await repo.getConversation(id) : null
+        await repo.upsertMlsConversation(id, {
+          members,
+          subject: conversation.subject ?? '',
+          mls: existing?.mls ?? { ...conversation.mls, left: true },
+          accepted: conversation.accepted,
+          at: conversation.lastActivity,
+        })
+      } else if (conversation.kind === 'group' && members.length >= 2) {
+        const group = await repo.ensureGroupConversation(identityPubkey, members, {
+          subject: conversation.subject ?? null,
+          at: conversation.subjectAt ?? conversation.lastActivity,
+          accepted: conversation.accepted,
+        })
+        id = group.id
+      } else {
+        // Exports written before groups carry only the peer.
+        await repo.ensureConversation(identityPubkey, conversation.peerPubkey)
+        id = repo.conversationId(identityPubkey, conversation.peerPubkey)
+      }
+      await repo.updateConversation(id, {
+        lastActivity: conversation.lastActivity,
+        pinned: conversation.pinned,
+      })
+      idByOldId.set(conversation.id, id)
+      summary.conversations += 1
+    }
 
-  await vault.unlock(credential);
-
-  // ── 3. Verify backup HMAC ────────────────────────────────────────────
-
-  const masterKey = vault.getMasterKey();
-  const hmacKey = backupHmacKey(masterKey);
-  const expectedHmac = computeBackupHmac(
-    {
-      version: parsed.version,
-      timestamp: parsed.timestamp,
-      keyslots: parsed.keyslots,
-      records: parsed.records,
-    },
-    hmacKey,
-  );
-
-  if (expectedHmac !== parsed.hmac) {
-    vault.lock();
-    // Roll back: remove imported keyslots
-    await vault.db.keyslots.clear();
-    throw new Error('Backup integrity check failed — HMAC mismatch');
+    for (const message of payload.messages) {
+      const convoId = idByOldId.get(message.convoId)
+      if (!convoId) continue
+      if (await repo.hasMessage(message.id)) continue
+      // A call record is drawn from its fields alone, so one that is not what
+      // this build writes is left behind rather than shown garbled.
+      if (message.call !== undefined && !isCallRecord(message.call)) continue
+      await repo.putMessage({ ...message, convoId })
+      summary.messages += 1
+    }
   }
 
-  // ── 4. Import records ────────────────────────────────────────────────
-
-  const records = parsed.records.map(deserializeRecord);
-  for (const record of records) {
-    await vault.db.records.put(record);
+  for (const relay of payload.relays) {
+    await repo.upsertRelay(relay.url, {
+      read: relay.read,
+      write: relay.write,
+      enabled: relay.enabled,
+      discovered: relay.discovered,
+    })
+    summary.relays += 1
   }
+
+  await repo.saveSettings(payload.settings)
+  log.info(`import merged ${summary.messages} messages across ${summary.conversations} conversations`)
+  return summary
 }
+
+/** Suggested filename; the date makes successive backups sort naturally. */
+export const exportFilename = (date = new Date()): string =>
+  `crow-backup-${date.toISOString().slice(0, 10)}.crow.json`

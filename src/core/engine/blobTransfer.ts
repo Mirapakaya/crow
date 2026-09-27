@@ -1,263 +1,491 @@
-import type { RelayPool } from '../transport';
+import { Emitter } from '../util/emitter'
+import { createLogger } from '../util/log'
+import { b64ToBytes, bytesToB64 } from '../util/bytes'
+import { PROTOCOL_VERSION, type BlobChunkFrame, type ControlFrame } from '../models/protocol'
+import {
+  assembleBlob,
+  blobRef,
+  blobRefKey,
+  chunkOpens,
+  openChunk,
+  type BlobEnvelope,
+  type BlobRef,
+} from '../crypto/blobCrypto'
+import type { Attachment } from '../models/attachment'
 
-/** Extract an ArrayBuffer copy from a Uint8Array, compatible with Web Crypto. */
-function toArrayBuffer(u8: Uint8Array): ArrayBuffer {
-  return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
+const log = createLogger('blob')
+
+/**
+ * How many chunks are in flight at once on the relay path.
+ *
+ * Each chunk is a separate gift-wrapped event: a signature, a wrap, and a
+ * publish to every write relay. Firing thirty at once is how a client gets
+ * rate-limited or disconnected, and the receiver cannot use them any faster
+ * than they arrive anyway.
+ */
+const RELAY_WINDOW = 3
+
+/** The direct channel is ours alone, so it is paced only by the send buffer. */
+const DIRECT_WINDOW = 12
+
+/**
+ * How long a receiver waits for quiet before asking for what is missing.
+ *
+ * Long enough that a slow-but-progressing transfer is never interrupted by a
+ * redundant request, short enough that a genuinely dropped chunk does not
+ * strand a payload for minutes.
+ */
+const STALL_MS = 8_000
+
+/** Give up asking after this many rounds; the payload stays resumable by hand. */
+const MAX_REQUEST_ROUNDS = 6
+
+/**
+ * Ciphertext held for chunks that arrive before the message describing them.
+ *
+ * This is the common case, not an edge case: the sender publishes the message
+ * and starts pushing chunks in the same breath, and relays deliver in whatever
+ * order they like. Dropping those chunks — which an earlier version did — threw
+ * away most of a payload and left the transfer to be rebuilt entirely by resend
+ * requests, which is slow when it works and silent when it does not.
+ *
+ * They cannot be verified yet: the key lives in the descriptor that has not
+ * arrived. So they are held in memory, never written to disk, and the total is
+ * capped so a peer cannot spend our memory by sending chunks for a message they
+ * never send.
+ */
+const MAX_ORPHAN_BYTES = 4 * 1024 * 1024
+
+export interface BlobProgress {
+  id: string
+  /** Which sealed copy (ADR-052): two transfers of one file are two transfers. */
+  copy: string
+  received: number
+  total: number
+  /** True for a payload we are sending. */
+  outgoing: boolean
 }
 
-/** NIP-94 / custom kind for chunked blob events. */
-const KIND_BLOB_CHUNK = 443;
-
-/** Maximum chunk size in bytes (64 KB). */
-const CHUNK_SIZE = 65_536;
-
-/** AES-256-GCM nonce length. */
-const NONCE_LENGTH = 12;
-
-/** Tag length for AES-256-GCM. */
-const TAG_LENGTH = 16;
-
-/** Track active uploads for progress and cancellation. */
-interface UploadState {
-  totalBytes: number;
-  bytesTransferred: number;
-  cancelled: boolean;
-  eventIds: string[];
+export type BlobTransferEvents = {
+  progress: BlobProgress
+  /** A payload finished arriving and passed its integrity check. */
+  complete: { id: string; copy: string; bytes: Uint8Array }
+  failed: { id: string; copy: string; reason: string }
 }
 
 /**
- * Chunked, encrypted attachment transfer over Nostr relay events.
+ * What the transfer engine needs from storage, narrowed to keep it testable.
+ * Everything is by copy, not by payload: see `BlobRef`.
+ */
+export interface BlobStore {
+  getBlobManifest(ref: BlobRef): Promise<{ total: number; size: number } | undefined>
+  putBlobChunk(
+    ref: BlobRef,
+    seq: number,
+    data: Uint8Array,
+    meta: { total: number; size: number; outgoing?: boolean },
+  ): Promise<{ received: number; total: number; complete: number }>
+  missingChunks(ref: BlobRef, total: number): Promise<number[]>
+  getBlobChunk(ref: BlobRef, seq: number): Promise<Uint8Array | null>
+  getBlobChunks(ref: BlobRef, total: number): Promise<Uint8Array[] | null>
+  /** Every copy held of a payload, for a request that does not name one. */
+  copiesOf(blobId: string): Promise<BlobRef[]>
+}
+
+export interface BlobTransferDeps {
+  store: BlobStore
+  /** Deliver one control frame to a peer. Resolves when it has been handed off. */
+  send(peerPubkey: string, frame: ControlFrame): Promise<void>
+  /** Whether a direct channel to this peer is open right now. */
+  isDirect(peerPubkey: string): boolean
+  setTimer?: (fn: () => void, ms: number) => ReturnType<typeof setTimeout>
+  clearTimer?: (handle: ReturnType<typeof setTimeout>) => void
+}
+
+interface Orphan {
+  chunks: Map<number, Uint8Array>
+  bytes: number
+}
+
+interface Inbound {
+  attachment: Attachment
+  ref: BlobRef
+  peerPubkey: string
+  timer: ReturnType<typeof setTimeout> | null
+  rounds: number
+  lastCount: number
+}
+
+/**
+ * Moves attachment payloads between two peers.
  *
- * Upload: encrypt with AES-256-GCM, split into chunks, publish each
- * as a kind-443 event. Download: fetch chunk events, reassemble,
- * and decrypt.
+ * Deliberately transport-agnostic: it hands frames to `send` and lets the
+ * messenger decide whether they travel over the direct channel or as
+ * gift-wrapped events. The only thing it changes based on the answer is how
+ * many chunks it keeps in flight.
+ *
+ * The receiver drives completion. A sender pushes the payload once and then
+ * stops caring; if anything is lost the receiver asks for exactly the missing
+ * indexes. That is what makes a transfer resumable across a reload, a lock, or
+ * a week offline — the state lives in the database, not in this object.
  */
 export class BlobTransfer {
-  private uploads = new Map<string, UploadState>();
-  private uploadCounter = 0;
+  readonly events = new Emitter<BlobTransferEvents>()
+
+  readonly #deps: BlobTransferDeps
+  /** Transfers under way, by copy (`blobRefKey`). */
+  readonly #inbound = new Map<string, Inbound>()
+  /**
+   * Chunks waiting for the message that explains them. Memory only. Held by
+   * `id:copy`, or `id:` for a chunk from a client that does not name its copy.
+   */
+  readonly #orphans = new Map<string, Orphan>()
+  #orphanBytes = 0
+  readonly #setTimer: (fn: () => void, ms: number) => ReturnType<typeof setTimeout>
+  readonly #clearTimer: (handle: ReturnType<typeof setTimeout>) => void
+
+  constructor(deps: BlobTransferDeps) {
+    this.#deps = deps
+    this.#setTimer = deps.setTimer ?? ((fn, ms) => setTimeout(fn, ms))
+    this.#clearTimer = deps.clearTimer ?? ((handle) => clearTimeout(handle))
+  }
+
+  /** Drop all timers. Called when the vault locks or the messenger stops. */
+  stop(): void {
+    for (const entry of this.#inbound.values()) {
+      if (entry.timer) this.#clearTimer(entry.timer)
+    }
+    this.#inbound.clear()
+    this.#orphans.clear()
+    this.#orphanBytes = 0
+  }
+
+  // --- sending --------------------------------------------------------------
 
   /**
-   * Encrypt and upload a binary blob via relay events.
+   * Persist an outgoing payload.
    *
-   * @param data - Raw file data.
-   * @param key - 256-bit AES encryption key.
-   * @param relayPool - Pool to publish chunk events to.
-   * @returns The root event ID that references all chunks.
+   * Must complete before the message describing it is emitted: the sender's own
+   * bubble reads the payload straight back out of this store, and a message
+   * that arrives first would render as a permanently broken attachment. It is
+   * also what lets a resend request be served after a reload, since the
+   * sender's copy and the receiver's live in the same table.
    */
-  public async upload(data: Uint8Array, key: Uint8Array, relayPool: RelayPool): Promise<string> {
-    const uploadId = `upload_${++this.uploadCounter}`;
-    const totalBytes = data.byteLength;
+  async store(envelope: BlobEnvelope, chunkAt: (index: number) => Uint8Array): Promise<void> {
+    const ref = blobRef(envelope)
+    for (let seq = 0; seq < envelope.chunks; seq++) {
+      await this.#deps.store.putBlobChunk(ref, seq, chunkAt(seq), {
+        total: envelope.chunks,
+        size: envelope.size,
+        outgoing: true,
+      })
+    }
+  }
 
-    const state: UploadState = {
-      totalBytes,
-      bytesTransferred: 0,
-      cancelled: false,
-      eventIds: [],
-    };
-    this.uploads.set(uploadId, state);
+  /** Send the listed chunks (or all of them) of one copy to a peer, paced by transport. */
+  async push(peerPubkey: string, ref: BlobRef, total: number, only?: readonly number[]): Promise<void> {
+    const indexes = only && only.length > 0 ? [...only] : Array.from({ length: total }, (_, i) => i)
+    const window = this.#deps.isDirect(peerPubkey) ? DIRECT_WINDOW : RELAY_WINDOW
 
-    try {
-      // Step 1: Encrypt the entire blob
-      const { ciphertext, nonce } = await this.aesEncrypt(data, key);
-
-      // Step 2: Split ciphertext into chunks
-      const chunks = this.splitIntoChunks(ciphertext, CHUNK_SIZE);
-
-      // Step 3: Publish each chunk as a relay event
-      const chunkEventIds: string[] = [];
-
-      for (let i = 0; i < chunks.length; i++) {
-        if (state.cancelled) {
-          throw new Error('Upload cancelled');
-        }
-
-        const chunkData = chunks[i];
-        const chunkEvent = {
-          kind: KIND_BLOB_CHUNK,
-          pubkey: '', // Will be set by the caller's signing step
-          content: this.uint8ToBase64(chunkData),
-          tags: [
-            ['x', uploadId],
-            ['chunk', String(i), String(chunks.length)],
-            ['nonce', this.uint8ToBase64(nonce)],
-          ],
-          id: '',
-          created_at: Math.floor(Date.now() / 1000),
-          sig: '',
-        };
-
-        await relayPool.publish(chunkEvent as any);
-        chunkEventIds.push(chunkEvent.id ?? `chunk_${i}`);
-
-        state.bytesTransferred = Math.min((i + 1) * CHUNK_SIZE, totalBytes);
-      }
-
-      state.eventIds = chunkEventIds;
-
-      // Step 4: Publish a root manifest event referencing all chunks
-      const manifestEvent = {
-        kind: KIND_BLOB_CHUNK,
-        pubkey: '',
-        content: JSON.stringify({
-          size: totalBytes,
-          chunks: chunks.length,
-          chunkEventIds,
-          nonce: this.uint8ToBase64(nonce),
+    for (let i = 0; i < indexes.length; i += window) {
+      const batch = indexes.slice(i, i + window)
+      await Promise.all(
+        batch.map(async (seq) => {
+          const data = await this.#deps.store.getBlobChunk(ref, seq)
+          if (!data) {
+            log.warn(`chunk ${seq} of ${ref.id.slice(0, 8)} is gone; cannot serve`)
+            return
+          }
+          const frame: BlobChunkFrame = {
+            v: PROTOCOL_VERSION,
+            t: 'blob',
+            id: ref.id,
+            copy: ref.copy,
+            seq,
+            total,
+            data: bytesToB64(data),
+          }
+          await this.#deps.send(peerPubkey, frame).catch((err: unknown) => {
+            // One failed chunk is not a failed transfer: the receiver will ask
+            // for whatever did not arrive.
+            log.warn(`chunk ${seq} failed to send`, err)
+          })
         }),
-        tags: [
-          ['x', uploadId],
-          ['type', 'manifest'],
-        ],
-        id: '',
-        created_at: Math.floor(Date.now() / 1000),
-        sig: '',
-      };
-
-      await relayPool.publish(manifestEvent as any);
-      return manifestEvent.id ?? uploadId;
-    } finally {
-      // Clean up upload state after completion or failure
-      this.uploads.delete(uploadId);
+      )
     }
   }
 
   /**
-   * Download and reassemble a blob from relay events.
+   * Serve a peer's resend request.
    *
-   * @param eventId - The manifest event ID.
-   * @param key - 256-bit AES decryption key.
-   * @param relayPool - Pool to fetch chunk events from.
-   * @returns The decrypted file data.
+   * The total comes from our own manifest, never from the request. Inferring it
+   * from the highest missing index — which an earlier version did — is wrong
+   * whenever the tail chunk is not among the missing ones, and it is wrong in a
+   * way that cannot be recovered from: `total` is bound into each chunk's AAD
+   * and re-checked by the receiver, so every resent chunk fails authentication
+   * and the transfer can never complete.
+   *
+   * A request that names no copy comes from a client that predates ADR-052.
+   * Every copy held is offered: the requester keeps only the one its key
+   * opens, and it is almost always the only one there is.
    */
-  public async download(
-    eventId: string,
-    key: Uint8Array,
-    relayPool: RelayPool,
-  ): Promise<Uint8Array> {
-    // Step 1: Fetch the manifest event
-    const manifest = await this.fetchManifest(eventId, relayPool);
-    if (!manifest) {
-      throw new Error(`Manifest event not found: ${eventId.slice(0, 12)}…`);
+  async serve(
+    peerPubkey: string,
+    blobId: string,
+    copy: string | undefined,
+    need: readonly number[],
+  ): Promise<void> {
+    const refs = copy ? [{ id: blobId, copy }] : await this.#deps.store.copiesOf(blobId)
+    let held = false
+    for (const ref of refs) {
+      const manifest = await this.#deps.store.getBlobManifest(ref)
+      if (!manifest) continue
+      held = true
+      const wanted = need.filter((seq) => seq < manifest.total)
+      if (wanted.length > 0) await this.push(peerPubkey, ref, manifest.total, wanted)
     }
+    if (!held) log.warn(`asked to resend ${blobId.slice(0, 8)}, which this device does not hold`)
+  }
 
-    const { chunks: chunkCount, chunkEventIds, nonce: nonceB64, size } = manifest;
-    const nonce = this.base64ToUint8(nonceB64);
+  // --- receiving ------------------------------------------------------------
 
-    // Step 2: Fetch and reassemble chunk events
-    const assembled = new Uint8Array(size);
-    let offset = 0;
+  /**
+   * Register interest in a payload we have been told about.
+   *
+   * Called when a message with an attachment arrives, whether or not any chunk
+   * has. That is what lets a transfer be driven to completion even if every
+   * chunk was lost — the receiver knows what it is owed.
+   */
+  async expect(peerPubkey: string, attachment: Attachment): Promise<void> {
+    const ref = blobRef(attachment)
+    const key = blobRefKey(ref)
+    if (this.#inbound.has(key)) return
+    const entry: Inbound = { attachment, ref, peerPubkey, timer: null, rounds: 0, lastCount: -1 }
+    this.#inbound.set(key, entry)
+    // Anything that raced ahead of this message can now be verified and kept.
+    await this.#drainOrphans(entry)
 
-    for (let i = 0; i < chunkCount; i++) {
-      const chunkId = chunkEventIds[i];
-      const chunkData = await this.fetchChunk(chunkId, relayPool);
-      if (!chunkData) {
-        throw new Error(`Chunk ${i} not found for blob ${eventId.slice(0, 12)}…`);
+    const missing = await this.#deps.store.missingChunks(ref, attachment.chunks)
+    if (missing.length === 0) {
+      await this.#finish(key)
+      return
+    }
+    this.#armStall(key)
+  }
+
+  /**
+   * Re-register interest in a payload already on disk but incomplete.
+   *
+   * Without this, an attachment interrupted by a reload, a lock, or a closed
+   * tab is never resumed: the durable state is all there, but nothing is
+   * watching it any more, so the missing chunks are never asked for again.
+   */
+  async resume(peerPubkey: string, attachment: Attachment): Promise<void> {
+    const ref = blobRef(attachment)
+    if (this.#inbound.has(blobRefKey(ref))) return
+    const missing = await this.#deps.store.missingChunks(ref, attachment.chunks)
+    if (missing.length === 0) return
+    await this.expect(peerPubkey, attachment)
+  }
+
+  /**
+   * Keep what arrived early for this copy. Chunks that named it are all its
+   * own, so any that fail are junk. Chunks that named no copy may belong to
+   * another copy of the same file still to be described, so those that do
+   * not open stay held for it.
+   */
+  async #drainOrphans(entry: Inbound): Promise<void> {
+    const { attachment, ref } = entry
+    let recovered = 0
+    for (const bucket of [blobRefKey(ref), `${ref.id}:`]) {
+      const held = this.#orphans.get(bucket)
+      if (!held) continue
+      for (const [seq, ciphertext] of held.chunks) {
+        // Held before it could be checked; now it can be, and may not be ours.
+        if (!chunkOpens(attachment, seq, ciphertext)) continue
+        held.chunks.delete(seq)
+        held.bytes -= ciphertext.length
+        this.#orphanBytes -= ciphertext.length
+        await this.#deps.store.putBlobChunk(ref, seq, ciphertext, {
+          total: attachment.chunks,
+          size: attachment.size,
+        })
+        recovered++
       }
-      assembled.set(chunkData, offset);
-      offset += chunkData.byteLength;
+      if (bucket !== `${ref.id}:` || held.chunks.size === 0) {
+        this.#orphans.delete(bucket)
+        this.#orphanBytes -= held.bytes
+      }
+    }
+    if (recovered > 0) log.info(`recovered ${recovered} early chunk(s) for ${ref.id.slice(0, 8)}`)
+  }
+
+  #holdOrphan(bucket: string, seq: number, ciphertext: Uint8Array): void {
+    // One chunk bigger than the whole buffer is not held, and costs nothing held.
+    if (ciphertext.length > MAX_ORPHAN_BYTES) return
+    // Evict oldest first if a peer is filling the buffer. A Map iterates in
+    // insertion order, so the first bucket is the oldest.
+    while (this.#orphanBytes + ciphertext.length > MAX_ORPHAN_BYTES && this.#orphans.size > 0) {
+      const [oldest, evicted] = this.#orphans.entries().next().value as [string, Orphan]
+      this.#orphans.delete(oldest)
+      this.#orphanBytes -= evicted.bytes
     }
 
-    // Step 3: Decrypt the reassembled ciphertext
-    const plaintext = await this.aesDecrypt(assembled.slice(0, offset), key, nonce);
-    return plaintext;
+    const entry = this.#orphans.get(bucket) ?? { chunks: new Map(), bytes: 0 }
+    if (!entry.chunks.has(seq)) {
+      entry.chunks.set(seq, ciphertext)
+      entry.bytes += ciphertext.length
+      this.#orphanBytes += ciphertext.length
+    }
+    this.#orphans.set(bucket, entry)
   }
 
   /**
-   * Cancel an in-progress upload.
+   * Accept one chunk from a peer.
+   *
+   * Chunks are verified before they are stored: `openChunk` proves the piece
+   * belongs to this payload, at this index, in a payload of this length. A
+   * chunk that fails is dropped rather than persisted, so a peer cannot fill
+   * the database with garbage that later fails reassembly.
+   *
+   * A chunk names its copy. One from a client that predates ADR-052 does not,
+   * and goes to whichever expected copy of that payload its key opens.
    */
-  public cancel(uploadId: string): void {
-    const state = this.uploads.get(uploadId);
-    if (state) {
-      state.cancelled = true;
+  async accept(peerPubkey: string, frame: BlobChunkFrame): Promise<void> {
+    const candidates = frame.copy
+      ? [this.#inbound.get(blobRefKey({ id: frame.id, copy: frame.copy }))].filter((e) => e !== undefined)
+      : [...this.#inbound.values()].filter((e) => e.ref.id === frame.id)
+    let ciphertext: Uint8Array
+    try {
+      ciphertext = b64ToBytes(frame.data)
+    } catch {
+      return // not decodable, so not worth holding
+    }
+    if (candidates.length === 0) {
+      // The message has not arrived yet — routine on the relay path, where the
+      // sender pushes chunks the moment it publishes and delivery order is
+      // whatever the relay feels like. Hold the ciphertext until the descriptor
+      // turns up and it can be verified; it is never written to disk unchecked.
+      this.#holdOrphan(`${frame.id}:${frame.copy ?? ''}`, frame.seq, ciphertext)
+      return
+    }
+
+    // Verify now, store after. Decrypting twice costs microseconds and keeps
+    // unauthenticated bytes out of the database entirely.
+    const entry = candidates.find(
+      (e) =>
+        e.peerPubkey === peerPubkey &&
+        frame.total === e.attachment.chunks &&
+        chunkOpens(e.attachment, frame.seq, ciphertext),
+    )
+    if (!entry) {
+      log.warn(`chunk ${frame.seq} of ${frame.id.slice(0, 8)} refused: wrong peer, length or key`)
+      return
+    }
+
+    const manifest = await this.#deps.store.putBlobChunk(entry.ref, frame.seq, ciphertext, {
+      total: entry.attachment.chunks,
+      size: entry.attachment.size,
+    })
+
+    this.events.emit('progress', {
+      id: entry.ref.id,
+      copy: entry.ref.copy,
+      received: manifest.received,
+      total: manifest.total,
+      outgoing: false,
+    })
+
+    const key = blobRefKey(entry.ref)
+    if (manifest.complete === 1) {
+      await this.#finish(key)
+      return
+    }
+    this.#armStall(key)
+  }
+
+  /** True while a copy is still being collected. */
+  isPending(ref: BlobRef): boolean {
+    return this.#inbound.has(blobRefKey(ref))
+  }
+
+  async #finish(key: string): Promise<void> {
+    const entry = this.#inbound.get(key)
+    if (!entry) return
+    if (entry.timer) this.#clearTimer(entry.timer)
+    this.#inbound.delete(key)
+    const { id, copy } = entry.ref
+
+    const chunks = await this.#deps.store.getBlobChunks(entry.ref, entry.attachment.chunks)
+    if (!chunks) {
+      this.events.emit('failed', { id, copy, reason: 'incomplete' })
+      return
+    }
+    try {
+      const plaintext = assembleBlob(
+        entry.attachment,
+        chunks.map((chunk, seq) => openChunk(entry.attachment, seq, chunk)),
+      )
+      this.events.emit('complete', { id, copy, bytes: plaintext })
+    } catch (err) {
+      // Every chunk authenticated individually, so reaching here means the
+      // sender's own descriptor was inconsistent with what they sent.
+      log.warn(`payload ${id.slice(0, 8)} failed reassembly`, err)
+      this.events.emit('failed', { id, copy, reason: 'integrity' })
     }
   }
 
   /**
-   * Get progress info for an active upload.
+   * Ask for missing chunks once the transfer has been quiet for a while.
+   *
+   * Rearmed on every arrival, so a healthy transfer never sends a request at
+   * all. The round counter stops a peer that has genuinely gone away from
+   * costing an unbounded number of relay events.
    */
-  public getProgress(uploadId: string): { bytesTransferred: number; totalBytes: number } {
-    const state = this.uploads.get(uploadId);
-    if (!state) {
-      return { bytesTransferred: 0, totalBytes: 0 };
+  #armStall(key: string): void {
+    // Gone if it was stopped, or finished, while its caller was waiting.
+    const entry = this.#inbound.get(key)
+    if (!entry) return
+    if (entry.timer) this.#clearTimer(entry.timer)
+    // Every path that drops an entry clears this timer first, so when it fires
+    // the entry is still the one it was armed for.
+    entry.timer = this.#setTimer(() => {
+      void this.#requestMissing(key, entry)
+    }, STALL_MS)
+  }
+
+  async #requestMissing(key: string, entry: Inbound): Promise<void> {
+    const missing = await this.#deps.store.missingChunks(entry.ref, entry.attachment.chunks)
+    // Stopped, or completed by a chunk, while that was read: nothing to ask for.
+    if (this.#inbound.get(key) !== entry) return
+    if (missing.length === 0) {
+      await this.#finish(key)
+      return
     }
-    return { bytesTransferred: state.bytesTransferred, totalBytes: state.totalBytes };
-  }
 
-  // ── Private helpers ──────────────────────────────────────────────
-
-  private splitIntoChunks(data: Uint8Array, chunkSize: number): Uint8Array[] {
-    const chunks: Uint8Array[] = [];
-    for (let offset = 0; offset < data.byteLength; offset += chunkSize) {
-      const end = Math.min(offset + chunkSize, data.byteLength);
-      chunks.push(data.slice(offset, end));
+    // No progress since the last round and no rounds left: stop asking. The
+    // payload stays on disk, so a later retry resumes rather than restarts.
+    if (entry.rounds >= MAX_REQUEST_ROUNDS && missing.length === entry.lastCount) {
+      // Its timer is the one that just fired: nothing left to clear.
+      this.events.emit('failed', { id: entry.ref.id, copy: entry.ref.copy, reason: 'stalled' })
+      this.#inbound.delete(key)
+      return
     }
-    return chunks;
-  }
 
-  private async aesEncrypt(
-    plaintext: Uint8Array,
-    key: Uint8Array,
-  ): Promise<{ ciphertext: Uint8Array; nonce: Uint8Array }> {
-    const nonce = crypto.getRandomValues(new Uint8Array(NONCE_LENGTH));
-    const algorithm: AesGcmParams = {
-      name: 'AES-GCM',
-      iv: toArrayBuffer(nonce),
-      tagLength: TAG_LENGTH * 8,
-    };
-    const cryptoKey = await crypto.subtle.importKey('raw', toArrayBuffer(key), algorithm, false, [
-      'encrypt',
-    ]);
-    const encrypted = await crypto.subtle.encrypt(algorithm, cryptoKey, toArrayBuffer(plaintext));
-    return { ciphertext: new Uint8Array(encrypted), nonce };
-  }
+    entry.rounds++
+    entry.lastCount = missing.length
+    await this.#deps
+      .send(entry.peerPubkey, {
+        v: PROTOCOL_VERSION,
+        t: 'blobreq',
+        id: entry.ref.id,
+        copy: entry.ref.copy,
+        // Bounded: a payload missing thousands of chunks asks for the first
+        // slice and repeats, rather than emitting an enormous frame.
+        need: missing.slice(0, 128),
+      })
+      .catch((err: unknown) => log.warn('resend request failed', err))
 
-  private async aesDecrypt(
-    ciphertext: Uint8Array,
-    key: Uint8Array,
-    nonce: Uint8Array,
-  ): Promise<Uint8Array> {
-    const algorithm: AesGcmParams = {
-      name: 'AES-GCM',
-      iv: toArrayBuffer(nonce),
-      tagLength: TAG_LENGTH * 8,
-    };
-    const cryptoKey = await crypto.subtle.importKey('raw', toArrayBuffer(key), algorithm, false, [
-      'decrypt',
-    ]);
-    const decrypted = await crypto.subtle.decrypt(algorithm, cryptoKey, toArrayBuffer(ciphertext));
-    return new Uint8Array(decrypted);
-  }
-
-  private uint8ToBase64(data: Uint8Array): string {
-    let binary = '';
-    for (let i = 0; i < data.byteLength; i++) {
-      binary += String.fromCharCode(data[i]);
-    }
-    return btoa(binary);
-  }
-
-  private base64ToUint8(b64: string): Uint8Array {
-    const binary = atob(b64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes;
-  }
-
-  /** Stub: fetch a manifest event by ID. Production impl would use relayPool.subscribe. */
-  private async fetchManifest(
-    _eventId: string,
-    _relayPool: RelayPool,
-  ): Promise<{ chunks: number; chunkEventIds: string[]; nonce: string; size: number } | null> {
-    // Placeholder — in production this subscribes to the relay pool
-    // and waits for the manifest event matching the ID.
-    return null;
-  }
-
-  /** Stub: fetch a single chunk event and decode its content. */
-  private async fetchChunk(_chunkId: string, _relayPool: RelayPool): Promise<Uint8Array | null> {
-    // Placeholder — in production this subscribes and returns the chunk data
-    return null;
+    this.#armStall(key)
   }
 }

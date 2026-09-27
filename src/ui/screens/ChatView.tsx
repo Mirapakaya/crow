@@ -1,331 +1,540 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { useAppStore } from '@app/Store';
-import { MessengerEngine } from '@engine/messenger';
-import { InboxSync } from '@engine/inboxSync';
-import { t } from '@i18n';
-import type { Message, DeliveryState, Contact } from '@models';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useApp } from '../../app/store'
+import { useI18n } from '../../i18n'
+import { goBack, useNavigate } from '../../app/router'
+import { Avatar, Banner, EmptyState, GroupAvatar } from '../components/primitives'
+import {
+  BackIcon,
+  BoltIcon,
+  CloseIcon,
+  LockIcon,
+  PhoneIcon,
+  SendIcon,
+  ShieldCheckIcon,
+  ShieldIcon,
+  VideoIcon,
+} from '../components/Icons'
+import { AttachButton, EmojiButton, VoiceButton } from '../components/Composer'
+import { MessageBubble } from '../components/MessageBubble'
+import { CallBubble, isCallEntry } from '../components/CallBubble'
+import { supportsWebRtc } from '../../core/transport/webrtc/directManager'
+import { formatDayLabel, isSameDay } from '../format'
+import { conversationTitle, displayName } from './ChatList'
+import { isGroupAddress, type ChatAddress, type Conversation, type Message } from '../../core/models/types'
 
-interface ChatViewProps {
-  conversationId: string;
+/** The stored conversation at an address: a group by its id, a person by their key. */
+function findConversation(
+  conversations: readonly Conversation[],
+  address: ChatAddress,
+): Conversation | undefined {
+  return isGroupAddress(address)
+    ? conversations.find((c) => c.id === address)
+    : conversations.find((c) => c.kind === 'direct' && c.peerPubkey === address)
 }
 
-function formatTime(ts: number): string {
-  const d = new Date(ts);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+/** Read a saved draft synchronously, so the composer is populated on first paint. */
+function readStoredDraft(address: ChatAddress): string {
+  return findConversation(useApp.getState().conversations, address)?.draft ?? ''
 }
 
-function deliveryIcon(state: DeliveryState): string {
-  switch (state) {
-    case 'sending':
-      return '◷';
-    case 'sent':
-      return '✓';
-    case 'delivered':
-      return '✓✓';
-    case 'read':
-      return '✓✓';
-    case 'failed':
-      return '✕';
-  }
-}
+/** Messages closer together than this from the same sender render as one run. */
+const GROUP_WINDOW_MS = 4 * 60 * 1000
 
-export default function ChatView({ conversationId }: ChatViewProps) {
-  const [message, setMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [sendError, setSendError] = useState('');
-  const messageListRef = useRef<HTMLDivElement>(null);
-  const composerRef = useRef<HTMLTextAreaElement>(null);
-  const shouldAutoScroll = useRef(true);
+/**
+ * One conversation, direct or group — the same screen, because it is the same
+ * thing: messages to a set of people. What differs is small and all here: a
+ * group names who wrote each run, has no direct channel or typing indicator,
+ * and opens its member list from the header instead of a contact page.
+ */
+export function ChatView({ address }: { address: ChatAddress }) {
+  const { t, locale } = useI18n()
+  const navigate = useNavigate()
+  const isGroup = isGroupAddress(address)
+  const peer = isGroup ? '' : address
 
-  const setActiveConversation = useAppStore((s) => s.setActiveConversation);
-  const navigate = useAppStore((s) => s.navigate);
-  const messagesMap = useAppStore((s) => s.messages);
-  const contacts = useAppStore((s) => s.contacts);
-  const relayPool = useAppStore((s) => s.relayPool);
-  const identityPubKey = useAppStore((s) => s.identityPubKey);
-  const identityPrivateKey = useAppStore((s) => s.identityPrivateKey);
-  const conversations = useAppStore((s) => s.conversations);
-  const connectionStatus = useAppStore((s) => s.connectionStatus);
+  const messages = useApp((s) => s.messages)
+  const contacts = useApp((s) => s.contacts)
+  const typingPeers = useApp((s) => s.typingPeers)
+  const directStates = useApp((s) => s.directStates)
+  const openConversation = useApp((s) => s.openConversation)
+  const closeConversation = useApp((s) => s.closeConversation)
+  const sendMessage = useApp((s) => s.sendMessage)
+  const retryMessage = useApp((s) => s.retryMessage)
+  const deleteMessageLocally = useApp((s) => s.deleteMessageLocally)
+  const deleteMessageForEveryone = useApp((s) => s.deleteMessageForEveryone)
+  const reactions = useApp((s) => s.reactions)
+  const react = useApp((s) => s.react)
+  const updates = useApp((s) => s.updates)
+  const vote = useApp((s) => s.vote)
+  const checkItem = useApp((s) => s.checkItem)
+  const addChecklistItem = useApp((s) => s.addChecklistItem)
+  const conversations = useApp((s) => s.conversations)
+  const acceptGroup = useApp((s) => s.acceptGroup)
+  const deleteConversation = useApp((s) => s.deleteConversation)
+  const selfPubkey = useApp((s) => s.identity?.pubkey ?? '')
+  const hasEarlierMessages = useApp((s) => s.hasEarlierMessages)
+  const loadEarlierMessages = useApp((s) => s.loadEarlierMessages)
+  const setTyping = useApp((s) => s.setTyping)
+  const updateContact = useApp((s) => s.updateContact)
+  const saveDraft = useApp((s) => s.saveDraft)
+  const settings = useApp((s) => s.settings)
+  const startCall = useApp((s) => s.startCall)
 
-  const messages: Message[] = useMemo(
-    () => messagesMap.get(conversationId) ?? [],
-    [messagesMap, conversationId],
-  );
+  // Seeded once at mount. The route gives this component a `key` of the peer's
+  // key, so switching conversations remounts and re-seeds — no effect needed,
+  // and no render cascade from mirroring store state into component state.
+  const [draft, setDraft] = useState(() => readStoredDraft(address))
+  const [loadingEarlier, setLoadingEarlier] = useState(false)
+  const [replyTo, setReplyTo] = useState<Message | null>(null)
+  // The latest draft, readable from the unmount cleanup without making the
+  // effect depend on every keystroke.
+  const draftRef = useRef(draft)
+  const listRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const stickToBottom = useRef(true)
 
-  const contact: Contact | undefined = useMemo(
-    () => contacts.find((c) => c.pubKey === conversationId),
-    [contacts, conversationId],
-  );
+  const conversationsLoaded = useApp((s) => s.conversationsLoaded)
+  const conversation = findConversation(conversations, address)
+  // A forward-secret group carries text only, and nothing once you have left it.
+  const secure = conversation?.mls
+  const contact = isGroup ? undefined : contacts.get(peer)
+  const name = isGroup
+    ? conversation
+      ? conversationTitle(conversation, contacts, locale)
+      : ''
+    : displayName(contact, peer)
+  const direct = !isGroup && directStates.get(peer) === 'connected'
+  // Calls are one to one, and only with someone taken into the address book:
+  // a call from a stranger never rings (see `Messenger.#routeCall`), so
+  // calling one would be asking for what this side refuses to give.
+  const callable = !isGroup && contact?.accepted === true && !contact.blocked && supportsWebRtc()
+  const typing = !isGroup && typingPeers.has(peer)
+  // Who wrote what, for the memoised row builder below. Rebuilt only when the
+  // address book changes, not on every render.
+  const nameOf = useCallback(
+    (pubkey: string) => (pubkey === selfPubkey ? t('groups.you') : displayName(contacts.get(pubkey), pubkey)),
+    [contacts, selfPubkey, t],
+  )
 
-  const conversation = useMemo(
-    () => conversations.find((c) => c.id === conversationId),
-    [conversations, conversationId],
-  );
-
-  const displayName =
-    contact?.displayName ?? conversation?.displayName ?? conversationId.slice(0, 12) + '…';
-
-  const isVerified = contact?.trust === 'verified';
-  const isOnline = connectionStatus === 'connected';
-
-  // Scroll to bottom on new messages
   useEffect(() => {
-    if (shouldAutoScroll.current && messageListRef.current) {
-      messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+    void openConversation(address)
+    return () => {
+      // Persist whatever was typed but not sent, so switching conversations
+      // (or locking) does not throw it away.
+      void saveDraft(address, draftRef.current)
+      closeConversation()
     }
-  }, [messages]);
+  }, [address, openConversation, closeConversation, saveDraft])
 
-  // Track scroll position to disable auto-scroll if user scrolls up
-  const handleScroll = () => {
-    if (!messageListRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = messageListRef.current;
-    shouldAutoScroll.current = scrollHeight - scrollTop - clientHeight < 60;
-  };
+  // Keep the newest message in view, but do not yank the scroll position out
+  // from under someone who has deliberately scrolled back through history.
+  useLayoutEffect(() => {
+    const node = listRef.current
+    if (node && stickToBottom.current) node.scrollTop = node.scrollHeight
+  }, [messages, typing])
 
-  const handleSend = async () => {
-    if (!message.trim()) return;
-    if (!relayPool || !identityPubKey || !identityPrivateKey) {
-      setSendError(t('chatView.error.notReady'));
-      return;
-    }
-    if (!isOnline) {
-      setSendError(t('chatView.error.offline'));
-      return;
-    }
+  // The list also shrinks under a reply preview, a composer growing a line, or
+  // an on-screen keyboard. Whoever was reading the newest message still is.
+  const missing = isGroup && conversationsLoaded && !conversation
+  useEffect(() => {
+    const node = listRef.current
+    if (!node || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => {
+      if (stickToBottom.current) node.scrollTop = node.scrollHeight
+    })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [missing])
 
-    const plaintext = message.trim();
-    setMessage('');
-    setSendError('');
-    setSending(true);
+  const onScroll = useCallback(() => {
+    const node = listRef.current
+    if (!node) return
+    stickToBottom.current = node.scrollHeight - node.scrollTop - node.clientHeight < 80
+  }, [])
 
-    try {
-      // Build a Vault adapter for MessengerEngine
-      const vaultAdapter: import('@engine/messenger').Vault = {
-        pubKey: identityPubKey,
-        encrypt: async (_plain: string, _recipient: string) => {
-          return btoa(_plain);
-        },
-        decrypt: async (_cipher: string, _sender: string) => {
-          return atob(_cipher);
-        },
-        signEvent: async (event) => {
-          return {
-            kind: (event.kind ?? 14) as number,
-            pubkey: identityPubKey,
-            content: (event.content ?? '') as string,
-            tags: (event.tags ?? []) as string[][],
-            created_at: (event.created_at ?? Math.floor(Date.now() / 1000)) as number,
-            id: crypto.randomUUID(),
-            sig: 'placeholder',
-          };
-        },
-      };
+  const byId = useMemo(() => new Map(messages.map((message) => [message.id, message])), [messages])
 
-      const inboxSync = new InboxSync();
-      const engine = new MessengerEngine(relayPool, vaultAdapter, inboxSync);
+  const send = useCallback(async () => {
+    const text = draft.trim()
+    if (!text) return
+    setDraft('')
+    draftRef.current = ''
+    setReplyTo(null)
+    stickToBottom.current = true
+    setTyping(false)
+    await sendMessage(text, replyTo?.id)
+    inputRef.current?.focus()
+  }, [draft, replyTo, sendMessage, setTyping])
 
-      await engine.sendMessage(conversationId, plaintext);
-      setIsTyping(true);
-      setTimeout(() => setIsTyping(false), 2000);
-    } catch {
-      setSendError(t('chatView.error.sendFailed'));
-    } finally {
-      setSending(false);
-      if (composerRef.current) {
-        composerRef.current.style.height = 'auto';
+  // The conversation's entries in the order they happened, each one child of
+  // the single column they are drawn in: dates, messages and calls alike.
+  const rows = useMemo(() => {
+    const output: React.ReactNode[] = []
+    let previous: Message | null = null
+
+    for (const message of messages) {
+      if (!previous || !isSameDay(previous.ts, message.ts)) {
+        output.push(
+          <div key={`day-${message.ts}`} className="day-separator">
+            {formatDayLabel(message.ts, locale, { today: t('chat.today'), yesterday: t('chat.yesterday') })}
+          </div>,
+        )
       }
+
+      const groupStart =
+        !previous ||
+        // A call between two messages splits them into two runs: whoever
+        // speaks after it is announced again.
+        !!previous.call ||
+        previous.direction !== message.direction ||
+        // In a group, two people in a row are two runs, each with its name.
+        previous.authorPubkey !== message.authorPubkey ||
+        message.ts - previous.ts > GROUP_WINDOW_MS ||
+        !isSameDay(previous.ts, message.ts)
+      const author = nameOf(message.authorPubkey)
+
+      // A call sits on the side of whoever placed it, and is deleted like
+      // anything else — for both people by either of them, since it is theirs
+      // alike (ADR-047).
+      if (isCallEntry(message)) {
+        output.push(
+          <CallBubble
+            key={message.id}
+            message={message}
+            groupStart={groupStart}
+            onCallBack={callable ? (media) => void startCall(peer, media) : undefined}
+            onDelete={(m) => void deleteMessageLocally(m.id)}
+            onDeleteForEveryone={(m) => {
+              if (confirm(t('calls.deleteEveryoneConfirm'))) void deleteMessageForEveryone(m.id)
+            }}
+          />,
+        )
+        previous = message
+        continue
+      }
+
+      output.push(
+        <MessageBubble
+          key={message.id}
+          message={message}
+          groupStart={groupStart}
+          senderLabel={message.direction === 'out' ? t('chat.fromYou') : t('chat.fromThem', { name: author })}
+          authorLabel={isGroup && message.direction === 'in' ? author : undefined}
+          quoted={message.replyTo ? (byId.get(message.replyTo) ?? null) : null}
+          reactions={reactions.get(message.id)}
+          updates={updates.get(message.id)}
+          nameOf={nameOf}
+          onVote={(m, choices) => void vote(m.id, choices)}
+          onCheck={(m, itemId, done) => void checkItem(m.id, itemId, done)}
+          onAddItem={(m, label) => void addChecklistItem(m.id, label)}
+          selfPubkey={selfPubkey}
+          onReact={(m, emoji) => void react(m.id, emoji)}
+          onReply={setReplyTo}
+          onRetry={(m) => void retryMessage(m.id)}
+          onDelete={(m) => void deleteMessageLocally(m.id)}
+          onDeleteForEveryone={(m) => {
+            if (confirm(t('chat.deleteEveryoneConfirm'))) void deleteMessageForEveryone(m.id)
+          }}
+        />,
+      )
+      previous = message
     }
-  };
+    return output
+  }, [
+    messages,
+    byId,
+    locale,
+    t,
+    isGroup,
+    nameOf,
+    reactions,
+    updates,
+    vote,
+    checkItem,
+    addChecklistItem,
+    react,
+    selfPubkey,
+    retryMessage,
+    deleteMessageLocally,
+    deleteMessageForEveryone,
+    callable,
+    startCall,
+    peer,
+  ])
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
-    const el = e.target;
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-  };
-
-  const handleBack = () => {
-    setActiveConversation(null);
-    navigate('/');
-  };
+  // A group address that names nothing here — deleted on this device, or a
+  // link from another one, whose ids are blinded with a different key. A
+  // direct address always has somewhere to go: the conversation is created by
+  // the first message.
+  if (missing) {
+    return (
+      <div className="screen">
+        <header className="app-header">
+          <button className="btn btn-icon btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
+            <BackIcon />
+          </button>
+        </header>
+        <EmptyState
+          title={t('groups.notFound')}
+          body={t('groups.notFoundBody')}
+          action={
+            <button className="btn btn-primary" onClick={() => navigate({ name: 'chats' }, true)}>
+              {t('nav.chats')}
+            </button>
+          }
+        />
+      </div>
+    )
+  }
 
   return (
-    <div className="chat-area">
-      {/* Header */}
-      <div className="chat-header">
-        <button
-          className="btn btn-icon btn-ghost mobile-back"
-          onClick={handleBack}
-          aria-label={t('chatView.back')}
-        >
-          ←
+    <div className="chat-screen">
+      <header className="chat-header">
+        <button className="btn btn-icon btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
+          <BackIcon />
         </button>
-        <div className="avatar-sm avatar">{displayName.charAt(0).toUpperCase()}</div>
-        <div className="chat-header-info">
-          <div className="chat-header-name">
-            {displayName}
-            {isVerified && (
-              <span className="shield-verified" style={{ fontSize: 12, marginLeft: 4 }}>
-                ✓
-              </span>
-            )}
-            <span className="encryption-badge">🔒 E2EE</span>
-          </div>
-          <div className="chat-header-status">
-            <span className={`connection-dot ${isOnline ? 'connected' : 'offline'}`} />
-            <span>{isOnline ? t('chatView.online') : t('chatView.offline')}</span>
-          </div>
-        </div>
-        <button className="btn btn-icon btn-ghost" aria-label={t('chatView.voiceCall')}>
-          📞
-        </button>
-        <button className="btn btn-icon btn-ghost" aria-label={t('chatView.videoCall')}>
-          📹
-        </button>
-        <button className="btn btn-icon btn-ghost" aria-label={t('chatView.moreOptions')}>
-          ⋯
-        </button>
-      </div>
-
-      {/* Messages */}
-      <div
-        className="message-list"
-        ref={messageListRef}
-        onScroll={handleScroll}
-        role="log"
-        aria-label={t('chatView.messages')}
-      >
-        {/* E2EE banner */}
-        <div className="empty-state" style={{ padding: 'var(--space-6) var(--space-4)' }}>
-          <div
-            className="encryption-badge"
-            style={{ fontSize: 14, marginBottom: 'var(--space-2)' }}
-          >
-            🔒 {t('chatView.e2eeBanner')}
-          </div>
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
-            {t('chatView.e2eeDescription')}
-          </p>
-        </div>
-
-        {/* Message bubbles */}
-        {messages.map((msg) => {
-          const isSent = msg.senderPubKey === identityPubKey;
-          return (
-            <div key={msg.id} className={`message-row ${isSent ? 'sent' : 'received'}`}>
-              <div className="message-bubble">
-                {/* Sender name for group chats */}
-                {!isSent && conversation?.type === 'group' && (
-                  <div className="message-sender">
-                    {contacts.find((c) => c.pubKey === msg.senderPubKey)?.displayName ??
-                      msg.senderPubKey.slice(0, 8) + '…'}
-                  </div>
-                )}
-                {msg.isDeleted ? (
-                  <div className="message-deleted">{t('chatView.messageDeleted')}</div>
-                ) : (
-                  <>
-                    <div className="message-text">{msg.content}</div>
-                    <div className="message-meta">
-                      <span className="message-time">
-                        {formatTime(msg.createdAt)}
-                        {msg.editedAt && (
-                          <span className="edited-indicator"> {t('chatView.edited')}</span>
-                        )}
-                      </span>
-                      {isSent && (
-                        <span className={`message-status ${msg.deliveryState}`}>
-                          {deliveryIcon(msg.deliveryState)}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Empty messages state */}
-        {messages.length === 0 && (
-          <div className="empty-state" style={{ padding: 'var(--space-8) var(--space-4)' }}>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
-              {t('chatView.startConversation')}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Send error */}
-      {sendError && (
-        <div
-          style={{
-            padding: 'var(--space-2) var(--space-3)',
-            fontSize: 'var(--text-xs)',
-            color: 'var(--error)',
-            textAlign: 'center',
-          }}
-        >
-          {sendError}
-        </div>
-      )}
-
-      {/* Typing indicator */}
-      {isTyping && (
-        <div className="typing-indicator">
-          <div className="typing-dots">
-            <span className="typing-dot" />
-            <span className="typing-dot" />
-            <span className="typing-dot" />
-          </div>
-          <span>{t('chatView.typing')}</span>
-        </div>
-      )}
-
-      {/* Composer */}
-      <div className="composer">
-        <button className="btn btn-icon btn-ghost" aria-label={t('chatView.attachFile')}>
-          📎
-        </button>
-        <div className="composer-input-wrap">
-          <textarea
-            ref={composerRef}
-            className="composer-input"
-            value={message}
-            onChange={handleInput}
-            onKeyDown={handleKeyDown}
-            placeholder={t('chatView.composePlaceholder')}
-            rows={1}
-            aria-label={t('chatView.composePlaceholder')}
-            disabled={sending}
-          />
-        </div>
-        <button className="btn btn-icon btn-ghost" aria-label={t('chatView.voiceMessage')}>
-          🎤
-        </button>
-        {message.trim() ? (
-          <button
-            className="btn btn-icon btn-primary"
-            onClick={handleSend}
-            disabled={sending}
-            aria-label={t('chatView.send')}
-          >
-            {sending ? <div className="spinner" style={{ width: 16, height: 16 }} /> : '➤'}
-          </button>
+        {isGroup ? (
+          <GroupAvatar seed={address} size="sm" />
         ) : (
-          <button className="btn btn-icon btn-ghost" aria-label={t('chatView.send')} disabled>
-            ➤
-          </button>
+          <Avatar name={name} seed={peer} src={contact?.avatar} size="sm" />
         )}
+        <button
+          className="chat-header-info"
+          aria-label={isGroup ? t('groups.info') : t('chat.openContact', { name })}
+          onClick={() => navigate(isGroup ? { name: 'group-info', id: address } : { name: 'contact', peer })}
+        >
+          <span className="chat-header-name">
+            <span className="truncate" dir="auto">
+              {name}
+            </span>
+            {contact?.verification === 'verified' ? (
+              <ShieldCheckIcon size={14} style={{ color: 'var(--success)' }} />
+            ) : null}
+          </span>
+          <span className="chat-header-status">
+            {isGroup ? (
+              <>
+                {secure ? (
+                  <>
+                    <LockIcon size={11} /> {t('groups.secure')} ·{' '}
+                  </>
+                ) : null}
+                {/* Everyone, counting you: the number the limit is stated in. */}
+                {t('groups.members', { n: (conversation?.members.length ?? 0) + 1 })}
+              </>
+            ) : typing ? (
+              t('chat.typing')
+            ) : direct ? (
+              <>
+                <BoltIcon size={11} /> {t('status.direct')}
+              </>
+            ) : (
+              t('status.relayed')
+            )}
+          </span>
+        </button>
+        {callable ? (
+          <>
+            <button
+              className="btn btn-icon"
+              aria-label={t('calls.voiceCall')}
+              title={t('calls.voiceCall')}
+              onClick={() => void startCall(peer, 'audio')}
+            >
+              <PhoneIcon />
+            </button>
+            <button
+              className="btn btn-icon"
+              aria-label={t('calls.videoCall')}
+              title={t('calls.videoCall')}
+              onClick={() => void startCall(peer, 'video')}
+            >
+              <VideoIcon />
+            </button>
+          </>
+        ) : null}
+      </header>
+
+      {isGroup && conversation && !conversation.accepted ? (
+        <div className="chat-notice">
+          <Banner tone="warning">
+            <span className="grow">{t('groups.requestBanner')}</span>
+            <button className="btn btn-ghost small" onClick={() => void acceptGroup(address)}>
+              {t('groups.accept')}
+            </button>
+            <button
+              className="btn btn-ghost small danger-text"
+              onClick={() => {
+                if (!confirm(t('groups.deleteConfirm'))) return
+                void deleteConversation(address).then(() => navigate({ name: 'chats' }, true))
+              }}
+            >
+              {t('groups.delete')}
+            </button>
+          </Banner>
+        </div>
+      ) : null}
+
+      {contact && !contact.accepted ? (
+        <div className="chat-notice">
+          <Banner tone="warning">
+            <span className="grow">{t('chat.requestBanner')}</span>
+            <button
+              className="btn btn-ghost small"
+              onClick={() => void updateContact(peer, { accepted: true, source: 'manual' })}
+            >
+              {t('chat.accept')}
+            </button>
+            <button
+              className="btn btn-ghost small danger-text"
+              onClick={() => void updateContact(peer, { blocked: true })}
+            >
+              {t('chat.block')}
+            </button>
+          </Banner>
+        </div>
+      ) : null}
+
+      {contact?.blocked ? (
+        <div className="chat-notice">
+          <Banner tone="danger">
+            <span className="grow">{t('chat.blocked')}</span>
+            <button
+              className="btn btn-ghost small"
+              onClick={() => void updateContact(peer, { blocked: false })}
+            >
+              {t('chat.unblock')}
+            </button>
+          </Banner>
+        </div>
+      ) : null}
+
+      {contact && contact.verification !== 'verified' && messages.length > 0 ? (
+        <div className="chat-notice">
+          <Banner tone="accent">
+            <ShieldIcon size={16} />
+            <span className="grow">{t('chat.verifyPromptBody')}</span>
+            <button className="btn btn-ghost small" onClick={() => navigate({ name: 'verify', peer })}>
+              {t('contacts.verify')}
+            </button>
+          </Banner>
+        </div>
+      ) : null}
+
+      <div className="message-list" ref={listRef} onScroll={onScroll} role="log" aria-live="polite">
+        <div className="message-stream">
+          {messages.length === 0 ? (
+            <EmptyState title={t('chats.noMessages')} body={t('chat.encryptedNote')} />
+          ) : hasEarlierMessages ? (
+            <button
+              className="btn btn-ghost small"
+              disabled={loadingEarlier}
+              onClick={async () => {
+                // Hold the scroll position: growing the list upwards would
+                // otherwise jump the reader away from where they were.
+                const node = listRef.current
+                const before = node?.scrollHeight ?? 0
+                setLoadingEarlier(true)
+                stickToBottom.current = false
+                await loadEarlierMessages()
+                setLoadingEarlier(false)
+                requestAnimationFrame(() => {
+                  if (node) node.scrollTop += node.scrollHeight - before
+                })
+              }}
+            >
+              {loadingEarlier ? t('common.loading') : t('chat.loadEarlier')}
+            </button>
+          ) : (
+            <p className="faint">{t('chat.startOfConversation')}</p>
+          )}
+          {rows}
+          {typing ? (
+            <div className="typing-indicator" aria-label={t('chat.typing')}>
+              <span />
+              <span />
+              <span />
+            </div>
+          ) : null}
+        </div>
       </div>
+
+      {replyTo ? (
+        <div className="reply-preview">
+          <span className="reply-preview-body truncate" dir="auto">
+            <span className="faint" style={{ display: 'block' }}>
+              {t('chat.replyingTo')}
+            </span>
+            {replyTo.body}
+          </span>
+          <button className="btn btn-icon" aria-label={t('common.close')} onClick={() => setReplyTo(null)}>
+            <CloseIcon size={16} />
+          </button>
+        </div>
+      ) : null}
+
+      {secure?.left ? (
+        <div className="composer">
+          <Banner tone="warning">
+            <span className="grow">{t('groups.secureLeft')}</span>
+          </Banner>
+        </div>
+      ) : (
+        <div className="composer">
+          {secure ? null : <AttachButton disabled={contact?.blocked} />}
+          <textarea
+            ref={inputRef}
+            className="composer-input"
+            dir="auto"
+            rows={1}
+            placeholder={t('chat.placeholder')}
+            aria-label={t('chat.placeholder')}
+            value={draft}
+            disabled={contact?.blocked}
+            onChange={(event) => {
+              setDraft(event.target.value)
+              draftRef.current = event.target.value
+              setTyping(event.target.value.length > 0)
+              // Grow with content up to the CSS max-height, then scroll.
+              const node = event.target
+              node.style.height = 'auto'
+              node.style.height = `${Math.min(node.scrollHeight, 144)}px`
+            }}
+            onBlur={() => setTyping(false)}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return
+              const shouldSend = settings.enterToSend ? !event.shiftKey : event.ctrlKey || event.metaKey
+              if (!shouldSend) return
+              event.preventDefault()
+              void send()
+            }}
+          />
+          {/* Trailing the input: this one edits what is being typed, so it sits
+            at the end of the field beside send rather than with the
+            attachment control that opens a file picker. */}
+          <EmojiButton
+            disabled={contact?.blocked}
+            onInsertEmoji={(emoji) => {
+              setDraft((current) => current + emoji)
+              draftRef.current += emoji
+            }}
+          />
+          {/* The microphone takes the place of send while there is nothing to
+            send, the way every messenger does it — one control, two jobs. */}
+          {draft.trim() || secure ? (
+            <button
+              className="composer-send"
+              aria-label={t('chat.send')}
+              disabled={contact?.blocked || !draft.trim()}
+              onClick={() => void send()}
+            >
+              <SendIcon size={18} />
+            </button>
+          ) : (
+            <VoiceButton disabled={contact?.blocked} />
+          )}
+        </div>
+      )}
     </div>
-  );
+  )
 }

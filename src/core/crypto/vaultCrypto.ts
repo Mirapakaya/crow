@@ -1,88 +1,137 @@
-/**
- * Vault record encryption for Crow messenger.
- *
- * Provides symmetric encryption of vault records using
- * XChaCha20-Poly1305 (via @noble/ciphers) and key
- * derivation from passphrases using scrypt (via @noble/hashes).
- */
-
-import { xchacha20poly1305 } from '@noble/ciphers/chacha';
-import { scrypt } from '@noble/hashes/scrypt';
-import { randomBytes } from './kdf';
-
-/** scrypt parameters used for vault key derivation. */
-const VAULT_SCRYPT_PARAMS = {
-  N: 2 ** 17, // 131072
-  r: 8,
-  p: 1,
-  dkLen: 32,
-};
+import { xchacha20poly1305 } from '@noble/ciphers/chacha.js'
+import { hkdf } from '@noble/hashes/hkdf.js'
+import { hmac } from '@noble/hashes/hmac.js'
+import { sha256 } from '@noble/hashes/sha2.js'
+import { bytesToHex, bytesToUtf8, concatBytes, randomBytes, utf8ToBytes, wipe } from '../util/bytes'
 
 /**
- * Seal (encrypt) a vault record using XChaCha20-Poly1305.
+ * At-rest encryption for the local vault.
  *
- * @param plaintext - Cleartext bytes to encrypt.
- * @param key       - 32-byte symmetric key.
- * @returns Object with ciphertext and the unique nonce used.
+ * Key hierarchy - the passphrase is *not* used to encrypt records directly, so
+ * changing it only rewraps one 32-byte key instead of re-encrypting the whole
+ * database:
+ *
+ *   passphrase --scrypt(salt, params)--> KEK
+ *   KEK        --XChaCha20-Poly1305---> wraps dataKey (random, 32 bytes)
+ *   dataKey    --HKDF-SHA256----------> recordKey   (record bodies)
+ *                                       indexKey    (blinded index keys)
+ *                                       identityKey (the Nostr secret key)
+ *
+ * The identity secret gets its own subkey so a later "read-only unlock" or an
+ * external signer (NIP-46) can withhold signing capability while still
+ * decrypting history.
  */
-export function sealRecord(
-  plaintext: Uint8Array,
-  key: Uint8Array,
-): { ciphertext: Uint8Array; nonce: Uint8Array } {
-  const nonce = randomBytes(24);
-  const aead = xchacha20poly1305(key, nonce);
-  const ciphertext = aead.encrypt(plaintext);
-  return { ciphertext, nonce };
+
+export const SEALED_VERSION = 1
+const NONCE_LEN = 24
+
+export type SealedBlob = Uint8Array
+
+export interface VaultKeys {
+  readonly dataKey: Uint8Array
+  readonly recordKey: Uint8Array
+  readonly indexKey: Uint8Array
+  readonly identityKey: Uint8Array
+}
+
+const INFO = {
+  record: 'crow/vault/record/v1',
+  index: 'crow/vault/index/v1',
+  identity: 'crow/vault/identity/v1',
+} as const
+
+function subkey(dataKey: Uint8Array, info: string): Uint8Array {
+  return hkdf(sha256, dataKey, undefined, utf8ToBytes(info), 32)
+}
+
+export function deriveVaultKeys(dataKey: Uint8Array): VaultKeys {
+  if (dataKey.length !== 32) throw new Error('dataKey must be 32 bytes')
+  return {
+    dataKey,
+    recordKey: subkey(dataKey, INFO.record),
+    indexKey: subkey(dataKey, INFO.index),
+    identityKey: subkey(dataKey, INFO.identity),
+  }
+}
+
+export function wipeVaultKeys(keys: VaultKeys | null | undefined): void {
+  if (!keys) return
+  wipe(keys.dataKey, keys.recordKey, keys.indexKey, keys.identityKey)
+}
+
+export const generateDataKey = (): Uint8Array => randomBytes(32)
+
+/**
+ * Seal bytes under `key`, binding them to `aad`.
+ *
+ * The AAD is the record's logical address (table + primary key). Binding it
+ * means an attacker with write access to IndexedDB cannot move a valid
+ * ciphertext to a different row - say, swapping one contact's metadata onto
+ * another contact - without the tag failing.
+ *
+ * Layout: version(1) || nonce(24) || ciphertext+tag
+ */
+export function seal(key: Uint8Array, plaintext: Uint8Array, aad: string): SealedBlob {
+  const nonce = randomBytes(NONCE_LEN)
+  const cipher = xchacha20poly1305(key, nonce, utf8ToBytes(aad))
+  return concatBytes(new Uint8Array([SEALED_VERSION]), nonce, cipher.encrypt(plaintext))
+}
+
+export function open(key: Uint8Array, blob: SealedBlob, aad: string): Uint8Array {
+  if (blob.length < 1 + NONCE_LEN + 16) throw new Error('sealed blob too short')
+  const version = blob[0]
+  if (version !== SEALED_VERSION) throw new Error(`unsupported sealed blob version ${String(version)}`)
+  const nonce = blob.subarray(1, 1 + NONCE_LEN)
+  const ciphertext = blob.subarray(1 + NONCE_LEN)
+  const cipher = xchacha20poly1305(key, nonce, utf8ToBytes(aad))
+  return cipher.decrypt(ciphertext)
+}
+
+export function sealJson(key: Uint8Array, value: unknown, aad: string): SealedBlob {
+  return seal(key, utf8ToBytes(JSON.stringify(value)), aad)
+}
+
+export function openJson<T>(key: Uint8Array, blob: SealedBlob, aad: string): T {
+  return JSON.parse(bytesToUtf8(open(key, blob, aad))) as T
 }
 
 /**
- * Unseal (decrypt) a vault record using XChaCha20-Poly1305.
+ * Deterministic, unlinkable primary keys.
  *
- * @param ciphertext - Encrypted bytes.
- * @param nonce      - Nonce that was used during sealing.
- * @param key        - 32-byte symmetric key.
- * @returns Decrypted plaintext bytes.
- * @throws Error if authentication tag verification fails.
+ * Dexie indexes are stored in the clear inside IndexedDB. Keying rows by a raw
+ * pubkey would hand a device attacker the full social graph without ever
+ * breaking a ciphertext. Blinding through HMAC(indexKey, ...) keeps lookups
+ * O(1) while making the index meaningless to anyone who cannot unlock.
  */
-export function unsealRecord(
-  ciphertext: Uint8Array,
-  nonce: Uint8Array,
-  key: Uint8Array,
-): Uint8Array {
-  const aead = xchacha20poly1305(key, nonce);
-  return aead.decrypt(ciphertext);
+export function blindId(indexKey: Uint8Array, domain: string, value: string): string {
+  return bytesToHex(hmac(sha256, indexKey, utf8ToBytes(domain + ' ' + value))).slice(0, 32)
+}
+
+/** Stable id for a 1:1 conversation, independent of who initiated it. */
+export function conversationId(indexKey: Uint8Array, a: string, b: string): string {
+  return conversationIdOf(indexKey, [a, b])
 }
 
 /**
- * Derive a vault encryption key from a passphrase using scrypt.
+ * Stable id for any room, keyed by the set of people in it.
  *
- * Uses N=2^17, r=8, p=1 as specified for vault records.
- *
- * @param passphrase - Human-readable passphrase.
- * @param salt       - Random salt (use `generateSalt()` to create one).
- * @returns 32-byte derived key.
+ * NIP-17 defines a room as exactly that set — the author plus every `p` tag —
+ * so two messages naming the same people in a different order are the same
+ * conversation, and adding or removing anyone starts a new one. Sorting makes
+ * the id independent of order and of who sent first; for two people it is the
+ * same string `conversationId` has always hashed, so every existing 1:1
+ * conversation keeps its id.
  */
-export async function deriveVaultKey(passphrase: string, salt: Uint8Array): Promise<Uint8Array> {
-  // Yield to event loop because scrypt is CPU-heavy.
-  return new Promise<Uint8Array>((resolve) => {
-    setTimeout(() => {
-      resolve(
-        scrypt(passphrase, salt, {
-          N: VAULT_SCRYPT_PARAMS.N,
-          r: VAULT_SCRYPT_PARAMS.r,
-          p: VAULT_SCRYPT_PARAMS.p,
-          dkLen: VAULT_SCRYPT_PARAMS.dkLen,
-        }),
-      );
-    }, 0);
-  });
+export function conversationIdOf(indexKey: Uint8Array, participants: readonly string[]): string {
+  return blindId(indexKey, 'convo', [...new Set(participants)].sort().join(':'))
 }
 
-/**
- * Generate a 32-byte random salt for vault key derivation.
- *
- * @returns 32 random bytes from `crypto.getRandomValues`.
- */
-export function generateSalt(): Uint8Array {
-  return randomBytes(32);
-}
+export const contactId = (indexKey: Uint8Array, pubkey: string): string =>
+  blindId(indexKey, 'contact', pubkey)
+
+export const seenEventId = (indexKey: Uint8Array, eventId: string): string =>
+  blindId(indexKey, 'seen', eventId)
+
+/** A deleted rumor, by who wrote it: see `VaultRepo.withdraw`. */
+export const withdrawnId = (indexKey: Uint8Array, rumorId: string, author: string): string =>
+  blindId(indexKey, 'withdrawn', `${author}:${rumorId}`)

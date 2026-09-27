@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Crow">
+  <!--
+    Crow mark.
+
+    A stylised crow silhouette — sharp, calm, watchful.
+    Charcoal badge, silver bird. One colour pair, no gradients.
+
+    Built from analytic primitives so scripts/generate-icons.mjs can reproduce
+    it pixel-exactly.
+
+    Grid 64. Badge 0..64.
+  -->
+  <rect width="64" height="64" rx="14" fill="#1a1a1e"/>
+  <g fill="#d4d4d8">
+    <!-- Head -->
+    <ellipse cx="28" cy="24" rx="12" ry="11"/>
+    <!-- Body -->
+    <ellipse cx="32" cy="40" rx="16" ry="14"/>
+    <!-- Beak -->
+    <polygon points="40,21 52,24 40,27"/>
+    <!-- Eye -->
+    <circle cx="22" cy="22" r="3" fill="#1a1a1e"/>
+  </g>
+</svg>

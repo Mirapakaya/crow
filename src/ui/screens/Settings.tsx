@@ -1,194 +1,364 @@
-import { useState } from 'react';
-import { useAppStore } from '@app/Store';
+import { useApp } from '../../app/store'
+import { useI18n, LOCALE_NAMES } from '../../i18n'
+import { useNavigate, useRoute, type Route } from '../../app/router'
+import { Avatar, Banner, Field, Toggle } from '../components/primitives'
+import {
+  ChevronIcon,
+  GlobeIcon,
+  LockIcon,
+  MonitorIcon,
+  MoonIcon,
+  ShieldIcon,
+  SunIcon,
+  DownloadIcon,
+  PhoneIcon,
+} from '../components/Icons'
+import { SegmentedControl } from '../components/SegmentedControl'
+import { SettingsPage } from './SettingsPage'
+import type { LocaleCode, ThemePreference } from '../../core/models/types'
+import { APP_VERSION, SOURCE_URL } from '../../app/meta'
 
-export default function Settings() {
-  const theme = useAppStore((s) => s.theme);
-  const setTheme = useAppStore((s) => s.setTheme);
-  const locale = useAppStore((s) => s.locale);
-  const setLocale = useAppStore((s) => s.setLocale);
-  const setVaultState = useAppStore((s) => s.setVaultState);
+export function SettingsHome() {
+  const { t } = useI18n()
+  const identity = useApp((s) => s.identity)
+  const settings = useApp((s) => s.settings)
+  const saveSettings = useApp((s) => s.saveSettings)
+  const updateProfile = useApp((s) => s.updateProfile)
+  const lock = useApp((s) => s.lock)
+  const toast = useApp((s) => s.toast)
 
-  const handleLock = () => {
-    setVaultState('locked');
-  };
+  if (!identity) return null
+
+  const pickAvatar = async (file: File) => {
+    if (file.size > 1024 * 1024) {
+      toast(t('settings.avatarTooLarge'), 'danger')
+      return
+    }
+    const dataUri = await downscaleToDataUri(file, 192)
+    if (!dataUri) {
+      toast(t('errors.generic'), 'danger')
+      return
+    }
+    await updateProfile({ avatar: dataUri })
+  }
 
   return (
     <div className="screen">
-      <div className="header">
-        <h1 className="header-title">Settings</h1>
-      </div>
+      <header className="app-header">
+        <h1 className="grow">{t('settings.title')}</h1>
+      </header>
 
       <div className="screen-scroll">
-        {/* Appearance */}
-        <div className="settings-section">
-          <h2 className="settings-section-title">Appearance</h2>
-          <div className="settings-item">
-            <div>
-              <div className="settings-item-label">Theme</div>
-              <div className="settings-item-description">
-                Light, dark, or follow system preference
+        <div className="container stack" style={{ maxWidth: '34rem' }}>
+          <span className="section-title">{t('settings.profile')}</span>
+          <div className="card stack">
+            <div className="row">
+              <Avatar name={identity.name} seed={identity.pubkey} src={identity.avatar} size="lg" />
+              <div className="grow stack-sm">
+                <span style={{ fontWeight: 600 }}>{identity.name}</span>
+                <code className="mono faint" style={{ wordBreak: 'break-all' }}>
+                  {identity.npub}
+                </code>
               </div>
             </div>
-            <select
-              className="input"
-              style={{ width: 'auto', minWidth: 120 }}
-              value={theme}
-              onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')}
-              aria-label="Theme"
-            >
-              <option value="system">System</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </div>
-          <div className="settings-item">
-            <div>
-              <div className="settings-item-label">Language</div>
-              <div className="settings-item-description">Choose your preferred language</div>
+            <p className="hint">{t('settings.profileBody')}</p>
+
+            {/*
+              Uncontrolled and keyed by the stored value: the vault is the
+              source of truth, edits commit on blur, and a profile update from
+              anywhere else re-seeds the field by remounting it. Mirroring the
+              identity into component state instead would mean a setState in an
+              effect and a render cascade on every keystroke elsewhere.
+            */}
+            <Field label={t('settings.displayName')}>
+              <input
+                key={`name:${identity.name}`}
+                className="input"
+                defaultValue={identity.name}
+                maxLength={64}
+                onBlur={(event) => {
+                  const next = event.target.value.trim()
+                  if (next && next !== identity.name) void updateProfile({ name: next })
+                }}
+              />
+            </Field>
+
+            <Field label={t('settings.about')}>
+              <input
+                key={`about:${identity.about}`}
+                className="input"
+                defaultValue={identity.about}
+                maxLength={200}
+                onBlur={(event) => {
+                  if (event.target.value !== identity.about) void updateProfile({ about: event.target.value })
+                }}
+              />
+            </Field>
+
+            <div className="row">
+              <label className="btn btn-outline grow">
+                {t('settings.avatarChoose')}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="visually-hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    if (file) void pickAvatar(file)
+                  }}
+                />
+              </label>
+              {identity.avatar ? (
+                <button className="btn btn-ghost" onClick={() => void updateProfile({ avatar: undefined })}>
+                  {t('settings.avatarRemove')}
+                </button>
+              ) : null}
             </div>
-            <select
-              className="input"
-              style={{ width: 'auto', minWidth: 120 }}
-              value={locale}
-              onChange={(e) => setLocale(e.target.value)}
-              aria-label="Language"
-            >
-              <option value="en">English</option>
-              <option value="te">తెలుగు</option>
-              <option value="hi">हिन्दी</option>
-              <option value="ta">தமிழ்</option>
-              <option value="ar">العربية</option>
-              <option value="ja">日本語</option>
-              <option value="ko">한국어</option>
-              <option value="zh">中文</option>
-              <option value="es">Español</option>
-              <option value="de">Deutsch</option>
-              <option value="fr">Français</option>
-              <option value="ru">Русский</option>
-              <option value="pt">Português</option>
-              <option value="ur">اردو</option>
-              <option value="bn">বাংলা</option>
-              <option value="tr">Türkçe</option>
-              <option value="id">Bahasa Indonesia</option>
-            </select>
           </div>
-        </div>
 
-        {/* Privacy */}
-        <div className="settings-section">
-          <h2 className="settings-section-title">Privacy</h2>
-          <ToggleSetting
-            label="Read Receipts"
-            description="Let contacts know when you've read their messages"
-            defaultChecked={true}
-          />
-          <ToggleSetting
-            label="Typing Indicators"
-            description="Show when you're typing a message"
-            defaultChecked={true}
-          />
-          <ToggleSetting
-            label="Link Previews"
-            description="Generate previews for links in messages"
-            defaultChecked={false}
-          />
-          <ToggleSetting
-            label="Media Auto-Download"
-            description="Automatically download media in messages"
-            defaultChecked={false}
-          />
-        </div>
+          <span className="section-title">{t('settings.appearance')}</span>
+          <div className="card-section">
+            <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
+              <Field label={t('settings.language')}>
+                <select
+                  className="input select"
+                  value={settings.locale}
+                  onChange={(event) => void saveSettings({ locale: event.target.value as LocaleCode })}
+                >
+                  {(Object.keys(LOCALE_NAMES) as LocaleCode[]).map((code) => (
+                    <option key={code} value={code}>
+                      {LOCALE_NAMES[code]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
+              {/* The same control as on the entry screens, so the theme switch
+                  looks and behaves identically wherever it is met. */}
+              <Field label={t('settings.theme')}>
+                <SegmentedControl
+                  label={t('settings.theme')}
+                  value={settings.theme}
+                  options={[
+                    { value: 'system', label: t('settings.themeSystem'), icon: <MonitorIcon size={15} /> },
+                    { value: 'light', label: t('settings.themeLight'), icon: <SunIcon size={15} /> },
+                    { value: 'dark', label: t('settings.themeDark'), icon: <MoonIcon size={15} /> },
+                  ]}
+                  onChange={(theme: ThemePreference) => void saveSettings({ theme })}
+                />
+              </Field>
+            </div>
+            <Toggle
+              label={t('settings.enterToSend')}
+              checked={settings.enterToSend}
+              onChange={(enterToSend) => void saveSettings({ enterToSend })}
+            />
+          </div>
 
-        {/* Security */}
-        <div className="settings-section">
-          <h2 className="settings-section-title">Security</h2>
-          <button
-            className="btn btn-secondary"
-            style={{ width: '100%', justifyContent: 'flex-start' }}
-          >
-            🔐 Security & Verification
-          </button>
-          <div style={{ height: 'var(--space-2)' }} />
-          <button
-            className="btn btn-secondary"
-            style={{ width: '100%', justifyContent: 'flex-start' }}
-          >
-            📱 Device Management
-          </button>
-          <div style={{ height: 'var(--space-2)' }} />
-          <button
-            className="btn btn-secondary"
-            style={{ width: '100%', justifyContent: 'flex-start' }}
-          >
-            🗄️ Relay Configuration
-          </button>
-          <div style={{ height: 'var(--space-2)' }} />
-          <button
-            className="btn btn-secondary"
-            style={{ width: '100%', justifyContent: 'flex-start' }}
-          >
-            💾 Encrypted Backup
-          </button>
-        </div>
+          <div className="card-section">
+            <NavRow
+              icon={<GlobeIcon size={18} />}
+              label={t('settings.relays')}
+              to={{ name: 'settings-relays' }}
+            />
+            <NavRow
+              icon={<ShieldIcon size={18} />}
+              label={t('settings.privacy')}
+              to={{ name: 'settings-privacy' }}
+            />
+            <NavRow
+              icon={<PhoneIcon size={18} />}
+              label={t('settings.calls')}
+              to={{ name: 'settings-calls' }}
+            />
+            <NavRow
+              icon={<LockIcon size={18} />}
+              label={t('settings.security')}
+              to={{ name: 'settings-security' }}
+            />
+            <NavRow
+              icon={<DownloadIcon size={18} />}
+              label={t('settings.data')}
+              to={{ name: 'settings-data' }}
+            />
+          </div>
 
-        {/* Account */}
-        <div className="settings-section">
-          <h2 className="settings-section-title">Account</h2>
-          <button
-            className="btn btn-danger btn-ghost"
-            onClick={handleLock}
-            style={{ width: '100%', justifyContent: 'flex-start' }}
-          >
-            🔒 Lock Vault
-          </button>
-        </div>
+          <span className="section-title">{t('settings.aboutSection')}</span>
+          <div className="card-section">
+            <NavRow label={t('settings.whatLeaves')} to={{ name: 'about' }} />
+            <a className="list-row" href={SOURCE_URL} target="_blank" rel="noreferrer noopener">
+              <span className="grow">{t('settings.sourceCode')}</span>
+              <ChevronIcon size={16} />
+            </a>
+            <div className="list-row" style={{ cursor: 'default' }}>
+              <span className="grow muted">{t('settings.version')}</span>
+              <code className="mono small">{APP_VERSION}</code>
+            </div>
+          </div>
 
-        {/* About */}
-        <div className="settings-section">
-          <h2 className="settings-section-title">About</h2>
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>Crow v0.1.0</p>
-          <p
-            style={{
-              fontSize: 'var(--text-xs)',
-              color: 'var(--text-tertiary)',
-              marginTop: 'var(--space-1)',
-            }}
-          >
-            Privacy-first, end-to-end encrypted web messenger
-          </p>
+          <button className="btn btn-outline btn-block" onClick={() => lock()}>
+            <LockIcon size={16} />
+            {t('settings.lockNow')}
+          </button>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-function ToggleSetting({
-  label,
-  description,
-  defaultChecked,
-}: {
-  label: string;
-  description: string;
-  defaultChecked: boolean;
-}) {
-  const [checked, setChecked] = useState(defaultChecked);
+/** A row that opens a settings page, marked as current while that page is open beside the list. */
+export function NavRow({ icon, label, to }: { icon?: React.ReactNode; label: string; to: Route }) {
+  const navigate = useNavigate()
+  const current = useRoute().name === to.name
   return (
-    <div className="settings-item">
-      <div>
-        <div className="settings-item-label">{label}</div>
-        <div className="settings-item-description">{description}</div>
+    <button className="list-row" aria-current={current || undefined} onClick={() => navigate(to)}>
+      {icon ? <span style={{ color: 'var(--text-muted)' }}>{icon}</span> : null}
+      <span className="grow">{label}</span>
+      <ChevronIcon size={16} style={{ color: 'var(--text-faint)' }} />
+    </button>
+  )
+}
+
+export function PrivacySettings() {
+  const { t } = useI18n()
+  const settings = useApp((s) => s.settings)
+  const saveSettings = useApp((s) => s.saveSettings)
+  const toast = useApp((s) => s.toast)
+
+  const notificationsBlocked = typeof Notification === 'undefined' || Notification.permission === 'denied'
+
+  /**
+   * Ask for permission at the moment the user turns the toggle on, never on
+   * page load. A permission prompt that appears unprompted is the fastest way
+   * to get permanently denied.
+   */
+  const setNotifications = async (enabled: boolean) => {
+    if (!enabled) {
+      await saveSettings({ notificationsEnabled: false })
+      return
+    }
+    if (typeof Notification === 'undefined') return
+    const permission =
+      Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
+    if (permission !== 'granted') {
+      toast(t('settings.notificationsDenied'), 'danger')
+      return
+    }
+    await saveSettings({ notificationsEnabled: true })
+  }
+
+  return (
+    <SettingsPage title={t('settings.privacy')}>
+      <div className="card-section">
+        <Toggle
+          label={t('settings.notifications')}
+          description={t('settings.notificationsBody')}
+          checked={settings.notificationsEnabled && !notificationsBlocked}
+          disabled={notificationsBlocked}
+          onChange={(enabled) => void setNotifications(enabled)}
+        />
+        <Toggle
+          label={t('settings.readReceipts')}
+          checked={settings.sendReadReceipts}
+          onChange={(sendReadReceipts) => void saveSettings({ sendReadReceipts })}
+        />
+        <Toggle
+          label={t('settings.typingIndicators')}
+          checked={settings.sendTypingIndicators}
+          onChange={(sendTypingIndicators) => void saveSettings({ sendTypingIndicators })}
+        />
+        <Toggle
+          label={t('settings.directConnection')}
+          description={t('settings.directConnectionBody')}
+          checked={settings.enableDirectConnection}
+          onChange={(enableDirectConnection) => void saveSettings({ enableDirectConnection })}
+        />
+        <Toggle
+          label={t('settings.publicProfile')}
+          description={t('settings.publicProfileBody')}
+          checked={settings.publishPublicProfile}
+          onChange={(publishPublicProfile) => void saveSettings({ publishPublicProfile })}
+        />
+        <Toggle
+          label={t('settings.mlsInvites')}
+          description={t('settings.mlsInvitesBody')}
+          checked={settings.mlsInvites}
+          onChange={(mlsInvites) => void saveSettings({ mlsInvites })}
+        />
       </div>
-      <div
-        className={`toggle${checked ? ' active' : ''}`}
-        onClick={() => setChecked(!checked)}
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && setChecked(!checked)}
-      >
-        <div className="toggle-thumb" />
+
+      <div className="card stack-sm">
+        <Field label={t('settings.retention')}>
+          <select
+            className="input select"
+            value={settings.retention}
+            onChange={(event) =>
+              void saveSettings({ retention: event.target.value as typeof settings.retention })
+            }
+          >
+            <option value="forever">{t('settings.retentionForever')}</option>
+            <option value="90d">{t('settings.retentionDays', { n: 90 })}</option>
+            <option value="30d">{t('settings.retentionDays', { n: 30 })}</option>
+            <option value="7d">{t('settings.retentionDays', { n: 7 })}</option>
+          </select>
+        </Field>
       </div>
-    </div>
-  );
+
+      <div className="card stack-sm">
+        <Field label={t('settings.messageExpiry')} hint={t('settings.messageExpiryBody')}>
+          <select
+            className="input select"
+            value={String(settings.messageExpirationDays)}
+            onChange={(event) => void saveSettings({ messageExpirationDays: Number(event.target.value) })}
+          >
+            {[7, 30, 90, 365].map((days) => (
+              <option key={days} value={days}>
+                {t('settings.retentionDays', { n: days })}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
+
+      <Banner tone="accent">
+        <span className="small">{t('privacy.limitsForwardSecrecy')}</span>
+      </Banner>
+    </SettingsPage>
+  )
+}
+
+/**
+ * Re-encode an avatar to a small square JPEG data URI.
+ *
+ * Two reasons this is not just `FileReader.readAsDataURL`: the original may be
+ * megabytes (and gets sent to every contact), and re-encoding through a canvas
+ * strips EXIF, which routinely carries GPS coordinates.
+ */
+async function downscaleToDataUri(file: File, size: number): Promise<string | null> {
+  try {
+    const bitmap = await createImageBitmap(file)
+    const side = Math.min(bitmap.width, bitmap.height)
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const context = canvas.getContext('2d')
+    if (!context) return null
+    context.drawImage(
+      bitmap,
+      (bitmap.width - side) / 2,
+      (bitmap.height - side) / 2,
+      side,
+      side,
+      0,
+      0,
+      size,
+      size,
+    )
+    bitmap.close()
+    const dataUri = canvas.toDataURL('image/jpeg', 0.82)
+    return dataUri.length <= 64 * 1024 ? dataUri : canvas.toDataURL('image/jpeg', 0.6)
+  } catch {
+    return null
+  }
 }

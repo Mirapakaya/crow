@@ -1,78 +1,35 @@
-/**
- * Async mutex for Crow.
- *
- * Used to serialise access to shared resources (e.g. the relay
- * publish queue, the key store) without blocking the JS event loop.
- */
-
-/**
- * A lightweight async mutex.
- *
- * Callers either use `lock()` to obtain an explicit unlock function
- * or the convenience `withLock()` for scoped access.
- *
- * @example
- * ```ts
- * const mutex = new Mutex();
- *
- * // Explicit lock / unlock:
- * const unlock = await mutex.lock();
- * try { … } finally { unlock(); }
- *
- * // Convenience wrapper:
- * const result = await mutex.withLock(async () => criticalWork());
- * ```
- */
+/** Serialises async sections. Used to keep vault writes and sync passes ordered. */
 export class Mutex {
-  private queue: (() => void)[] = [];
-  private locked = false;
+  #tail: Promise<unknown> = Promise.resolve()
 
-  /**
-   * Acquire the mutex.
-   *
-   * Resolves immediately if the mutex is free; otherwise the caller
-   * is queued and will resolve once all preceding holders have
-   * released their locks.
-   *
-   * @returns An **unlock function** that must be called exactly once.
-   */
-  lock(): Promise<() => void> {
-    return new Promise<() => void>((resolve) => {
-      const tryAcquire = () => {
-        if (!this.locked) {
-          this.locked = true;
-          resolve(unlock);
-        } else {
-          this.queue.push(tryAcquire);
-        }
-      };
-
-      const unlock = () => {
-        const next = this.queue.shift();
-        if (next) {
-          // Hand the lock directly to the next waiter.
-          next();
-        } else {
-          this.locked = false;
-        }
-      };
-
-      tryAcquire();
-    });
+  run<T>(fn: () => Promise<T>): Promise<T> {
+    const result = this.#tail.then(fn, fn)
+    // Swallow rejection on the chain so one failure does not poison the queue.
+    this.#tail = result.then(
+      () => undefined,
+      () => undefined,
+    )
+    return result
   }
+}
 
-  /**
-   * Convenience wrapper that acquires the mutex, runs `fn`, and
-   * releases the lock when the promise settles (even on error).
-   *
-   * @returns Whatever `fn` returns.
-   */
-  async withLock<T>(fn: () => Promise<T>): Promise<T> {
-    const unlock = await this.lock();
-    try {
-      return await fn();
-    } finally {
-      unlock();
+/** Collapses concurrent calls into one in-flight run, then re-runs if asked again. */
+export function coalesce(fn: () => Promise<void>): () => Promise<void> {
+  let running: Promise<void> | null = null
+  let queued = false
+  const start = async (): Promise<void> => {
+    do {
+      queued = false
+      await fn()
+    } while (queued)
+    running = null
+  }
+  return () => {
+    if (running) {
+      queued = true
+      return running
     }
+    running = start()
+    return running
   }
 }

@@ -1,113 +1,90 @@
+import { scryptAsync } from '@noble/hashes/scrypt.js'
+
 /**
- * Key-derivation functions for Crow messenger.
+ * Passphrase stretching for the vault.
  *
- * Uses scrypt (via @noble/hashes/scrypt) and HKDF-SHA256
- * (via @noble/hashes/hkdf). No custom KDFs.
+ * scrypt is chosen over PBKDF2 (memory-hard, so GPU/ASIC cracking is far more
+ * expensive) and over Argon2 (scrypt has a mature, audited pure-JS
+ * implementation in @noble/hashes; no WASM, which keeps the CSP tight and the
+ * static bundle self-contained).
+ *
+ * Parameters are stored per-vault so they can be raised later without breaking
+ * existing vaults. Where more work is wanted, raising `p` costs no extra peak
+ * memory (the passes run sequentially, so peak stays at N*r*128 bytes) whereas
+ * raising `N` doubles it — and a 256 MB peak is a real out-of-memory risk on
+ * mobile Safari.
  */
-
-import { scrypt } from '@noble/hashes/scrypt';
-import { hkdf } from '@noble/hashes/hkdf';
-import { sha256 } from '@noble/hashes/sha256';
-
-/** Parameters for scrypt key derivation. */
-export interface ScryptParams {
-  /** CPU/memory cost factor (must be a power of 2). */
-  N: number;
-  /** Block size factor. */
-  r: number;
-  /** Parallelism factor. */
-  p: number;
-  /** Derived key length in bytes. */
-  dkLen: number;
+export interface KdfParams {
+  readonly algo: 'scrypt'
+  readonly N: number
+  readonly r: number
+  readonly p: number
 }
 
-/** Default scrypt parameters for passphrases (moderate security). */
-export const DEFAULT_SCRYPT_PARAMS: ScryptParams = {
-  N: 2 ** 17, // 131072
-  r: 8,
-  p: 1,
-  dkLen: 32,
-};
+/**
+ * Measured, not guessed. Browser engines run this workload roughly 8x slower
+ * than Node, so parameters were chosen against a real browser:
+ *
+ *   N=2^16 p=1  ~0.9 s   (desktop Chrome)   ~3-4 s on a mid-range phone
+ *   N=2^17 p=1  ~1.8 s                      ~7-8 s
+ *   N=2^16 p=4  ~3.5 s                      ~15 s
+ *
+ * Unlock happens on every auto-lock timeout, so anything past a couple of
+ * seconds pushes people towards disabling auto-lock entirely - a net loss for
+ * security. N=2^16, r=8, p=1 keeps peak memory at 64 MB (safe on mobile Safari)
+ * and stays well inside the interactive budget.
+ *
+ * Parameters are stored per-vault, so this can be raised for new vaults without
+ * breaking existing ones, and a passphrase change re-derives under the current
+ * default.
+ */
+export const DEFAULT_KDF_PARAMS: KdfParams = { algo: 'scrypt', N: 2 ** 16, r: 8, p: 1 }
 
-/** Stricter scrypt parameters for short PINs (higher cost). */
-const PIN_SCRYPT_PARAMS: ScryptParams = {
-  N: 2 ** 20, // 1048576
-  r: 8,
-  p: 2,
-  dkLen: 32,
-};
+/** Refuse absurd parameters from a tampered or corrupted vault header. */
+export function assertKdfParams(params: KdfParams): void {
+  if (params.algo !== 'scrypt') throw new Error(`unsupported KDF: ${String(params.algo)}`)
+  const { N, r, p } = params
+  const powerOfTwo = Number.isInteger(N) && N > 1 && (N & (N - 1)) === 0
+  if (!powerOfTwo || N < 2 ** 12 || N > 2 ** 20) throw new Error('KDF N out of range')
+  if (!Number.isInteger(r) || r < 1 || r > 16) throw new Error('KDF r out of range')
+  if (!Number.isInteger(p) || p < 1 || p > 16) throw new Error('KDF p out of range')
+}
+
+export interface DeriveOptions {
+  onProgress?: (fraction: number) => void
+  signal?: AbortSignal
+}
 
 /**
- * Derive a key from a passphrase using scrypt.
- *
- * @param passphrase - Human-readable passphrase.
- * @param salt       - Random salt (≥16 bytes recommended).
- * @param params     - Optional scrypt parameters (defaults to `DEFAULT_SCRYPT_PARAMS`).
- * @returns 32-byte derived key.
+ * Derive the key-encryption key from a passphrase. Runs on whatever thread
+ * calls it; the app calls this through `kdfClient` so it lands in a worker and
+ * the UI keeps painting.
  */
-export async function deriveKey(
+export async function deriveKek(
   passphrase: string,
   salt: Uint8Array,
-  params?: ScryptParams,
+  params: KdfParams = DEFAULT_KDF_PARAMS,
+  opts: DeriveOptions = {},
 ): Promise<Uint8Array> {
-  const p = params ?? DEFAULT_SCRYPT_PARAMS;
-  // scrypt is synchronous in @noble/hashes but may be CPU-heavy;
-  // yielding to the event loop keeps the UI responsive.
-  return new Promise<Uint8Array>((resolve) => {
-    setTimeout(() => {
-      resolve(scrypt(passphrase, salt, { N: p.N, r: p.r, p: p.p, dkLen: p.dkLen }));
-    }, 0);
-  });
-}
-
-/**
- * Derive a sub-key from a master key using HKDF-SHA256.
- *
- * @param masterKey - Input keying material.
- * @param context   - Domain-separation context string (e.g. "crow-vault" or "crow-blob").
- * @param subkeyId  - Numeric subkey identifier.
- * @param length    - Output length in bytes (default 32).
- * @returns Derived sub-key bytes.
- */
-export function deriveSubKey(
-  masterKey: Uint8Array,
-  context: string,
-  subkeyId: number,
-  length: number = 32,
-): Uint8Array {
-  // Encode subkeyId as a 4-byte big-endian suffix in the info buffer.
-  const info = new TextEncoder().encode(context);
-  const idBytes = new Uint8Array(4);
-  new DataView(idBytes.buffer).setUint32(0, subkeyId, false);
-  const fullInfo = new Uint8Array(info.length + 4);
-  fullInfo.set(info, 0);
-  fullInfo.set(idBytes, info.length);
-
-  const prk = hkdf(sha256, masterKey, new Uint8Array(0), fullInfo, length);
-  return new Uint8Array(prk);
-}
-
-/**
- * Stretch a short PIN into a full-strength key using scrypt with
- * higher parameters. Use this instead of `deriveKey` when the
- * input is known to be low-entropy (4–6 digit PIN).
- *
- * @param pin  - Numeric PIN string.
- * @param salt - Random salt (≥16 bytes).
- * @returns 32-byte derived key.
- */
-export async function stretchPin(pin: string, salt: Uint8Array): Promise<Uint8Array> {
-  return deriveKey(pin, salt, PIN_SCRYPT_PARAMS);
-}
-
-/**
- * Generate `n` cryptographically random bytes using `crypto.getRandomValues`.
- *
- * @param n - Number of bytes to generate.
- * @returns Random byte array of length `n`.
- */
-export function randomBytes(n: number): Uint8Array {
-  const buf = new Uint8Array(n);
-  crypto.getRandomValues(buf);
-  return buf;
+  assertKdfParams(params)
+  if (salt.length < 16) throw new Error('KDF salt must be at least 16 bytes')
+  // NFKC keeps a passphrase typed with a Persian keyboard (or any composed
+  // script) hashing identically across platforms and input methods.
+  const normalized = passphrase.normalize('NFKC')
+  const key = await scryptAsync(normalized, salt, {
+    N: params.N,
+    r: params.r,
+    p: params.p,
+    dkLen: 32,
+    // Guard rail matching scrypt's own accounting, so a tampered header
+    // cannot make us try to allocate gigabytes.
+    maxmem: 128 * params.r * (params.N + params.p) + 1024 * 1024,
+    onProgress: opts.onProgress
+      ? (n: number) => {
+          opts.signal?.throwIfAborted()
+          opts.onProgress?.(n)
+        }
+      : undefined,
+  })
+  return key
 }

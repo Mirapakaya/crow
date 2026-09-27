@@ -1,76 +1,52 @@
 /**
- * ICE / STUN / TURN server configuration for Crow WebRTC calls.
+ * STUN and TURN servers the user types in, checked before they are saved.
  *
- * Provides default public STUN servers and a hook for overriding
- * them with TURN servers when available.
+ * Only Settings reads this, so it rides in the settings chunk.
  */
 
-/** Default public STUN servers used when no custom configuration is provided. */
-export const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
-];
-
-/** Custom ICE servers that, once set, override the defaults. */
-let customIceServers: RTCIceServer[] | null = null;
-
-/**
- * Return the ICE servers that will be used for new peer connections.
- *
- * If {@link setIceServers} has been called, those servers are returned;
- * otherwise the built-in public STUN servers are used.
- */
-export function getIceServers(): RTCIceServer[] {
-  return customIceServers ?? DEFAULT_ICE_SERVERS;
+export interface IceServerInput {
+  url: string
+  username?: string
+  credential?: string
 }
 
-/**
- * Override the default ICE server list (e.g. to add TURN relays).
- *
- * Pass `null` to revert to the defaults.
- */
-export function setIceServers(servers: RTCIceServer[] | null): void {
-  customIceServers = servers;
-}
+export type IceServerError = 'invalid' | 'credentials'
+
+const MAX_URL_CHARS = 512
+const MAX_CREDENTIAL_CHARS = 256
 
 /**
- * Perform a basic ICE connectivity check by creating a short-lived
- * RTCPeerConnection and verifying that at least one ICE candidate
- * is gathered within a timeout window.
- *
- * @returns `true` if ICE gathering succeeds, `false` otherwise.
+ * Validate one server. A `turn:` or `turns:` server needs credentials — every
+ * real one does, and one without them fails at call time with nothing to show
+ * why. A `stun:` server takes none, and any given are dropped rather than
+ * stored for no reason.
  */
-export async function testIceConnectivity(): Promise<boolean> {
-  try {
-    const pc = new RTCPeerConnection({ iceServers: getIceServers() });
-    const gathered = new Promise<boolean>((resolve) => {
-      const timeout = setTimeout(() => {
-        resolve(false);
-        pc.close();
-      }, 5_000);
-
-      pc.addEventListener('icecandidate', (evt) => {
-        if (evt.candidate) {
-          clearTimeout(timeout);
-          resolve(true);
-          pc.close();
-        }
-      });
-
-      // An empty data channel triggers ICE gathering.
-      pc.createDataChannel('connectivity-test');
-      pc.createOffer()
-        .then((offer) => pc.setLocalDescription(offer))
-        .catch(() => {
-          clearTimeout(timeout);
-          resolve(false);
-          pc.close();
-        });
-    });
-
-    return await gathered;
-  } catch {
-    return false;
+export function parseIceServer(input: IceServerInput): { server: RTCIceServer } | { error: IceServerError } {
+  const url = input.url.trim()
+  // stun:host[:port], turn:host[:port][?transport=udp|tcp], turns:…
+  if (url.length > MAX_URL_CHARS || !/^(stuns?|turns?):[^\s/?#]+(\?transport=(udp|tcp))?$/i.test(url)) {
+    return { error: 'invalid' }
   }
+  const scheme = url.slice(0, url.indexOf(':')).toLowerCase()
+  const normalized = `${scheme}${url.slice(scheme.length)}`
+  if (!scheme.startsWith('turn')) return { server: { urls: normalized } }
+
+  const username = (input.username ?? '').trim()
+  const credential = input.credential ?? ''
+  if (!username || !credential) return { error: 'credentials' }
+  if (username.length > MAX_CREDENTIAL_CHARS || credential.length > MAX_CREDENTIAL_CHARS)
+    return { error: 'invalid' }
+  return { server: { urls: normalized, username, credential } }
 }
+
+/** The addresses a server entry names. */
+export const serverUrls = (server: RTCIceServer): string[] =>
+  Array.isArray(server.urls) ? server.urls : [server.urls]
+
+/** Whether `server` names an address already in `servers`. */
+export const alreadyListed = (servers: readonly RTCIceServer[], server: RTCIceServer): boolean =>
+  servers.some((existing) =>
+    serverUrls(existing).some((url) =>
+      serverUrls(server).some((other) => other.toLowerCase() === url.toLowerCase()),
+    ),
+  )
