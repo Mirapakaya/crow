@@ -811,3 +811,104 @@ index key rather than trusted from the file.
 A forward-secret group's MLS state is **never** in a backup. Two devices holding the same
 leaf would break the group for everyone. Its history is restored read-only, marked as
 left, unless the importing device is still in that group — then its own state stands.
+
+---
+
+## 6. Post-quantum integration (from Zerion)
+
+Crow integrates Zerion's post-quantum cryptographic technology as an additional
+defence layer against harvest-now-decrypt-later attacks. The integration follows
+Zerion's Mode 3-Full design: every message key incorporates ML-KEM-768 in
+addition to the existing classical primitives, so an attacker must break both
+X25519 and ML-KEM-768 to derive a shared secret.
+
+### 6.1 Cryptographic primitives
+
+| Purpose | Primitive | Source |
+| --- | --- | --- |
+| Key encapsulation (post-quantum) | ML-KEM-768 (FIPS 203) | `@noble/post-quantum` |
+| Signature (post-quantum) | ML-DSA-65 (FIPS 204) | `@noble/post-quantum` |
+| Key agreement (classical) | X25519 | `@noble/curves` |
+| Signature (classical) | Ed25519 | `@noble/curves` |
+| Authenticated encryption | XChaCha20-Poly1305 | `@noble/ciphers` |
+| Key derivation | HKDF-SHA-512, HKDF-SHA-256 | `@noble/hashes` |
+
+All post-quantum primitives come from `@noble/post-quantum` (same author and
+audit philosophy as the existing `@noble/*` packages), keeping the bundle pure
+TypeScript with no WASM and preserving Crow's strict CSP.
+
+### 6.2 Hybrid key agreement
+
+Two peers performing key agreement run X25519 ECDH and ML-KEM-768 encapsulation
+in parallel, then mix both shared secrets through HKDF-SHA-512 with domain
+separation:
+
+```
+classicalSs = X25519(ourSk, theirPk)
+pqSs = ML-KEM-768.encapsulate(theirKemPk)
+sharedSecret = HKDF-SHA-512(classicalSs || pqSs, "crow/pq-hybrid-agree/v1", context)
+```
+
+The context string binds the key to its use (handshake, envelope sealing, etc.),
+preventing cross-protocol attacks.
+
+### 6.3 Hybrid signatures
+
+Identity signatures are hybrid Ed25519 + ML-DSA-65. Both halves must verify
+independently. Signature layout on the wire:
+
+```
+signature = Ed25519-sig(64) || ML-DSA-65-sig(3309)
+```
+
+### 6.4 ZWF framing (WebRTC data channels)
+
+Direct WebRTC data channels use Zerion Wire Format framing:
+
+- Every frame is exactly 4096 bytes on the wire
+- Three authenticated segments: frame header, KEM header, body
+- KEM header carries the sender's current ML-KEM-768 encapsulation key and a
+  ciphertext to the peer's advertised key
+- The body segment is encrypted under a hybrid body key derived from both the
+  classical message key and the per-message ML-KEM-768 shared secret
+- ML-KEM keys rotate every 16 sends
+- The receiver retains 32 recent decapsulation keypairs for in-flight messages
+- After the first real ML-KEM contribution, zero-sentinel frames are rejected
+
+See `src/core/transport/zwf/`.
+
+### 6.5 Constant-rate traffic shaping (ZPP)
+
+The paced sender emits exactly one fixed-size ZWF frame per time slot, carrying
+the next queued record or a cover frame if the queue is empty. An observer of
+the data channel sees a stream of identical frames whether the user is chatting
+or idle.
+
+Two regimes: an active interval (~750 ms) while messages are flowing, and a
+slower idle interval (~5 s) after 30 seconds with no queued messages. Each slot
+adds zero-mean jitter of up to one-third of the interval. Pacing is self-paced:
+a stall lengthens the cadence, never producing a catch-up burst.
+
+See `src/core/transport/zwf/pacing.ts`.
+
+### 6.6 Async sealed-sender envelopes
+
+For relay-based delivery of post-quantum-protected messages to offline peers,
+Crow supports async sealed-sender envelopes. The sender encrypts to the
+recipient's published prekey bundle (ML-KEM-768 + X25519 agreement key) with
+no interactive handshake. Inside the sealed envelope is a hybrid signature
+(Ed25519 + ML-DSA-65) authenticating the sender.
+
+A relay sees only the prekey selector, the ephemeral key, the KEM ciphertext,
+an advisory TTL, a dedup identifier, and an opaque blob — never the sender,
+recipient, or content.
+
+See `src/core/crypto/asyncSealedSender.ts`.
+
+### 6.7 Relationship to NIP-17
+
+The post-quantum layer is additive. NIP-17 gift wrapping remains the primary
+envelope for Nostr relay delivery, preserving interoperability with other Nostr
+clients. The ZWF + ZPP stack applies to direct WebRTC connections, where both
+peers are Crow users and can negotiate the stronger protocol. Async sealed-sender
+envelopes apply to future relay-based PQ delivery when both peers support it.

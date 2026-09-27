@@ -212,10 +212,18 @@ A messenger that only lists its strengths is not being straight with you.
 ## Technology
 
 TypeScript · React 19 · Vite 8 · Dexie (IndexedDB) · Zustand · `nostr-tools` ·
-`@noble/{ciphers,curves,hashes}` · `ts-mls` · `qr` · Workbox
+`@noble/{ciphers,curves,hashes,post-quantum}` · `ts-mls` · `qr` · Workbox
 
-Fourteen direct runtime dependencies, no CDN, no analytics, no tracking, no telemetry. Every
+Fifteen direct runtime dependencies, no CDN, no analytics, no tracking, no telemetry. Every
 byte is served from the app's own origin under a strict Content-Security-Policy.
+
+### Post-quantum protection
+
+Crow integrates Zerion's post-quantum technology (ML-KEM-768, ML-DSA-65) as an
+additional defence layer. On direct WebRTC connections, every message key
+incorporates ML-KEM-768 alongside X25519, so an attacker must break both
+classical and post-quantum primitives to succeed — and recorded traffic stays
+safe against future quantum computers. See [`docs/PROTOCOL.md §6`](docs/PROTOCOL.md).
 
 ---
 
