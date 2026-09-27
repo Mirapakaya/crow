@@ -232,11 +232,14 @@ export class KeySlotManager {
     const newParams = { ...DEFAULT_SCRYPT_PARAMS };
     const newWrappingKey = deriveFromCredential(newCredential, newSalt, newParams);
     const newWrappedKey = wrapKey(masterKey, newWrappingKey);
+    const { verifier: newVerifier, nonce: newVerifierNonce } = computeVerifier(masterKey);
 
     await db.keyslots.update(slotId, {
       salt: newSalt,
       params: newParams,
       wrappedKey: newWrappedKey,
+      verifier: newVerifier,
+      verifierNonce: newVerifierNonce,
     });
   }
 }

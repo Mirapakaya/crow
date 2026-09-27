@@ -13,7 +13,7 @@
  */
 
 import { secp256k1 } from "@noble/curves/secp256k1";
-import { chacha20 } from "@noble/ciphers/chacha";
+import { xchacha20 } from "@noble/ciphers/chacha";
 import { hmac } from "@noble/hashes/hmac";
 import { sha256 } from "@noble/hashes/sha256";
 
@@ -110,7 +110,7 @@ export function encrypt(
   crypto.getRandomValues(nonce);
 
   const padded = pad(plaintext);
-  const ciphertext = chacha20(conversationKey, nonce, padded);
+  const ciphertext = xchacha20(conversationKey, nonce, padded);
 
   // MAC input = version ‖ nonce ‖ ciphertext
   const macInput = new Uint8Array(1 + nonce.length + ciphertext.length);
@@ -163,7 +163,7 @@ export function decrypt(
     throw new Error("nip44: MAC verification failed");
   }
 
-  const padded = chacha20(conversationKey, nonce, ct);
+  const padded = xchacha20(conversationKey, nonce, ct);
   return unpad(padded);
 }
 
