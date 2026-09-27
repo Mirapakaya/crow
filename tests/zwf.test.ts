@@ -16,7 +16,7 @@ import {
   deriveHybridBodyKey,
 } from '@/core/transport/zwf/framing'
 import { kemKeyGen } from '@/core/crypto/postQuantum'
-import { randomBytes, bytesToHex } from '@/core/util/bytes'
+import { randomBytes } from '@/core/util/bytes'
 
 describe('chain key advancement', () => {
   it('is one-way: message key does not reveal chain key', () => {
@@ -111,7 +111,7 @@ describe('ZwfStreamEncrypter + ZwfStreamDecrypter', () => {
 
     const kemKp = kemKeyGen()
     const encrypter = new ZwfStreamEncrypter(chainKey, streamId)
-    const decrypter = new ZwfStreamDecrypter(chainKey, streamId, kemKp)
+    new ZwfStreamDecrypter(chainKey, streamId, kemKp)
 
     // Set up: tell encrypter about decrypter's KEM public key
     // and tell decrypter about encrypter's KEM public key

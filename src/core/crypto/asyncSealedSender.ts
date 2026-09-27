@@ -22,7 +22,6 @@ import {
   concatBytes,
   randomBytes,
   utf8ToBytes,
-  bytesToUtf8,
   bytesToHex,
   wipe,
 } from '../util/bytes'
@@ -33,7 +32,6 @@ import {
   type HybridSigPublicKey,
   hybridAgreeKeyGen,
   hybridAgreeEncapsulate,
-  hybridSigKeyGen,
   hybridSign,
   hybridSigVerify,
   PQ,
@@ -43,7 +41,6 @@ import {
 
 const VERSION = 0x01
 const NONCE_LEN = 24
-const TAG_LEN = 16
 
 /** Prekey kinds. */
 const PREKEY_ONE_TIME = 0x01
@@ -112,7 +109,7 @@ export function sealEnvelope(
   // 2. Choose prekey: prefer one-time, fall back to signed
   const useOneTime = recipientBundle.oneTimePrekeys.length > 0
   const prekey = useOneTime
-    ? recipientBundle.oneTimePrekeys[0]
+    ? recipientBundle.oneTimePrekeys[0]!
     : recipientBundle.signedPrekey
   const prekeyKind = useOneTime ? PREKEY_ONE_TIME : PREKEY_SIGNED
   const prekeyId = prekey.id
@@ -198,7 +195,7 @@ export function openEnvelope(
   // Parse envelope header
   if (envelope[0] !== VERSION) throw new Error('unsupported envelope version')
 
-  const prekeyKind = envelope[1]
+  const prekeyKind = envelope[1] ?? 0
   const prekeyId = envelope.subarray(2, 18)
   const signedPrekeyId = envelope.subarray(18, 22)
   const ephemeralClassicalPk = envelope.subarray(22, 22 + PQ.X25519_PK)
@@ -210,11 +207,7 @@ export function openEnvelope(
   const ciphertextLen = dv.getUint32(22 + PQ.HYBRID_AGREE_PK + PQ.KEM_CT + 4 + 16, false)
   const ciphertext = envelope.subarray(22 + PQ.HYBRID_AGREE_PK + PQ.KEM_CT + 4 + 16 + 4, 22 + PQ.HYBRID_AGREE_PK + PQ.KEM_CT + 4 + 16 + 4 + ciphertextLen)
 
-  // Reconstruct ephemeral public key
-  const ephemeralAgreePk: HybridAgreePublicKey = {
-    classicalPk: ephemeralClassicalPk,
-    pqPk: ephemeralPqPk,
-  }
+  // Ephemeral public key is used inline below (ephemeralClassicalPk, ephemeralPqPk)
 
   // Perform hybrid key agreement from the recipient side
   const context = `${DOMAIN.envelopeKey}|${bytesToHex(prekeyId)}`

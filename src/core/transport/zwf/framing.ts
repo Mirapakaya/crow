@@ -21,7 +21,7 @@ import { xchacha20poly1305 } from '@noble/ciphers/chacha.js'
 import { sha256 } from '@noble/hashes/sha2.js'
 import { hkdf } from '@noble/hashes/hkdf.js'
 import { hmac } from '@noble/hashes/hmac.js'
-import { concatBytes, randomBytes, utf8ToBytes, wipe } from '@/core/util/bytes'
+import { concatBytes, utf8ToBytes, wipe } from '@/core/util/bytes'
 import {
   type KemKeyPair,
   kemKeyGen,
@@ -40,9 +40,6 @@ const TAG_LEN = 16
 
 /** Stream tag length. */
 const STREAM_TAG_LEN = 16
-
-/** Stream ID length. */
-const STREAM_ID_LEN = 8
 
 /** Nonce length for XChaCha20-Poly1305. */
 const NONCE_LEN = 24
@@ -236,7 +233,6 @@ export class ZwfStreamEncrypter {
    * from a real frame on the wire).
    */
   encrypt(payload: Uint8Array | null, peerKemPk: Uint8Array | null): EncryptedFrame {
-    const isCover = payload === null
     const realPayload = payload ?? new Uint8Array(0)
 
     // Advance chain
@@ -347,7 +343,7 @@ export class ZwfStreamDecrypter {
     const headerNonce = frameNonce(this.#streamId, this.#frameNumber, 0, false)
     const headerCipher = xchacha20poly1305(messageKey, headerNonce)
     const decryptedHeader = headerCipher.decrypt(frame.subarray(0, 20))
-    const { payloadLen, paddingLen, isFinal } = decodeFrameHeader(decryptedHeader)
+    const { payloadLen, paddingLen } = decodeFrameHeader(decryptedHeader)
 
     // Segment 1: KEM header
     const kemHeaderOffset = 20
@@ -357,8 +353,7 @@ export class ZwfStreamDecrypter {
     const KEM_HEADER_SIZE = PQ.KEM_PK + PQ.KEM_CT + 16 + TAG_LEN
     const decryptedKemHeader = kemCipher.decrypt(frame.subarray(kemHeaderOffset, kemHeaderOffset + KEM_HEADER_SIZE))
 
-    // Parse KEM header
-    const theirKemPk = decryptedKemHeader.subarray(0, PQ.KEM_PK)
+    // Parse KEM header (peer's KEM pk starts at byte 0, but is not yet consumed)
     const kemCt = decryptedKemHeader.subarray(PQ.KEM_PK, PQ.KEM_PK + PQ.KEM_CT)
     const pkId = decryptedKemHeader.subarray(PQ.KEM_PK + PQ.KEM_CT, PQ.KEM_PK + PQ.KEM_CT + 16)
 

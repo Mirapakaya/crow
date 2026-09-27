@@ -16,7 +16,6 @@ import {
   hybridAgreeKeyGen,
   hybridAgreeEncapsulate,
   hybridAgreeDecapsulate,
-  deriveHybridSharedSecret,
   hybridSigKeyGen,
   hybridSign,
   hybridSigVerify,
