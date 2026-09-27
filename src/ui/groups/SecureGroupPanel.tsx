@@ -5,11 +5,12 @@ import { useNavigate } from '../../app/router'
 import type { Conversation } from '../../core/models/types'
 import { MAX_MLS_MEMBERS } from '../../core/models/protocol'
 import { Avatar, Banner } from '../components/primitives'
+import { confirmDanger } from '../components/dialog'
 import { LockIcon, PlusIcon, RefreshIcon, ShieldCheckIcon, TrashIcon } from '../components/Icons'
 import { displayName } from '../screens/ChatList'
 import { explainFailure, useSecureText } from './secureText'
-import { Button } from '../../components/ui/button'
-import { cn } from '../../lib/utils'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 /**
  * RFC 9420's epoch authenticator, as people can read it aloud: the first 80
@@ -80,13 +81,14 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
     return (
       <div className="flex flex-col gap-4">
         <Banner tone="warning">
-          <span className="flex-1">{text('left')}</span>
+          <span className="grow">{text('left')}</span>
         </Banner>
         <Button
-          variant="outline"
-          className="w-full border-[var(--danger)] text-[var(--danger)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
-          onClick={() => {
-            if (!confirm(text('deleteConfirm'))) return
+          variant="destructive"
+          className="w-full"
+          onClick={async () => {
+            if (!(await confirmDanger(text('deleteHistory'), text('deleteHistory'), text('deleteConfirm'))))
+              return
             void deleteConversation(group.id).then(() => navigate({ name: 'chats' }, true))
           }}
         >
@@ -99,21 +101,21 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4">
+      <div className="card flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <LockIcon size={16} />
-          <strong className="text-sm text-[var(--text)]">{text('badge')}</strong>
+          <strong>{text('badge')}</strong>
         </div>
-        <p className="text-xs text-[var(--text-muted)]">{text('explainer')}</p>
+        <p className="text-xs text-text-muted">{text('explainer')}</p>
         <div className="flex flex-col gap-2" aria-live="polite">
-          <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--text-muted)] [dir=rtl_&]:normal-case">{text('code')}</span>
-          <code className="rounded-[var(--radius-md)] bg-[var(--surface-2)] px-3 py-2 text-sm font-mono text-[var(--text)]" dir="ltr">
+          <span className="section-title">{text('code')}</span>
+          <code className="security-code" dir="ltr">
             {formatSecurityCode(mls.code)}
           </code>
-          <span className="text-xs text-[var(--text-muted)] tabular-nums">{text('generation', { n: mls.epoch })}</span>
-          <p className="text-xs text-[var(--text-muted)]">{text('codeHint')}</p>
+          <span className="text-xs text-text-muted tabular">{text('generation', { n: mls.epoch })}</span>
+          <p className="text-xs text-text-muted">{text('codeHint')}</p>
         </div>
-        <p className="text-xs text-[var(--text)]">{text('refreshed', { when: relative(mls.refreshedAt, locale) })}</p>
+        <p className="text-xs">{text('refreshed', { when: relative(mls.refreshedAt, locale) })}</p>
         <Button
           variant="ghost"
           size="sm"
@@ -125,19 +127,15 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
         </Button>
       </div>
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+      <div className="card-section">
         {identity ? (
-          <div className="flex w-full items-center gap-3 px-4 py-3">
+          <div className="flex w-full items-center gap-3 px-4 py-3 hover:bg-surface-hover">
             <Avatar name={identity.name} seed={identity.pubkey} src={identity.avatar} size="sm" />
-            <span className="flex-1 min-w-0 truncate">
+            <span className="grow truncate">
               <bdi>{identity.name}</bdi>
             </span>
-            {amAdmin ? (
-              <span className="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.6875rem] font-medium text-[var(--text-muted)]">
-                {text('admin')}
-              </span>
-            ) : null}
-            <span className="text-xs text-[var(--text-muted)]">{t('groups.you')}</span>
+            {amAdmin ? <span className="badge">{text('admin')}</span> : null}
+            <span className="text-xs text-text-muted">{t('groups.you')}</span>
           </div>
         ) : null}
         {[...group.members]
@@ -148,28 +146,28 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
             const contact = contacts.get(pubkey)
             const name = displayName(contact, pubkey)
             return (
-              <div key={pubkey} className="flex w-full items-center gap-3 px-4 py-3 border-t border-[var(--border-subtle)]">
+              <div key={pubkey} className="flex w-full items-center gap-3 px-4 py-3">
                 <Avatar name={name} seed={pubkey} src={contact?.avatar} size="sm" />
-                <span className="flex-1 min-w-0 truncate">
+                <span className="grow truncate">
                   <bdi>{name}</bdi>
                 </span>
                 {contact?.verification === 'verified' ? (
                   <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
                 ) : null}
-                {mls.admins.includes(pubkey) ? (
-                  <span className="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.6875rem] font-medium text-[var(--text-muted)]">
-                    {text('admin')}
-                  </span>
-                ) : null}
+                {mls.admins.includes(pubkey) ? <span className="badge">{text('admin')}</span> : null}
                 {amAdmin ? (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-[var(--danger)] hover:text-[var(--danger)]"
+                    className="text-danger"
                     disabled={busy}
                     aria-label={`${text('remove')} ${name}`}
-                    onClick={() => {
-                      if (confirm(text('removeConfirm', { name }))) void run({ remove: pubkey })
+                    onClick={async () => {
+                      if (
+                        await confirmDanger(text('remove'), text('remove'), text('removeConfirm', { name }))
+                      ) {
+                        void run({ remove: pubkey })
+                      }
                     }}
                   >
                     {text('remove')}
@@ -182,22 +180,25 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
 
       {amAdmin ? (
         adding ? (
-          <div className="flex flex-col gap-3">
-            <p className="text-xs text-[var(--text-muted)]">{addable.length > 0 ? text('addHint') : text('nobodyToAdd')}</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-text-muted">{addable.length > 0 ? text('addHint') : text('nobodyToAdd')}</p>
             {addable.length > 0 ? (
-              <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden" role="group" aria-label={text('add')}>
+              <div className="card-section" role="group" aria-label={text('add')}>
                 {addable.map((contact) => {
                   const on = chosen.includes(contact.pubkey)
                   const name = displayName(contact, contact.pubkey)
                   const blocked = !on && chosen.length >= room
                   return (
-                    <label key={contact.pubkey} className={cn(
-                      'flex w-full items-center gap-3 px-4 py-3 border-t border-[var(--border-subtle)] first:border-t-0',
-                      blocked && 'opacity-50 pointer-events-none',
-                    )}>
+                    <label
+                      key={contact.pubkey}
+                      className={cn(
+                        'flex w-full items-center gap-3 px-4 py-3',
+                        blocked ? 'opacity-50 pointer-events-none' : 'cursor-pointer',
+                      )}
+                    >
                       <input
                         type="checkbox"
-                        className="size-4 rounded-[var(--radius-sm)] border-[var(--border-strong)] bg-[var(--surface)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-2"
+                        className="checkbox"
                         checked={on}
                         aria-label={name}
                         disabled={blocked}
@@ -208,7 +209,7 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
                         }
                       />
                       <Avatar name={name} seed={contact.pubkey} src={contact.avatar} size="sm" />
-                      <span className="flex-1 min-w-0 truncate">
+                      <span className="grow truncate">
                         <bdi>{name}</bdi>
                       </span>
                     </label>
@@ -216,9 +217,9 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
                 })}
               </div>
             ) : null}
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <Button
-                className="flex-1"
+                className="grow"
                 disabled={busy || chosen.length === 0}
                 onClick={() =>
                   void run({ add: chosen }, () => {
@@ -248,12 +249,12 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
       ) : null}
 
       <Button
-        variant="outline"
-        className="w-full border-[var(--danger)] text-[var(--danger)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
+        variant="destructive"
+        className="w-full"
         disabled={busy}
-        onClick={() => {
+        onClick={async () => {
           const note = amAdmin && group.members.length > 0 ? `\n\n${text('leaveAdmin')}` : ''
-          if (!confirm(text('leaveConfirm') + note)) return
+          if (!(await confirmDanger(text('leave'), text('leave'), text('leaveConfirm') + note))) return
           void run({ leave: true }, () => navigate({ name: 'chats' }, true))
         }}
       >

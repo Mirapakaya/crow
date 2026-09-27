@@ -2,24 +2,27 @@ import { useApp } from '../../app/store'
 import { useI18n, LOCALE_NAMES } from '../../i18n'
 import { useNavigate, useRoute, type Route } from '../../app/router'
 import { Avatar } from '../components/primitives'
-import { MonitorIcon, MoonIcon, SunIcon } from '../components/Icons'
-import { SegmentedControl } from '../components/SegmentedControl'
-import { SettingsPage } from './SettingsPage'
-import type { LocaleCode, ThemePreference } from '../../core/models/types'
-import { APP_VERSION, SOURCE_URL } from '../../app/meta'
-import { cn } from '../../lib/utils'
+import {
+  ArrowLeft,
+  ChevronRight,
+  Globe,
+  Lock,
+  Monitor,
+  Moon,
+  Shield,
+  Sun,
+  Download,
+  Phone,
+} from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Switch } from '../../components/ui/switch'
-import {
-  Globe,
-  Shield,
-  Lock,
-  Phone,
-  Download,
-  ChevronRight,
-} from 'lucide-react'
+import { SegmentedControl } from '../components/SegmentedControl'
+import { SettingsPage } from './SettingsPage'
+import type { LocaleCode, ThemePreference } from '../../core/models/types'
+import { APP_VERSION, SOURCE_URL } from '../../app/meta'
+import { useAboutText } from './aboutText'
 
 export function SettingsHome() {
   const { t } = useI18n()
@@ -47,21 +50,19 @@ export function SettingsHome() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="flex items-center gap-2 shrink-0 min-h-[3.25rem] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 bg-[var(--surface)] border-b border-[var(--border)]">
+      <header className="flex items-center gap-2 px-4 py-3 bg-[var(--surface)] border-b border-[var(--border)]">
         <h1 className="flex-1 text-base font-semibold tracking-tight text-[var(--text)]">{t('settings.title')}</h1>
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-[34rem] flex flex-col gap-4 p-4">
-          <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-faint)] px-1 [dir=rtl]_[:root]&:normal-case [dir=rtl]_[:root]&:tracking-normal">
-            {t('settings.profile')}
-          </span>
+          <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">{t('settings.profile')}</span>
           <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <Avatar name={identity.name} seed={identity.pubkey} src={identity.avatar} size="lg" />
-              <div className="flex flex-1 flex-col gap-1 min-w-0">
-                <span className="font-semibold text-[var(--text)]">{identity.name}</span>
-                <code className="font-mono text-[0.75rem] text-[var(--text-faint)] break-all">
+              <div className="flex-1 flex flex-col gap-2">
+                <span style={{ fontWeight: 600 }}>{identity.name}</span>
+                <code className="mono text-xs text-[var(--text-faint)]" style={{ wordBreak: 'break-all' }}>
                   {identity.npub}
                 </code>
               </div>
@@ -70,8 +71,9 @@ export function SettingsHome() {
 
             <div className="flex flex-col gap-1.5">
               <Label>{t('settings.displayName')}</Label>
-              <Input
+              <input
                 key={`name:${identity.name}`}
+                className="input"
                 defaultValue={identity.name}
                 maxLength={64}
                 onBlur={(event) => {
@@ -83,8 +85,9 @@ export function SettingsHome() {
 
             <div className="flex flex-col gap-1.5">
               <Label>{t('settings.about')}</Label>
-              <Input
+              <input
                 key={`about:${identity.about}`}
+                className="input"
                 defaultValue={identity.about}
                 maxLength={200}
                 onBlur={(event) => {
@@ -93,13 +96,13 @@ export function SettingsHome() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <label className="flex h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-transparent text-sm font-medium text-[var(--text)] transition-colors hover:bg-[var(--surface-2)]">
+            <div className="flex gap-2">
+              <label className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium border border-[var(--border)] bg-[var(--surface)] shadow-xs hover:bg-[var(--surface-hover)] active:bg-[var(--surface-active)] text-[var(--text)] h-9 px-4 py-2 cursor-pointer flex-1 transition-[color,background-color,border-color,box-shadow]">
                 {t('settings.avatarChoose')}
                 <input
                   type="file"
                   accept="image/*"
-                  className="sr-only"
+                  className="visually-hidden"
                   onChange={(event) => {
                     const file = event.target.files?.[0]
                     if (file) void pickAvatar(file)
@@ -114,15 +117,13 @@ export function SettingsHome() {
             </div>
           </div>
 
-          <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-faint)] px-1 [dir=rtl]_[:root]&:normal-case [dir=rtl]_[:root]&:tracking-normal">
-            {t('settings.appearance')}
-          </span>
+          <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">{t('settings.appearance')}</span>
           <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
             <div className="p-3 px-4">
               <div className="flex flex-col gap-1.5">
                 <Label>{t('settings.language')}</Label>
                 <select
-                  className="flex h-9 w-full rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] transition-colors focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+                  className="input select"
                   value={settings.locale}
                   onChange={(event) => void saveSettings({ locale: event.target.value as LocaleCode })}
                 >
@@ -134,62 +135,77 @@ export function SettingsHome() {
                 </select>
               </div>
             </div>
-            <div className="border-t border-[var(--border-subtle)] p-3 px-4">
+            <div className="p-3 px-4 border-t border-[var(--border)]">
+              {/* The same control as on the entry screens, so the theme switch
+                  looks and behaves identically wherever it is met. */}
               <div className="flex flex-col gap-1.5">
                 <Label>{t('settings.theme')}</Label>
                 <SegmentedControl
                   label={t('settings.theme')}
                   value={settings.theme}
                   options={[
-                    { value: 'system', label: t('settings.themeSystem'), icon: <MonitorIcon size={15} /> },
-                    { value: 'light', label: t('settings.themeLight'), icon: <SunIcon size={15} /> },
-                    { value: 'dark', label: t('settings.themeDark'), icon: <MoonIcon size={15} /> },
+                    { value: 'system', label: t('settings.themeSystem'), icon: <Monitor size={15} /> },
+                    { value: 'light', label: t('settings.themeLight'), icon: <Sun size={15} /> },
+                    { value: 'dark', label: t('settings.themeDark'), icon: <Moon size={15} /> },
                   ]}
                   onChange={(theme: ThemePreference) => void saveSettings({ theme })}
                 />
               </div>
             </div>
-            <div className="border-t border-[var(--border-subtle)] flex items-center justify-between gap-3 px-4 py-3">
-              <div>
-                <span className="text-sm font-medium text-[var(--text)]">{t('settings.enterToSend')}</span>
-              </div>
+            <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
+              <span>
+                <span style={{ display: 'block', fontWeight: 'var(--weight-medium)' }}>{t('settings.enterToSend')}</span>
+              </span>
               <Switch
                 checked={settings.enterToSend}
-                onCheckedChange={(checked) => void saveSettings({ enterToSend: checked })}
+                onCheckedChange={(enterToSend) => void saveSettings({ enterToSend })}
               />
             </div>
           </div>
 
           <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-            <NavRow icon={<Globe size={18} strokeWidth={1.75} />} label={t('settings.relays')} to={{ name: 'settings-relays' }} />
-            <NavRow icon={<Shield size={18} strokeWidth={1.75} />} label={t('settings.privacy')} to={{ name: 'settings-privacy' }} />
-            <NavRow icon={<Phone size={18} strokeWidth={1.75} />} label={t('settings.calls')} to={{ name: 'settings-calls' }} />
-            <NavRow icon={<Lock size={18} strokeWidth={1.75} />} label={t('settings.security')} to={{ name: 'settings-security' }} />
-            <NavRow icon={<Download size={18} strokeWidth={1.75} />} label={t('settings.data')} to={{ name: 'settings-data' }} />
+            <NavRow
+              icon={<Globe size={18} />}
+              label={t('settings.relays')}
+              to={{ name: 'settings-relays' }}
+            />
+            <NavRow
+              icon={<Shield size={18} />}
+              label={t('settings.privacy')}
+              to={{ name: 'settings-privacy' }}
+            />
+            <NavRow
+              icon={<Phone size={18} />}
+              label={t('settings.calls')}
+              to={{ name: 'settings-calls' }}
+            />
+            <NavRow
+              icon={<Lock size={18} />}
+              label={t('settings.security')}
+              to={{ name: 'settings-security' }}
+            />
+            <NavRow
+              icon={<Download size={18} />}
+              label={t('settings.data')}
+              to={{ name: 'settings-data' }}
+            />
           </div>
 
-          <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-faint)] px-1 [dir=rtl]_[:root]&:normal-case [dir=rtl]_[:root]&:tracking-normal">
-            {t('settings.aboutSection')}
-          </span>
+          <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">{t('settings.aboutSection')}</span>
           <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
             <NavRow label={t('settings.whatLeaves')} to={{ name: 'about' }} />
-            <a
-              className="flex items-center gap-3 w-full px-4 py-3 border-none bg-transparent text-left cursor-pointer text-[var(--text)] transition-colors hover:bg-[var(--surface-hover)] border-t border-[var(--border-subtle)] [&:not(:first-child)]:border-t"
-              href={SOURCE_URL}
-              target="_blank"
-              rel="noreferrer noopener"
-            >
+            <a className="flex w-full items-center gap-3 px-4 py-3 hover:bg-[var(--surface-hover)] border-t border-[var(--border)]" href={SOURCE_URL} target="_blank" rel="noreferrer noopener">
               <span className="flex-1">{t('settings.sourceCode')}</span>
-              <ChevronRight size={16} className="text-[var(--text-faint)]" />
+              <ChevronRight size={16} style={{ color: 'var(--text-faint)' }} />
             </a>
-            <div className="flex items-center gap-3 px-4 py-3 border-t border-[var(--border-subtle)] cursor-default">
-              <span className="flex-1 text-[var(--text-muted)]">{t('settings.version')}</span>
-              <code className="font-mono text-xs">{APP_VERSION}</code>
+            <div className="flex w-full items-center gap-3 px-4 py-3 border-t border-[var(--border)]" style={{ cursor: 'default' }}>
+              <span className="flex-1 text-sm text-[var(--text-muted)]">{t('settings.version')}</span>
+              <code className="mono small">{APP_VERSION}</code>
             </div>
           </div>
 
-          <Button variant="outline" className="w-full gap-2" onClick={() => lock()}>
-            <Lock size={16} strokeWidth={1.75} />
+          <Button variant="outline" className="w-full" onClick={() => lock()}>
+            <Lock size={16} />
             {t('settings.lockNow')}
           </Button>
         </div>
@@ -198,34 +214,37 @@ export function SettingsHome() {
   )
 }
 
+/** A row that opens a settings page, marked as current while that page is open beside the list. */
 export function NavRow({ icon, label, to }: { icon?: React.ReactNode; label: string; to: Route }) {
   const navigate = useNavigate()
   const current = useRoute().name === to.name
   return (
     <button
-      className={cn(
-        'flex items-center gap-3 w-full px-4 py-3 border-none bg-transparent text-left cursor-pointer text-[var(--text)] transition-colors',
-        current ? 'bg-[var(--accent-soft)]' : 'hover:bg-[var(--surface-hover)]',
-        '[&:not(:first-child)]:border-t [&:not(:first-child)]:border-[var(--border-subtle)]',
-      )}
+      className={`flex w-full items-center gap-3 px-4 py-3 hover:bg-[var(--surface-hover)]${current ? ' bg-[var(--surface-hover)]' : ''}`}
       aria-current={current || undefined}
       onClick={() => navigate(to)}
     >
-      {icon ? <span className="text-[var(--text-muted)]">{icon}</span> : null}
-      <span className="flex-1">{label}</span>
-      <ChevronRight size={16} className="text-[var(--text-faint)]" />
+      {icon ? <span style={{ color: 'var(--text-muted)' }}>{icon}</span> : null}
+      <span className="flex-1 text-left">{label}</span>
+      <ChevronRight size={16} style={{ color: 'var(--text-faint)' }} />
     </button>
   )
 }
 
 export function PrivacySettings() {
   const { t } = useI18n()
+  const about = useAboutText()
   const settings = useApp((s) => s.settings)
   const saveSettings = useApp((s) => s.saveSettings)
   const toast = useApp((s) => s.toast)
 
   const notificationsBlocked = typeof Notification === 'undefined' || Notification.permission === 'denied'
 
+  /**
+   * Ask for permission at the moment the user turns the toggle on, never on
+   * page load. A permission prompt that appears unprompted is the fastest way
+   * to get permanently denied.
+   */
   const setNotifications = async (enabled: boolean) => {
     if (!enabled) {
       await saveSettings({ notificationsEnabled: false })
@@ -244,48 +263,68 @@ export function PrivacySettings() {
   return (
     <SettingsPage title={t('settings.privacy')}>
       <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-        <SettingsToggle
-          label={t('settings.notifications')}
-          description={t('settings.notificationsBody')}
-          checked={settings.notificationsEnabled && !notificationsBlocked}
-          disabled={notificationsBlocked}
-          onCheckedChange={(enabled) => void setNotifications(enabled)}
-        />
-        <SettingsToggle
-          label={t('settings.readReceipts')}
-          checked={settings.sendReadReceipts}
-          onCheckedChange={(sendReadReceipts) => void saveSettings({ sendReadReceipts })}
-        />
-        <SettingsToggle
-          label={t('settings.typingIndicators')}
-          checked={settings.sendTypingIndicators}
-          onCheckedChange={(sendTypingIndicators) => void saveSettings({ sendTypingIndicators })}
-        />
-        <SettingsToggle
-          label={t('settings.directConnection')}
-          description={t('settings.directConnectionBody')}
-          checked={settings.enableDirectConnection}
-          onCheckedChange={(enableDirectConnection) => void saveSettings({ enableDirectConnection })}
-        />
-        <SettingsToggle
-          label={t('settings.publicProfile')}
-          description={t('settings.publicProfileBody')}
-          checked={settings.publishPublicProfile}
-          onCheckedChange={(publishPublicProfile) => void saveSettings({ publishPublicProfile })}
-        />
-        <SettingsToggle
-          label={t('settings.mlsInvites')}
-          description={t('settings.mlsInvitesBody')}
-          checked={settings.mlsInvites}
-          onCheckedChange={(mlsInvites) => void saveSettings({ mlsInvites })}
-        />
+        <div className="flex items-center justify-between p-3 px-4">
+          <span className="flex-1">
+            <span style={{ display: 'block', fontWeight: 'var(--weight-medium)' }}>{t('settings.notifications')}</span>
+            <span className="text-xs text-[var(--text-muted)]" style={{ display: 'block', marginTop: 'var(--space-0-5)' }}>{t('settings.notificationsBody')}</span>
+          </span>
+          <Switch
+            checked={settings.notificationsEnabled && !notificationsBlocked}
+            disabled={notificationsBlocked}
+            onCheckedChange={(enabled) => void setNotifications(enabled)}
+          />
+        </div>
+        <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
+          <span style={{ fontWeight: 'var(--weight-medium)' }}>{t('settings.readReceipts')}</span>
+          <Switch
+            checked={settings.sendReadReceipts}
+            onCheckedChange={(sendReadReceipts) => void saveSettings({ sendReadReceipts })}
+          />
+        </div>
+        <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
+          <span style={{ fontWeight: 'var(--weight-medium)' }}>{t('settings.typingIndicators')}</span>
+          <Switch
+            checked={settings.sendTypingIndicators}
+            onCheckedChange={(sendTypingIndicators) => void saveSettings({ sendTypingIndicators })}
+          />
+        </div>
+        <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
+          <span className="flex-1">
+            <span style={{ display: 'block', fontWeight: 'var(--weight-medium)' }}>{t('settings.directConnection')}</span>
+            <span className="text-xs text-[var(--text-muted)]" style={{ display: 'block', marginTop: 'var(--space-0-5)' }}>{t('settings.directConnectionBody')}</span>
+          </span>
+          <Switch
+            checked={settings.enableDirectConnection}
+            onCheckedChange={(enableDirectConnection) => void saveSettings({ enableDirectConnection })}
+          />
+        </div>
+        <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
+          <span className="flex-1">
+            <span style={{ display: 'block', fontWeight: 'var(--weight-medium)' }}>{t('settings.publicProfile')}</span>
+            <span className="text-xs text-[var(--text-muted)]" style={{ display: 'block', marginTop: 'var(--space-0-5)' }}>{t('settings.publicProfileBody')}</span>
+          </span>
+          <Switch
+            checked={settings.publishPublicProfile}
+            onCheckedChange={(publishPublicProfile) => void saveSettings({ publishPublicProfile })}
+          />
+        </div>
+        <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
+          <span className="flex-1">
+            <span style={{ display: 'block', fontWeight: 'var(--weight-medium)' }}>{t('settings.mlsInvites')}</span>
+            <span className="text-xs text-[var(--text-muted)]" style={{ display: 'block', marginTop: 'var(--space-0-5)' }}>{t('settings.mlsInvitesBody')}</span>
+          </span>
+          <Switch
+            checked={settings.mlsInvites}
+            onCheckedChange={(mlsInvites) => void saveSettings({ mlsInvites })}
+          />
+        </div>
       </div>
 
       <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
         <div className="flex flex-col gap-1.5">
           <Label>{t('settings.retention')}</Label>
           <select
-            className="flex h-9 w-full rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] transition-colors focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+            className="input select"
             value={settings.retention}
             onChange={(event) =>
               void saveSettings({ retention: event.target.value as typeof settings.retention })
@@ -302,9 +341,8 @@ export function PrivacySettings() {
       <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
         <div className="flex flex-col gap-1.5">
           <Label>{t('settings.messageExpiry')}</Label>
-          <span className="text-xs text-[var(--text-muted)]">{t('settings.messageExpiryBody')}</span>
           <select
-            className="flex h-9 w-full rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] transition-colors focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+            className="input select"
             value={String(settings.messageExpirationDays)}
             onChange={(event) => void saveSettings({ messageExpirationDays: Number(event.target.value) })}
           >
@@ -315,41 +353,23 @@ export function PrivacySettings() {
             ))}
           </select>
         </div>
+        <span className="text-xs text-[var(--text-muted)]">{t('settings.messageExpiryBody')}</span>
       </div>
 
-      <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-xs text-[var(--accent-text)]">
-        {t('privacy.limitsForwardSecrecy')}
+      <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--accent-border)] bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--accent-text)]">
+        <span className="small">{about('limitsForwardSecrecy')}</span>
       </div>
     </SettingsPage>
   )
 }
 
-function SettingsToggle({
-  label,
-  description,
-  checked,
-  disabled,
-  onCheckedChange,
-}: {
-  label: string
-  description?: string
-  checked: boolean
-  disabled?: boolean
-  onCheckedChange: (checked: boolean) => void
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-[var(--border-subtle)] first:border-t-0">
-      <div className="flex-1 min-w-0">
-        <span className={cn('text-sm font-medium text-[var(--text)]', disabled && 'text-[var(--text-faint)]')}>{label}</span>
-        {description ? (
-          <span className="block mt-0.5 text-xs text-[var(--text-muted)]">{description}</span>
-        ) : null}
-      </div>
-      <Switch checked={checked} disabled={disabled} onCheckedChange={onCheckedChange} />
-    </div>
-  )
-}
-
+/**
+ * Re-encode an avatar to a small square JPEG data URI.
+ *
+ * Two reasons this is not just `FileReader.readAsDataURL`: the original may be
+ * megabytes (and gets sent to every contact), and re-encoding through a canvas
+ * strips EXIF, which routinely carries GPS coordinates.
+ */
 async function downscaleToDataUri(file: File, size: number): Promise<string | null> {
   try {
     const bitmap = await createImageBitmap(file)

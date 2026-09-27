@@ -1,29 +1,34 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
 import { goBack, useNavigate } from '../../app/router'
-import { Avatar, GroupAvatar } from '../components/primitives'
-import { SendIcon } from '../components/Icons'
+import { Avatar, EmptyState, GroupAvatar } from '../components/primitives'
+import {
+  ArrowDownIcon,
+  BoltIcon,
+  CloseIcon,
+  ForwardIcon,
+  LockIcon,
+  PhoneIcon,
+  SendIcon,
+  ShieldCheckIcon,
+  ShieldIcon,
+  TrashIcon,
+  VideoIcon,
+} from '../components/Icons'
+import { ArrowLeft } from 'lucide-react'
+import { Button } from '../../components/ui/button'
 import { AttachButton, EmojiButton, VoiceButton } from '../components/Composer'
 import { MessageBubble } from '../components/MessageBubble'
 import { CallBubble, isCallEntry } from '../components/CallBubble'
+import { ask, confirmDanger, type Choice } from '../components/dialog'
+import { ForwardSheet, MessageInfo } from '../lazyViews'
 import { supportsWebRtc } from '../../core/transport/webrtc/directManager'
 import { formatDayLabel, isSameDay } from '../format'
 import { conversationTitle, displayName } from './ChatList'
 import { isGroupAddress, type ChatAddress, type Conversation, type Message } from '../../core/models/types'
-import { Button } from '../../components/ui/button'
-import {
-  ArrowLeft,
-  Phone,
-  Video,
-  ShieldCheck,
-  Shield,
-  Lock,
-  Zap,
-  X,
-  MessageSquare,
-} from 'lucide-react'
 
+/** The stored conversation at an address: a group by its id, a person by their key. */
 function findConversation(
   conversations: readonly Conversation[],
   address: ChatAddress,
@@ -33,12 +38,44 @@ function findConversation(
     : conversations.find((c) => c.kind === 'direct' && c.peerPubkey === address)
 }
 
+/** Read a saved draft synchronously, so the composer is populated on first paint. */
 function readStoredDraft(address: ChatAddress): string {
   return findConversation(useApp.getState().conversations, address)?.draft ?? ''
 }
 
+/** Messages closer together than this from the same sender render as one run. */
 const GROUP_WINDOW_MS = 4 * 60 * 1000
 
+/**
+ * Whether `message` starts a new run: after a call, a change of side or of
+ * author, a pause, or midnight. The last of a run is the one with the tail.
+ * The times compared are what each author's clock said, which need not rise
+ * down the conversation when clocks disagree (ADR-063), so a pause is the gap
+ * either way.
+ */
+function startsRun(previous: Message | undefined, message: Message): boolean {
+  return (
+    !previous ||
+    // A call between two messages splits them into two runs: whoever speaks
+    // after it is announced again.
+    !!previous.call ||
+    !!message.call ||
+    previous.direction !== message.direction ||
+    // In a group, two people in a row are two runs, each with its name.
+    previous.authorPubkey !== message.authorPubkey ||
+    Math.abs(message.ts - previous.ts) > GROUP_WINDOW_MS ||
+    !isSameDay(previous.ts, message.ts)
+  )
+}
+
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/**
+ * One conversation, direct or group — the same screen, because it is the same
+ * thing: messages to a set of people. What differs is small and all here: a
+ * group names who wrote each run, has no direct channel or typing indicator,
+ * and opens its member list from the header instead of a contact page.
+ */
 export function ChatView({ address }: { address: ChatAddress }) {
   const { t, locale } = useI18n()
   const navigate = useNavigate()
@@ -53,8 +90,8 @@ export function ChatView({ address }: { address: ChatAddress }) {
   const closeConversation = useApp((s) => s.closeConversation)
   const sendMessage = useApp((s) => s.sendMessage)
   const retryMessage = useApp((s) => s.retryMessage)
-  const deleteMessageLocally = useApp((s) => s.deleteMessageLocally)
-  const deleteMessageForEveryone = useApp((s) => s.deleteMessageForEveryone)
+  const deleteMessages = useApp((s) => s.deleteMessages)
+  const forwardMessages = useApp((s) => s.forwardMessages)
   const reactions = useApp((s) => s.reactions)
   const react = useApp((s) => s.react)
   const updates = useApp((s) => s.updates)
@@ -73,9 +110,23 @@ export function ChatView({ address }: { address: ChatAddress }) {
   const settings = useApp((s) => s.settings)
   const startCall = useApp((s) => s.startCall)
 
+  // Seeded once at mount. The route gives this component a `key` of the peer's
+  // key, so switching conversations remounts and re-seeds — no effect needed,
+  // and no render cascade from mirroring store state into component state.
   const [draft, setDraft] = useState(() => readStoredDraft(address))
   const [loadingEarlier, setLoadingEarlier] = useState(false)
   const [replyTo, setReplyTo] = useState<Message | null>(null)
+  // What is picked while selecting, as Telegram selects: held, or chosen from
+  // a message's menu. Null when not selecting.
+  const [selected, setSelected] = useState<ReadonlySet<string> | null>(null)
+  const [forwarding, setForwarding] = useState<readonly string[] | null>(null)
+  const [infoFor, setInfoFor] = useState<string | null>(null)
+  // Scrolled a screen or more above the newest message: offer the way back.
+  const [away, setAway] = useState(false)
+  const earlierBusy = useRef(false)
+  const earlierRef = useRef<HTMLButtonElement>(null)
+  // The latest draft, readable from the unmount cleanup without making the
+  // effect depend on every keystroke.
   const draftRef = useRef(draft)
   const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -83,6 +134,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
 
   const conversationsLoaded = useApp((s) => s.conversationsLoaded)
   const conversation = findConversation(conversations, address)
+  // A forward-secret group carries text only, and nothing once you have left it.
   const secure = conversation?.mls
   const contact = isGroup ? undefined : contacts.get(peer)
   const name = isGroup
@@ -91,8 +143,13 @@ export function ChatView({ address }: { address: ChatAddress }) {
       : ''
     : displayName(contact, peer)
   const direct = !isGroup && directStates.get(peer) === 'connected'
+  // Calls are one to one, and only with someone taken into the address book:
+  // a call from a stranger never rings (see `Messenger.#routeCall`), so
+  // calling one would be asking for what this side refuses to give.
   const callable = !isGroup && contact?.accepted === true && !contact.blocked && supportsWebRtc()
   const typing = !isGroup && typingPeers.has(peer)
+  // Who wrote what, for the memoised row builder below. Rebuilt only when the
+  // address book changes, not on every render.
   const nameOf = useCallback(
     (pubkey: string) => (pubkey === selfPubkey ? t('groups.you') : displayName(contacts.get(pubkey), pubkey)),
     [contacts, selfPubkey, t],
@@ -101,16 +158,22 @@ export function ChatView({ address }: { address: ChatAddress }) {
   useEffect(() => {
     void openConversation(address)
     return () => {
+      // Persist whatever was typed but not sent, so switching conversations
+      // (or locking) does not throw it away.
       void saveDraft(address, draftRef.current)
       closeConversation()
     }
   }, [address, openConversation, closeConversation, saveDraft])
 
+  // Keep the newest message in view, but do not yank the scroll position out
+  // from under someone who has deliberately scrolled back through history.
   useLayoutEffect(() => {
     const node = listRef.current
     if (node && stickToBottom.current) node.scrollTop = node.scrollHeight
   }, [messages, typing])
 
+  // The list also shrinks under a reply preview, a composer growing a line, or
+  // an on-screen keyboard. Whoever was reading the newest message still is.
   const missing = isGroup && conversationsLoaded && !conversation
   useEffect(() => {
     const node = listRef.current
@@ -125,8 +188,106 @@ export function ChatView({ address }: { address: ChatAddress }) {
   const onScroll = useCallback(() => {
     const node = listRef.current
     if (!node) return
-    stickToBottom.current = node.scrollHeight - node.scrollTop - node.clientHeight < 80
+    const fromBottom = node.scrollHeight - node.scrollTop - node.clientHeight
+    stickToBottom.current = fromBottom < 80
+    setAway(fromBottom > node.clientHeight)
   }, [])
+
+  // Earlier history loads as the reader nears the top, as it does in every
+  // messenger, rather than behind a button — which stays, for a keyboard and
+  // for a browser without IntersectionObserver.
+  const loadEarlier = useCallback(async () => {
+    const node = listRef.current
+    if (!node || earlierBusy.current) return
+    earlierBusy.current = true
+    setLoadingEarlier(true)
+    // Hold the reader's place: history growing above them must not move what
+    // they are reading.
+    const fromBottom = node.scrollHeight - node.scrollTop
+    stickToBottom.current = false
+    await loadEarlierMessages()
+    setLoadingEarlier(false)
+    requestAnimationFrame(() => {
+      node.scrollTop = node.scrollHeight - fromBottom
+      earlierBusy.current = false
+    })
+  }, [loadEarlierMessages])
+
+  useEffect(() => {
+    const target = earlierRef.current
+    const root = listRef.current
+    if (!target || !root || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) void loadEarlier()
+      },
+      { root, rootMargin: '400px 0px 0px 0px' },
+    )
+    observer.observe(target)
+    return () => observer.disconnect()
+    // Watched afresh as the page grows, so a page too short to scroll keeps
+    // loading until it can.
+  }, [hasEarlierMessages, loadEarlier, messages.length])
+
+  const toggle = useCallback((message: Message) => {
+    setSelected((current) => {
+      const next = new Set(current)
+      if (!next.delete(message.id)) next.add(message.id)
+      return next.size > 0 ? next : null
+    })
+  }, [])
+  const picked = useMemo(
+    () => (selected ? messages.filter((message) => selected.has(message.id)) : []),
+    [messages, selected],
+  )
+  const selecting = picked.length > 0
+
+  useEffect(() => {
+    if (!selecting) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelected(null)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [selecting])
+
+  /**
+   * Delete, asking how, as Telegram asks: between two people, for both of
+   * them or for me alone — either may take anything out of their conversation
+   * (ADR-061). In a group, for everyone only what we wrote.
+   */
+  const remove = useCallback(
+    async (list: readonly Message[]) => {
+      const everyone: Choice<'everyone'> | null = !isGroup
+        ? { value: 'everyone', label: t('chat.deleteForBoth', { name }), danger: true }
+        : !secure?.left && list.every((m) => m.authorPubkey === selfPubkey && !m.call)
+          ? { value: 'everyone', label: t('chat.deleteForAll'), danger: true }
+          : null
+      const choice = await ask<'everyone' | 'me'>(
+        list.length === 1 ? t('chat.deleteOne') : t('chat.deleteMany', { n: list.length }),
+        [...(everyone ? [everyone] : []), { value: 'me', label: t('chat.deleteForMe'), danger: true }],
+        everyone ? t('chat.deleteBody') : undefined,
+      )
+      if (!choice) return
+      setSelected(null)
+      await deleteMessages(
+        list.map((m) => m.id),
+        choice,
+      )
+    },
+    [deleteMessages, isGroup, name, secure?.left, selfPubkey, t],
+  )
+  const onDelete = useCallback((message: Message) => void remove([message]), [remove])
+  const onForward = useCallback((message: Message) => setForwarding([message.id]), [])
+  const onInfo = useCallback((message: Message) => setInfoFor(message.id), [])
+
+  const forwardTo = async (to: ChatAddress) => {
+    const ids = forwarding ?? []
+    setForwarding(null)
+    setSelected(null)
+    await forwardMessages(ids, to)
+    navigate(isGroupAddress(to) ? { name: 'group', id: to } : { name: 'chat', peer: to })
+  }
 
   const byId = useMemo(() => new Map(messages.map((message) => [message.id, message])), [messages])
 
@@ -142,39 +303,47 @@ export function ChatView({ address }: { address: ChatAddress }) {
     inputRef.current?.focus()
   }, [draft, replyTo, sendMessage, setTyping])
 
+  // The conversation's entries in the order they happened, each one child of
+  // the single column they are drawn in: dates, messages and calls alike.
   const rows = useMemo(() => {
     const output: React.ReactNode[] = []
     let previous: Message | null = null
+    // The day last announced. Entries are in causal order and each shows its
+    // author's clock, so a reply from a clock behind can show an earlier day
+    // than what it answers; a date is announced only when the day moves on.
+    let announced: number | null = null
 
-    for (const message of messages) {
-      if (!previous || !isSameDay(previous.ts, message.ts)) {
+    for (const [index, message] of messages.entries()) {
+      if (announced === null || (message.ts > announced && !isSameDay(announced, message.ts))) {
+        announced = message.ts
         output.push(
-          <div key={`day-${message.ts}`} className="mx-auto my-3 mb-1 rounded-full bg-[var(--surface-3)] px-2.5 py-0.5 text-[0.6875rem] font-medium text-[var(--text-muted)]">
+          <div key={`day-${message.id}`} className="day-separator">
             {formatDayLabel(message.ts, locale, { today: t('chat.today'), yesterday: t('chat.yesterday') })}
           </div>,
         )
       }
 
-      const groupStart =
-        !previous ||
-        !!previous.call ||
-        previous.direction !== message.direction ||
-        previous.authorPubkey !== message.authorPubkey ||
-        message.ts - previous.ts > GROUP_WINDOW_MS ||
-        !isSameDay(previous.ts, message.ts)
+      const next = messages[index + 1]
+      const run = {
+        groupStart: startsRun(previous ?? undefined, message),
+        groupEnd: !next || startsRun(message, next),
+        selecting,
+        selected: selected?.has(message.id) ?? false,
+        onSelect: toggle,
+        onDelete,
+      }
       const author = nameOf(message.authorPubkey)
 
+      // A call sits on the side of whoever placed it, and is deleted like
+      // anything else — for both people by either of them, since it is theirs
+      // alike (ADR-047).
       if (isCallEntry(message)) {
         output.push(
           <CallBubble
             key={message.id}
             message={message}
-            groupStart={groupStart}
+            {...run}
             onCallBack={callable ? (media) => void startCall(peer, media) : undefined}
-            onDelete={(m) => void deleteMessageLocally(m.id)}
-            onDeleteForEveryone={(m) => {
-              if (confirm(t('calls.deleteEveryoneConfirm'))) void deleteMessageForEveryone(m.id)
-            }}
           />,
         )
         previous = message
@@ -185,7 +354,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
         <MessageBubble
           key={message.id}
           message={message}
-          groupStart={groupStart}
+          {...run}
           senderLabel={message.direction === 'out' ? t('chat.fromYou') : t('chat.fromThem', { name: author })}
           authorLabel={isGroup && message.direction === 'in' ? author : undefined}
           quoted={message.replyTo ? (byId.get(message.replyTo) ?? null) : null}
@@ -199,10 +368,8 @@ export function ChatView({ address }: { address: ChatAddress }) {
           onReact={(m, emoji) => void react(m.id, emoji)}
           onReply={setReplyTo}
           onRetry={(m) => void retryMessage(m.id)}
-          onDelete={(m) => void deleteMessageLocally(m.id)}
-          onDeleteForEveryone={(m) => {
-            if (confirm(t('chat.deleteEveryoneConfirm'))) void deleteMessageForEveryone(m.id)
-          }}
+          onForward={onForward}
+          onInfo={message.direction === 'out' ? onInfo : undefined}
         />,
       )
       previous = message
@@ -223,127 +390,169 @@ export function ChatView({ address }: { address: ChatAddress }) {
     react,
     selfPubkey,
     retryMessage,
-    deleteMessageLocally,
-    deleteMessageForEveryone,
+    selecting,
+    selected,
+    toggle,
+    onDelete,
+    onForward,
+    onInfo,
     callable,
     startCall,
     peer,
   ])
 
+  // A group address that names nothing here — deleted on this device, or a
+  // link from another one, whose ids are blinded with a different key. A
+  // direct address always has somewhere to go: the conversation is created by
+  // the first message.
   if (missing) {
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <header className="flex items-center gap-2 shrink-0 min-h-[3.25rem] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 bg-[var(--surface)] border-b border-[var(--border)]">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="btn-back"
-            aria-label={t('common.back')}
-            onClick={() => goBack()}
-          >
+        <header className="flex items-center gap-2 px-4 py-3 bg-[var(--surface)] border-b border-[var(--border)]">
+          <Button variant="ghost" size="icon" className="btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
             <ArrowLeft size={18} strokeWidth={1.75} />
           </Button>
         </header>
-        <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-[var(--text-muted)]">
-          <MessageSquare size={32} strokeWidth={1.25} className="text-[var(--text-faint)]" />
-          <h3 className="text-[var(--text)]">{t('groups.notFound')}</h3>
-          <p className="max-w-[28rem] text-sm">{t('groups.notFoundBody')}</p>
-          <Button className="mt-2" onClick={() => navigate({ name: 'chats' }, true)}>
-            {t('nav.chats')}
-          </Button>
-        </div>
+        <EmptyState
+          title={t('groups.notFound')}
+          body={t('groups.notFoundBody')}
+          action={
+            <Button onClick={() => navigate({ name: 'chats' }, true)}>
+              {t('nav.chats')}
+            </Button>
+          }
+        />
       </div>
     )
   }
 
-  const chatGutter = `max(var(--space-3), (100% - 46rem) / 2)`
+  const infoMessage = infoFor ? byId.get(infoFor) : undefined
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col" style={{ '--chat-gutter': chatGutter } as React.CSSProperties}>
-      <header className="flex items-center gap-3 shrink-0 min-h-[3.25rem] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 bg-[var(--surface)] border-b border-[var(--border)]">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="btn-back shrink-0"
-          aria-label={t('common.back')}
-          onClick={() => goBack()}
-        >
-          <ArrowLeft size={18} strokeWidth={1.75} />
-        </Button>
-        {isGroup ? (
-          <GroupAvatar seed={address} size="sm" />
-        ) : (
-          <Avatar name={name} seed={peer} src={contact?.avatar} size="sm" />
-        )}
-        <button
-          className="flex min-w-0 flex-1 flex-col gap-px cursor-pointer text-left bg-transparent border-none p-0 text-[var(--text)]"
-          aria-label={isGroup ? t('groups.info') : t('chat.openContact', { name })}
-          onClick={() => navigate(isGroup ? { name: 'group-info', id: address } : { name: 'contact', peer })}
-        >
-          <span className="flex items-center gap-1 text-sm font-semibold">
-            <span className="truncate" dir="auto">{name}</span>
-            {contact?.verification === 'verified' ? (
-              <ShieldCheck size={14} className="shrink-0 text-[var(--success)]" />
-            ) : null}
+    <div className="chat-screen">
+      {/* While selecting, the header becomes what can be done to the
+          selection, as it does in Telegram: how many, forward, delete. */}
+      {selecting ? (
+        <header className="chat-header selection-bar">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t('chat.cancelSelection')}
+            title={t('chat.cancelSelection')}
+            onClick={() => setSelected(null)}
+          >
+            <CloseIcon />
+          </Button>
+          <span className="grow selection-count" role="status">
+            {t('chat.selected', { n: picked.length })}
           </span>
-          <span className="flex items-center gap-1 truncate text-xs text-[var(--text-muted)] whitespace-nowrap">
-            {isGroup ? (
-              <>
-                {secure ? (
-                  <>
-                    <Lock size={11} /> {t('groups.secure')} ·{' '}
-                  </>
-                ) : null}
-                {t('groups.members', { n: (conversation?.members.length ?? 0) + 1 })}
-              </>
-            ) : typing ? (
-              t('chat.typing')
-            ) : direct ? (
-              <>
-                <Zap size={11} /> {t('status.direct')}
-              </>
-            ) : (
-              t('status.relayed')
-            )}
-          </span>
-        </button>
-        {callable ? (
-          <>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={t('calls.voiceCall')}
-              title={t('calls.voiceCall')}
-              onClick={() => void startCall(peer, 'audio')}
-            >
-              <Phone size={18} strokeWidth={1.75} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={t('calls.videoCall')}
-              title={t('calls.videoCall')}
-              onClick={() => void startCall(peer, 'video')}
-            >
-              <Video size={18} strokeWidth={1.75} />
-            </Button>
-          </>
-        ) : null}
-      </header>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t('chat.forward')}
+            title={t('chat.forward')}
+            disabled={picked.some((message) => message.call)}
+            onClick={() => setForwarding(picked.map((message) => message.id))}
+          >
+            <ForwardIcon />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="danger-text"
+            aria-label={t('chat.delete')}
+            title={t('chat.delete')}
+            onClick={() => void remove(picked)}
+          >
+            <TrashIcon />
+          </Button>
+        </header>
+      ) : (
+        <header className="chat-header">
+          <Button variant="ghost" size="icon" className="btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
+            <ArrowLeft size={18} strokeWidth={1.75} />
+          </Button>
+          {isGroup ? (
+            <GroupAvatar seed={address} size="sm" />
+          ) : (
+            <Avatar name={name} seed={peer} src={contact?.avatar} size="sm" />
+          )}
+          <button
+            className="chat-header-info"
+            aria-label={isGroup ? t('groups.info') : t('chat.openContact', { name })}
+            onClick={() =>
+              navigate(isGroup ? { name: 'group-info', id: address } : { name: 'contact', peer })
+            }
+          >
+            <span className="chat-header-name">
+              <span className="truncate" dir="auto">
+                {name}
+              </span>
+              {contact?.verification === 'verified' ? (
+                <ShieldCheckIcon size={14} style={{ color: 'var(--success)' }} />
+              ) : null}
+            </span>
+            <span className="chat-header-status">
+              {isGroup ? (
+                <>
+                  {secure ? (
+                    <>
+                      <LockIcon size={11} /> {t('groups.secure')} ·{' '}
+                    </>
+                  ) : null}
+                  {/* Everyone, counting you: the number the limit is stated in. */}
+                  {t('groups.members', { n: (conversation?.members.length ?? 0) + 1 })}
+                </>
+              ) : typing ? (
+                t('chat.typing')
+              ) : direct ? (
+                <>
+                  <BoltIcon size={11} /> {t('status.direct')}
+                </>
+              ) : (
+                t('status.relayed')
+              )}
+            </span>
+          </button>
+          {callable ? (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t('calls.voiceCall')}
+                title={t('calls.voiceCall')}
+                onClick={() => void startCall(peer, 'audio')}
+              >
+                <PhoneIcon />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t('calls.videoCall')}
+                title={t('calls.videoCall')}
+                onClick={() => void startCall(peer, 'video')}
+              >
+                <VideoIcon />
+              </Button>
+            </>
+          ) : null}
+        </header>
+      )}
 
       {isGroup && conversation && !conversation.accepted ? (
-        <div className="px-[var(--chat-gutter)] pt-2">
-          <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)]">
-            <span className="flex-1">{t('groups.requestBanner')}</span>
+        <div className="chat-notice">
+          <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]">
+            <span className="grow">{t('groups.requestBanner')}</span>
             <Button variant="ghost" size="sm" onClick={() => void acceptGroup(address)}>
               {t('groups.accept')}
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="text-[var(--danger)]"
-              onClick={() => {
-                if (!confirm(t('groups.deleteConfirm'))) return
+              className="danger-text"
+              onClick={async () => {
+                if (!(await confirmDanger(t('groups.delete'), t('groups.delete'), t('groups.deleteConfirm'))))
+                  return
                 void deleteConversation(address).then(() => navigate({ name: 'chats' }, true))
               }}
             >
@@ -354,9 +563,9 @@ export function ChatView({ address }: { address: ChatAddress }) {
       ) : null}
 
       {contact && !contact.accepted ? (
-        <div className="px-[var(--chat-gutter)] pt-2">
-          <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)]">
-            <span className="flex-1">{t('chat.requestBanner')}</span>
+        <div className="chat-notice">
+          <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]">
+            <span className="grow">{t('chat.requestBanner')}</span>
             <Button
               variant="ghost"
               size="sm"
@@ -367,7 +576,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
             <Button
               variant="ghost"
               size="sm"
-              className="text-[var(--danger)]"
+              className="danger-text"
               onClick={() => void updateContact(peer, { blocked: true })}
             >
               {t('chat.block')}
@@ -377,10 +586,14 @@ export function ChatView({ address }: { address: ChatAddress }) {
       ) : null}
 
       {contact?.blocked ? (
-        <div className="px-[var(--chat-gutter)] pt-2">
-          <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--danger-soft)] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--danger)]">
-            <span className="flex-1">{t('chat.blocked')}</span>
-            <Button variant="ghost" size="sm" onClick={() => void updateContact(peer, { blocked: false })}>
+        <div className="chat-notice">
+          <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+            <span className="grow">{t('chat.blocked')}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void updateContact(peer, { blocked: false })}
+            >
               {t('chat.unblock')}
             </Button>
           </div>
@@ -388,10 +601,10 @@ export function ChatView({ address }: { address: ChatAddress }) {
       ) : null}
 
       {contact && contact.verification !== 'verified' && messages.length > 0 ? (
-        <div className="px-[var(--chat-gutter)] pt-2">
-          <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-sm text-[var(--accent-text)]">
-            <Shield size={16} />
-            <span className="flex-1">{t('chat.verifyPromptBody')}</span>
+        <div className="chat-notice">
+          <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--accent-border)] bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--accent-text)]">
+            <ShieldIcon size={16} />
+            <span className="grow">{t('chat.verifyPromptBody')}</span>
             <Button variant="ghost" size="sm" onClick={() => navigate({ name: 'verify', peer })}>
               {t('contacts.verify')}
             </Button>
@@ -399,83 +612,82 @@ export function ChatView({ address }: { address: ChatAddress }) {
         </div>
       ) : null}
 
-      <div
-        className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain px-[var(--chat-gutter)] scrollbar-thin"
-        ref={listRef}
-        onScroll={onScroll}
-        role="log"
-        aria-live="polite"
-      >
-        <div className="flex flex-col gap-0.5 mt-auto py-4">
+      <div className="message-list" ref={listRef} onScroll={onScroll} role="log" aria-live="polite">
+        <div className={selecting ? 'message-stream selecting' : 'message-stream'}>
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-12 text-center text-[var(--text-muted)]">
-              <MessageSquare size={32} strokeWidth={1.25} className="text-[var(--text-faint)]" />
-              <h3 className="text-[var(--text)]">{t('chats.noMessages')}</h3>
-              <p className="max-w-[28rem] text-sm">{t('chat.encryptedNote')}</p>
-            </div>
+            <EmptyState title={t('chats.noMessages')} body={t('chat.encryptedNote')} />
           ) : hasEarlierMessages ? (
             <Button
+              ref={earlierRef}
               variant="ghost"
               size="sm"
-              className="self-center mb-3"
               disabled={loadingEarlier}
-              onClick={async () => {
-                const node = listRef.current
-                const before = node?.scrollHeight ?? 0
-                setLoadingEarlier(true)
-                stickToBottom.current = false
-                await loadEarlierMessages()
-                setLoadingEarlier(false)
-                requestAnimationFrame(() => {
-                  if (node) node.scrollTop += node.scrollHeight - before
-                })
-              }}
+              onClick={() => void loadEarlier()}
             >
               {loadingEarlier ? t('common.loading') : t('chat.loadEarlier')}
             </Button>
           ) : (
-            <p className="self-center mb-3 text-[0.75rem] text-[var(--text-faint)]">{t('chat.startOfConversation')}</p>
+            <p className="faint">{t('chat.startOfConversation')}</p>
           )}
           {rows}
           {typing ? (
-            <div className="flex items-center gap-1 mt-2 rounded-[var(--radius-lg)] bg-[var(--bubble-in)] px-3 py-2 shadow-[var(--shadow-sm)] self-start" aria-label={t('chat.typing')}>
-              <span className="size-1.5 rounded-full bg-[var(--text-faint)] animate-[typing-bounce_1.2s_infinite_ease-in-out]" />
-              <span className="size-1.5 rounded-full bg-[var(--text-faint)] animate-[typing-bounce_1.2s_infinite_ease-in-out_0.15s]" />
-              <span className="size-1.5 rounded-full bg-[var(--text-faint)] animate-[typing-bounce_1.2s_infinite_ease-in-out_0.3s]" />
+            <div className="typing-indicator" aria-label={t('chat.typing')}>
+              <span />
+              <span />
+              <span />
             </div>
           ) : null}
         </div>
       </div>
 
+      {away ? (
+        <div className="jump-dock">
+          <button
+            type="button"
+            className="jump-latest"
+            aria-label={t('chat.jumpToLatest')}
+            title={t('chat.jumpToLatest')}
+            onClick={() => {
+              const node = listRef.current
+              node?.scrollTo({ top: node.scrollHeight, behavior: reducedMotion() ? 'auto' : 'smooth' })
+            }}
+          >
+            <ArrowDownIcon />
+          </button>
+        </div>
+      ) : null}
+
       {replyTo ? (
-        <div className="flex items-center gap-2 py-2 px-[var(--chat-gutter)] bg-[var(--surface-2)] border-t border-[var(--border)] text-sm">
-          <span className="flex min-w-0 flex-1 border-s-3 border-[var(--accent)] ps-2 truncate" dir="auto">
-            <span className="block text-[var(--text-faint)] text-xs">{t('chat.replyingTo')}</span>
+        <div className="reply-preview">
+          <span className="reply-preview-body truncate" dir="auto">
+            <span className="faint" style={{ display: 'block' }}>
+              {t('chat.replyingTo')}
+            </span>
             {replyTo.body}
           </span>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={t('common.close')}
+          <button
+            type="button"
+            className="btn btn-icon"
+            aria-label={t('common.cancel')}
             onClick={() => setReplyTo(null)}
           >
-            <X size={16} />
-          </Button>
+            <CloseIcon size={16} />
+          </button>
         </div>
       ) : null}
 
       {secure?.left ? (
-        <div className="flex items-center gap-3 py-2 px-[var(--chat-gutter)] bg-[var(--surface)] border-t border-[var(--border)]">
-          <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)] flex-1">
-            <span className="flex-1">{t('groups.secureLeft')}</span>
+        <div className="composer">
+          <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]">
+            <span className="grow">{t('groups.secureLeft')}</span>
           </div>
         </div>
       ) : (
-        <div className="flex items-end gap-2 py-2 px-[var(--chat-gutter)] pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-[var(--surface)] border-t border-[var(--border)] shrink-0">
+        <div className="composer">
           {secure ? null : <AttachButton disabled={contact?.blocked} />}
           <textarea
             ref={inputRef}
-            className="flex-1 min-h-[2.5rem] max-h-[9rem] py-[0.55rem] px-[0.85rem] border border-[var(--border-strong)] rounded-[var(--radius-md)] bg-[var(--bg)] resize-none leading-[1.45] overflow-y-auto font-inherit text-[var(--text)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+            className="composer-input"
             dir="auto"
             rows={1}
             placeholder={t('chat.placeholder')}
@@ -486,6 +698,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
               setDraft(event.target.value)
               draftRef.current = event.target.value
               setTyping(event.target.value.length > 0)
+              // Grow with content up to the CSS max-height, then scroll.
               const node = event.target
               node.style.height = 'auto'
               node.style.height = `${Math.min(node.scrollHeight, 144)}px`
@@ -499,6 +712,9 @@ export function ChatView({ address }: { address: ChatAddress }) {
               void send()
             }}
           />
+          {/* Trailing the input: this one edits what is being typed, so it sits
+            at the end of the field beside send rather than with the
+            attachment control that opens a file picker. */}
           <EmojiButton
             disabled={contact?.blocked}
             onInsertEmoji={(emoji) => {
@@ -506,9 +722,11 @@ export function ChatView({ address }: { address: ChatAddress }) {
               draftRef.current += emoji
             }}
           />
+          {/* The microphone takes the place of send while there is nothing to
+            send, the way every messenger does it — one control, two jobs. */}
           {draft.trim() || secure ? (
             <button
-              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white border-none cursor-pointer transition-[background,transform] hover:bg-[var(--accent-hover)] active:scale-94 disabled:opacity-45 disabled:cursor-not-allowed [dir=rtl]_[:root]&_svg:scale-x-[-1]"
+              className="composer-send"
               aria-label={t('chat.send')}
               disabled={contact?.blocked || !draft.trim()}
               onClick={() => void send()}
@@ -520,6 +738,17 @@ export function ChatView({ address }: { address: ChatAddress }) {
           )}
         </div>
       )}
+
+      {forwarding ? (
+        <Suspense fallback={null}>
+          <ForwardSheet onPick={(to) => void forwardTo(to)} onClose={() => setForwarding(null)} />
+        </Suspense>
+      ) : null}
+      {infoMessage ? (
+        <Suspense fallback={null}>
+          <MessageInfo message={infoMessage} onClose={() => setInfoFor(null)} />
+        </Suspense>
+      ) : null}
     </div>
   )
 }

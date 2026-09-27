@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useApp } from '../../app/store'
-import { useI18n } from '../../i18n'
-import { Modal, Toggle } from '../components/primitives'
+import { Field, Modal, Toggle } from '../components/primitives'
 import { CloseIcon, PlusIcon } from '../components/Icons'
 import { makeChecklist, makePoll, MAX_QUESTION_CHARS } from '../../core/models/interactive'
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS, MAX_POLL_OPTIONS } from '../../core/models/protocol'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
+import { useInteractiveText } from './interactiveText'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 /**
  * Write a poll or a checklist and send it to the open conversation.
@@ -28,32 +28,33 @@ function Lines({
 }: {
   values: string[]
   onChange: (values: string[]) => void
+  /** Rows that cannot be removed: a poll with one option is not a choice. */
   min: number
   max: number
   label: string
   placeholder: (n: number) => string
   addLabel: string
 }) {
-  const { t } = useI18n()
+  const text = useInteractiveText()
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm font-medium text-[var(--text)]">{label}</legend>
+    <fieldset className="flex flex-col gap-2 border-0 m-0 p-0 min-w-0">
+      <Label>{label}</Label>
       {values.map((value, index) => (
-        <div key={index} className="flex items-center gap-2">
+        <div key={index} className="flex items-center gap-3">
           <Input
             dir="auto"
             value={value}
             maxLength={MAX_ITEM_CHARS}
             placeholder={placeholder(index + 1)}
             aria-label={placeholder(index + 1)}
-            className="flex-1"
+            className="grow"
             onChange={(event) => onChange(values.map((v, i) => (i === index ? event.target.value : v)))}
           />
           {values.length > min ? (
             <Button
-              variant="ghost"
+              type="button"
               size="icon"
-              aria-label={t('interactive.removeRow')}
+              aria-label={text('removeRow')}
               onClick={() => onChange(values.filter((_, i) => i !== index))}
             >
               <CloseIcon size={16} />
@@ -62,7 +63,7 @@ function Lines({
         </div>
       ))}
       {values.length < max ? (
-        <Button variant="ghost" size="sm" onClick={() => onChange([...values, ''])}>
+        <Button type="button" variant="ghost" size="sm" onClick={() => onChange([...values, ''])}>
           <PlusIcon size={15} />
           {addLabel}
         </Button>
@@ -72,7 +73,7 @@ function Lines({
 }
 
 export function PollComposer({ onClose }: { onClose: () => void }) {
-  const { t } = useI18n()
+  const text = useInteractiveText()
   const sendPoll = useApp((s) => s.sendPoll)
   const [question, setQuestion] = useState('')
   const [options, setOptions] = useState(['', ''])
@@ -81,8 +82,10 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false)
 
   const send = async () => {
-    if (!question.trim()) return setError(t('interactive.needQuestion'))
-    if (options.filter((option) => option.trim()).length < 2) return setError(t('interactive.needOptions'))
+    // The two things a person can get wrong here, said in their language.
+    // `makePoll` checks again — and everything else — on the way out.
+    if (!question.trim()) return setError(text('needQuestion'))
+    if (options.filter((option) => option.trim()).length < 2) return setError(text('needOptions'))
     let poll
     try {
       poll = makePoll(question, options, multi)
@@ -97,7 +100,7 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Modal title={t('interactive.newPoll')} onClose={onClose} labelledBy="poll-composer-title">
+    <Modal title={text('newPoll')} onClose={onClose} labelledBy="poll-composer-title">
       <form
         className="flex flex-col gap-4"
         onSubmit={(event) => {
@@ -105,20 +108,18 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
           void send()
         }}
       >
-        <div className="flex flex-col gap-1.5">
-          <Label>{t('interactive.question')}</Label>
+        <Field label={text('question')} error={error ?? undefined}>
           <Input
             dir="auto"
             value={question}
             maxLength={MAX_QUESTION_CHARS}
-            placeholder={t('interactive.questionPlaceholder')}
+            placeholder={text('questionPlaceholder')}
             onChange={(event) => {
               setQuestion(event.target.value)
               setError(null)
             }}
           />
-          {error ? <span className="text-sm text-[var(--danger)]" role="alert">{error}</span> : null}
-        </div>
+        </Field>
         <Lines
           values={options}
           onChange={(next) => {
@@ -127,13 +128,13 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
           }}
           min={2}
           max={MAX_POLL_OPTIONS}
-          label={t('interactive.options')}
-          placeholder={(n) => t('interactive.option', { n })}
-          addLabel={t('interactive.addOption')}
+          label={text('options')}
+          placeholder={(n) => text('option', { n })}
+          addLabel={text('addOption')}
         />
-        <Toggle label={t('interactive.multi')} checked={multi} onChange={setMulti} />
+        <Toggle label={text('multi')} checked={multi} onChange={setMulti} />
         <Button type="submit" className="w-full" disabled={busy}>
-          {t('interactive.send')}
+          {text('send')}
         </Button>
       </form>
     </Modal>
@@ -141,7 +142,7 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
 }
 
 export function ChecklistComposer({ onClose }: { onClose: () => void }) {
-  const { t } = useI18n()
+  const text = useInteractiveText()
   const sendChecklist = useApp((s) => s.sendChecklist)
   const [title, setTitle] = useState('')
   const [items, setItems] = useState(['', ''])
@@ -149,8 +150,8 @@ export function ChecklistComposer({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false)
 
   const send = async () => {
-    if (!title.trim()) return setError(t('interactive.needTitle'))
-    if (!items.some((item) => item.trim())) return setError(t('interactive.needItems'))
+    if (!title.trim()) return setError(text('needTitle'))
+    if (!items.some((item) => item.trim())) return setError(text('needItems'))
     let checklist
     try {
       checklist = makeChecklist(title, items)
@@ -165,7 +166,7 @@ export function ChecklistComposer({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Modal title={t('interactive.newChecklist')} onClose={onClose} labelledBy="checklist-composer-title">
+    <Modal title={text('newChecklist')} onClose={onClose} labelledBy="checklist-composer-title">
       <form
         className="flex flex-col gap-4"
         onSubmit={(event) => {
@@ -173,20 +174,18 @@ export function ChecklistComposer({ onClose }: { onClose: () => void }) {
           void send()
         }}
       >
-        <div className="flex flex-col gap-1.5">
-          <Label>{t('interactive.title')}</Label>
+        <Field label={text('title')} error={error ?? undefined}>
           <Input
             dir="auto"
             value={title}
             maxLength={MAX_QUESTION_CHARS}
-            placeholder={t('interactive.titlePlaceholder')}
+            placeholder={text('titlePlaceholder')}
             onChange={(event) => {
               setTitle(event.target.value)
               setError(null)
             }}
           />
-          {error ? <span className="text-sm text-[var(--danger)]" role="alert">{error}</span> : null}
-        </div>
+        </Field>
         <Lines
           values={items}
           onChange={(next) => {
@@ -195,12 +194,12 @@ export function ChecklistComposer({ onClose }: { onClose: () => void }) {
           }}
           min={1}
           max={MAX_CHECKLIST_ITEMS}
-          label={t('interactive.items')}
-          placeholder={(n) => t('interactive.item', { n })}
-          addLabel={t('interactive.addItem')}
+          label={text('items')}
+          placeholder={(n) => text('item', { n })}
+          addLabel={text('addItem')}
         />
         <Button type="submit" className="w-full" disabled={busy}>
-          {t('interactive.send')}
+          {text('send')}
         </Button>
       </form>
     </Modal>

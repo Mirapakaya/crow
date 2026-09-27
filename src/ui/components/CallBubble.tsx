@@ -5,7 +5,9 @@ import { useI18n, type TranslateFn } from '../../i18n'
 import { formatCallDuration, formatTime } from '../format'
 import { CallInIcon, CallOutIcon, MoreIcon, PhoneIcon, VideoIcon } from './Icons'
 import { Popover } from './Popover'
-import { useHold } from './hold'
+import { usePress } from './hold'
+import { EntryRow, MenuItem, type EntryProps } from './EntryRow'
+import { cn } from '@/lib/utils'
 
 export type CallEntry = Message & { call: CallRecord }
 
@@ -48,13 +50,10 @@ export function callSummary(message: CallLike, t: TranslateFn): string {
   return outcome ? `${title} · ${outcome}` : title
 }
 
-export interface CallBubbleProps {
+export interface CallBubbleProps extends EntryProps {
   message: CallEntry
-  groupStart: boolean
   /** Absent when this person cannot be called from here. */
   onCallBack?: (media: CallRecord['media']) => void
-  onDelete: (message: Message) => void
-  onDeleteForEveryone: (message: Message) => void
 }
 
 /**
@@ -69,14 +68,17 @@ export interface CallBubbleProps {
 export const CallBubble = memo(function CallBubble({
   message,
   groupStart,
+  groupEnd,
+  selecting,
+  selected,
+  onSelect,
   onCallBack,
   onDelete,
-  onDeleteForEveryone,
 }: CallBubbleProps) {
   const { t, locale } = useI18n()
   // The element the menu hangs from — its button, or the held bubble — or null.
   const [menuAt, setMenuAt] = useState<HTMLElement | null>(null)
-  const hold = useHold(setMenuAt)
+  const press = usePress({ hold: () => onSelect(message), menu: setMenuAt })
   const { call } = message
   const outgoing = message.direction === 'out'
   const Arrow = outgoing ? CallOutIcon : CallInIcon
@@ -84,16 +86,26 @@ export const CallBubble = memo(function CallBubble({
   const outcome = callOutcome(message, t)
   const titleId = `call-title-${message.id}`
 
+  const act = (run: () => void) => () => {
+    setMenuAt(null)
+    run()
+  }
+
   return (
-    <div
-      className={`bubble-row ${outgoing ? 'out' : 'in'}${groupStart ? ' group-start' : ''}`}
-      id={`msg-${message.id}`}
+    <EntryRow
+      message={message}
+      groupStart={groupStart}
+      groupEnd={groupEnd}
+      selecting={selecting}
+      selected={selected}
+      onSelect={onSelect}
+      afterHold={press.afterHold}
     >
       <div
         className="bubble call-bubble"
         data-outcome={call.outcome === 'completed' ? 'connected' : 'not-connected'}
         data-missed={call.outcome === 'missed' || undefined}
-        {...hold}
+        {...press.handlers}
       >
         <div className="call-bubble-text">
           <span className="call-bubble-title" id={titleId}>
@@ -148,33 +160,14 @@ export const CallBubble = memo(function CallBubble({
 
         {menuAt ? (
           <Popover anchor={menuAt} onClose={() => setMenuAt(null)} label={t('chat.messageActions')}>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setMenuAt(null)
-                onDelete(message)
-              }}
-            >
-              {t('chat.deleteLocal')}
-              <span className="block text-xs text-[var(--text-muted)]">{t('calls.deleteLocalHint')}</span>
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              className="text-[var(--danger)]"
-              onClick={() => {
-                setMenuAt(null)
-                onDeleteForEveryone(message)
-              }}
-            >
-              {t('chat.deleteEveryone')}
-              <span className="block text-xs text-[var(--text-muted)]">{t('chat.deleteEveryoneHint')}</span>
-            </button>
+            <MenuItem onClick={act(() => onSelect(message))}>{t('chat.select')}</MenuItem>
+            <MenuItem onClick={act(() => onDelete(message))} danger>
+              {t('chat.delete')}
+            </MenuItem>
           </Popover>
         ) : null}
       </div>
-    </div>
+    </EntryRow>
   )
 })
 

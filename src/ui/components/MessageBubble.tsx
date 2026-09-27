@@ -1,22 +1,29 @@
-import { memo, Suspense, useState } from 'react'
+import { memo, Suspense, useState, type ReactNode } from 'react'
 import type { Message, Reaction } from '../../core/models/types'
 import type { InteractiveUpdate } from '../../core/models/interactive'
 import { useI18n, type TranslateFn, type TranslationKey } from '../../i18n'
 import { ChecklistCard, PollCard } from '../lazyViews'
 import { formatTime } from '../format'
 import { AlertIcon, BoltIcon, CheckIcon, ClockIcon, DoubleCheckIcon, MoreIcon, ReplyIcon } from './Icons'
+import { EntryRow, MenuItem, type EntryProps } from './EntryRow'
 import { AttachmentView } from './AttachmentView'
 import { Popover } from './Popover'
 import { LazyPicker } from './LazyPicker'
 import { QUICK_REACTIONS } from './quickReactions'
-import { useHold } from './hold'
+import { usePress } from './hold'
+import { Button } from '@/components/ui/button'
 
 /**
- * Delivery state, rendered the way people already read it:
+ * Delivery state, rendered the way Telegram's readers already read it
+ * (ADR-061):
  *   clock  -> waiting to leave this device
- *   tick   -> a relay accepted it
- *   double -> their device has it
- *   filled -> they opened the conversation
+ *   tick   -> on its way: a relay accepted it, or their device has it
+ *   double -> they opened the conversation and read it
+ *
+ * Only reading earns the second tick. "Delivered" is a fact about a device,
+ * not about a person, and a second tick for it taught people to read two ticks
+ * as "seen" when nobody had looked. It is in the message's details instead,
+ * with when.
  *
  * Every icon carries a text label for screen readers and as a tooltip: a tick
  * glyph alone conveys nothing to anyone not looking at it, and "did this
@@ -70,9 +77,8 @@ function StatusIcon({ status, label }: { status: Message['status']; label: strin
     case 'sending':
       return <ClockIcon {...shared} />
     case 'sent':
-      return <CheckIcon {...shared} />
     case 'delivered':
-      return <DoubleCheckIcon {...shared} />
+      return <CheckIcon {...shared} />
     case 'read':
       return <DoubleCheckIcon {...shared} className="tick tick-read" />
     case 'failed':
@@ -80,9 +86,8 @@ function StatusIcon({ status, label }: { status: Message['status']; label: strin
   }
 }
 
-export interface MessageBubbleProps {
+export interface MessageBubbleProps extends EntryProps {
   message: Message
-  groupStart: boolean
   quoted?: Message | null
   /** Everyone's reactions to this message, ours included. */
   reactions?: Reaction[]
@@ -91,8 +96,10 @@ export interface MessageBubbleProps {
   onReact: (message: Message, emoji: string) => void
   onReply: (message: Message) => void
   onRetry: (message: Message) => void
-  onDelete: (message: Message) => void
-  onDeleteForEveryone: (message: Message) => void
+  /** Sending a copy elsewhere; absent where there is nothing to copy. */
+  onForward?: (message: Message) => void
+  /** When it was delivered and read; for what we sent. */
+  onInfo?: (message: Message) => void
   /** Announced before the first message of a run, so a screen reader knows who is speaking. */
   senderLabel: string
   /**
@@ -111,6 +118,10 @@ export interface MessageBubbleProps {
 export const MessageBubble = memo(function MessageBubble({
   message,
   groupStart,
+  groupEnd,
+  selecting,
+  selected,
+  onSelect,
   quoted,
   reactions,
   selfPubkey,
@@ -118,7 +129,8 @@ export const MessageBubble = memo(function MessageBubble({
   onReply,
   onRetry,
   onDelete,
-  onDeleteForEveryone,
+  onForward,
+  onInfo,
   senderLabel,
   authorLabel,
   updates,
@@ -135,7 +147,7 @@ export const MessageBubble = memo(function MessageBubble({
   const [menuAt, setMenuAt] = useState<HTMLElement | null>(null)
   const [reactAt, setReactAt] = useState<HTMLElement | null>(null)
   const [pickerAt, setPickerAt] = useState<HTMLElement | null>(null)
-  const hold = useHold(setMenuAt)
+  const press = usePress({ hold: () => onSelect(message), menu: setMenuAt })
 
   const status = statusLabel(message, t)
   const grouped = groupReactions(reactions, selfPubkey)
@@ -199,14 +211,28 @@ export const MessageBubble = memo(function MessageBubble({
     </div>
   )
 
+  const act = (run: () => void) => () => {
+    setMenuAt(null)
+    run()
+  }
+  const item = (label: ReactNode, run: () => void, danger?: boolean) => (
+    <MenuItem onClick={act(run)} danger={danger}>
+      {label}
+    </MenuItem>
+  )
+
   return (
-    <div
-      className={`bubble-row ${outgoing ? 'out' : 'in'}${groupStart ? ' group-start' : ''}${
-        message.status === 'failed' ? ' failed' : ''
-      }`}
-      id={`msg-${message.id}`}
+    <EntryRow
+      message={message}
+      groupStart={groupStart}
+      groupEnd={groupEnd}
+      selecting={selecting}
+      selected={selected}
+      onSelect={onSelect}
+      afterHold={press.afterHold}
+      failed={message.status === 'failed'}
     >
-      <div className="bubble" {...hold}>
+      <div className="bubble" {...press.handlers}>
         {/*
           Bubbles are visually attributed by side and colour, which conveys
           nothing to a screen reader. Announcing the sender once per run matches
@@ -346,84 +372,36 @@ export const MessageBubble = memo(function MessageBubble({
           </Popover>
         ) : null}
 
-        {/* Everything that can be done to a message, reactions first: what a
-            held finger opens, where the buttons beside the bubble are out of
-            reach. */}
+        {/* Everything that can be done to a message, reactions first, in
+            Telegram's order: what a tap opens on a touch screen, where the
+            buttons beside the bubble are out of reach. */}
         {menuAt ? (
           <Popover anchor={menuAt} onClose={() => setMenuAt(null)} label={t('chat.messageActions')}>
             {quick}
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setMenuAt(null)
-                setPickerAt(menuAt)
-              }}
-            >
-              {t('emoji.more')}
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setMenuAt(null)
-                onReply(message)
-              }}
-            >
-              {t('chat.reply')}
-            </button>
-            {message.body ? (
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
+            {item(t('emoji.more'), () => setPickerAt(menuAt))}
+            {item(t('chat.reply'), () => onReply(message))}
+            {message.body
+              ? item(t('chat.copyText'), () => {
                   void navigator.clipboard?.writeText(message.body).catch(() => undefined)
-                  setMenuAt(null)
-                }}
-              >
-                {t('chat.copyText')}
-              </button>
-            ) : null}
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setMenuAt(null)
-                onDelete(message)
-              }}
-            >
-              {t('chat.deleteLocal')}
-              <span className="block text-xs text-[var(--text-muted)]">{t('chat.deleteLocalHint')}</span>
-            </button>
-            {/* Only our own messages: asking a peer to delete something they
-                wrote is not ours to do, and their client would refuse. */}
-            {outgoing ? (
-              <button
-                type="button"
-                role="menuitem"
-                className="text-[var(--danger)]"
-                onClick={() => {
-                  setMenuAt(null)
-                  onDeleteForEveryone(message)
-                }}
-              >
-                {t('chat.deleteEveryone')}
-                <span className="block text-xs text-[var(--text-muted)]">{t('chat.deleteEveryoneHint')}</span>
-              </button>
-            ) : null}
+                })
+              : null}
+            {onForward ? item(t('chat.forward'), () => onForward(message)) : null}
+            {item(t('chat.select'), () => onSelect(message))}
+            {onInfo ? item(t('chat.info'), () => onInfo(message)) : null}
+            {item(t('chat.delete'), () => onDelete(message), true)}
           </Popover>
         ) : null}
       </div>
 
       {message.status === 'failed' ? (
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-[var(--danger)]">{t('chat.failed')}</span>
-          <button type="button" className="text-[var(--text-muted)] hover:text-[var(--text)] text-xs font-medium" onClick={() => onRetry(message)}>
+        <div className="bubble-failed">
+          <span className="text-danger text-xs">{t('chat.failed')}</span>
+          <Button type="button" variant="ghost" size="sm" onClick={() => onRetry(message)}>
             {t('chat.retrySend')}
-          </button>
+          </Button>
         </div>
       ) : null}
-    </div>
+    </EntryRow>
   )
 })
 

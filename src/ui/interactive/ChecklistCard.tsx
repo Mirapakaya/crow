@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react'
-import { useI18n } from '../../i18n'
 import { foldChecklist, type ChecklistSpec, type InteractiveUpdate } from '../../core/models/interactive'
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS } from '../../core/models/protocol'
 import { PlusIcon } from '../components/Icons'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { cn } from '../../lib/utils'
+import { useInteractiveText } from './interactiveText'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 export interface ChecklistCardProps {
   checklist: ChecklistSpec
@@ -30,7 +29,7 @@ export function ChecklistCard({
   onCheck,
   onAdd,
 }: ChecklistCardProps) {
-  const { t } = useI18n()
+  const text = useInteractiveText()
   const [draft, setDraft] = useState('')
   const entries = useMemo(
     () => foldChecklist(checklist, convoId, updates ?? []),
@@ -40,30 +39,27 @@ export function ChecklistCard({
   const headingId = `list-${messageId}`
 
   return (
-    <div className="flex flex-col gap-2" role="group" aria-labelledby={headingId}>
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-[var(--text)]" id={headingId} dir="auto">
+    <div className="checklist" role="group" aria-labelledby={headingId}>
+      <div className="flex items-center justify-between">
+        <span className="poll-question" id={headingId} dir="auto">
           {checklist.title}
         </span>
-        <span className="text-xs text-[var(--text-muted)] tabular-nums">{t('interactive.progress', { done, total: entries.length })}</span>
+        <span className="text-xs text-text-muted tabular">{text('progress', { done, total: entries.length })}</span>
       </div>
-      <ul className="flex flex-col gap-1">
+      <ul className="checklist-items">
         {entries.map((entry) => (
           <li key={entry.id}>
             <label
-              className={cn(
-                'flex items-center gap-2.5 py-1 text-sm',
-                entry.done && 'text-[var(--text-muted)] line-through',
-              )}
-              title={entry.by ? t('interactive.tickedBy', { name: nameOf(entry.by) }) : undefined}
+              className={entry.done ? 'checklist-item done' : 'checklist-item'}
+              title={entry.by ? text('tickedBy', { name: nameOf(entry.by) }) : undefined}
             >
               <input
                 type="checkbox"
-                className="size-4 rounded-[var(--radius-sm)] border-[var(--border-strong)] bg-[var(--surface)] text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-2"
+                className="checkbox checkbox-sm"
                 checked={entry.done}
                 onChange={(event) => onCheck(entry.id, event.target.checked)}
               />
-              <span className="flex-1 min-w-0" dir="auto">
+              <span className="grow" dir="auto">
                 {entry.label}
               </span>
             </label>
@@ -72,7 +68,7 @@ export function ChecklistCard({
       </ul>
       {entries.length < MAX_CHECKLIST_ITEMS ? (
         <form
-          className="flex items-center gap-2"
+          className="checklist-add"
           onSubmit={(event) => {
             event.preventDefault()
             const label = draft.trim()
@@ -85,16 +81,15 @@ export function ChecklistCard({
             dir="auto"
             value={draft}
             maxLength={MAX_ITEM_CHARS}
-            placeholder={t('interactive.newItemPlaceholder')}
-            aria-label={t('interactive.addItem')}
-            className="flex-1"
+            placeholder={text('newItemPlaceholder')}
+            aria-label={text('addItem')}
             onChange={(event) => setDraft(event.target.value)}
+            className="h-8 text-xs"
           />
           <Button
             type="submit"
-            variant="ghost"
             size="icon"
-            aria-label={t('interactive.addItem')}
+            aria-label={text('addItem')}
             disabled={!draft.trim()}
           >
             <PlusIcon size={16} />
