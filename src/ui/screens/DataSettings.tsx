@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react'
 import { getRepo, useApp } from '../../app/store'
 import { estimateStorage, type StorageEstimate } from '../../app/storagePersistence'
 import { useT } from '../../i18n'
-import { Banner, Field, Spinner, Toggle } from '../components/primitives'
-import { DownloadIcon, TrashIcon, UploadIcon } from '../components/Icons'
+import { Spinner } from '../components/primitives'
 import { SettingsPage } from './SettingsPage'
 import { LAZY_CHUNKS } from '../lazyViews'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import { Switch } from '../../components/ui/switch'
+import { Download, Upload, Trash2, AlertTriangle, Shield } from 'lucide-react'
 
-/** Compact byte sizes; the exact figure matters less than the order of magnitude. */
 function formatBytes(bytes: number): string {
   if (bytes <= 0) return '0 MB'
   const mb = bytes / (1024 * 1024)
@@ -26,7 +29,6 @@ export function DataSettings() {
   const [stats, setStats] = useState<{ messages: number; contacts: number } | null>(null)
   const [storage, setStorage] = useState<StorageEstimate | null>(null)
   const persisted = useApp((s) => s.storagePersisted)
-  // Backups made here open with the recovery phrase too, when there is one.
   const hasRecovery = useApp((s) => Boolean(s.identity?.mnemonic))
   const [exportPassphrase, setExportPassphrase] = useState('')
   const [includeMessages, setIncludeMessages] = useState(true)
@@ -48,7 +50,6 @@ export function DataSettings() {
     try {
       const { exportFilename, exportVault } = await LAZY_CHUNKS.vaultTransfer()
       const envelope = await exportVault(getRepo(), exportPassphrase, { includeMessages })
-      // A Blob download keeps the backup on the device: no upload, no service.
       const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
@@ -89,7 +90,7 @@ export function DataSettings() {
   return (
     <SettingsPage title={t('settings.data')}>
       {stats ? (
-        <p className="muted">
+        <p className="text-sm text-[var(--text-muted)]">
           {t('settings.storageUsed', { messages: stats.messages, contacts: stats.contacts })}
           {storage ? (
             <>
@@ -103,115 +104,103 @@ export function DataSettings() {
         </p>
       ) : null}
 
-      {/*
-        Whether the browser will keep this data is the single most consequential
-        fact on this screen — there is no server copy — so it is stated plainly
-        rather than assumed.
-      */}
       {persisted === 'persisted' ? (
-        <Banner tone="accent">{t('settings.storagePersisted')}</Banner>
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-xs text-[var(--accent-text)]">
+          <Shield size={16} />
+          {t('settings.storagePersisted')}
+        </div>
       ) : (
-        <Banner tone="warning">
-          <span className="stack-sm">
+        <div className="flex items-start gap-2 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)]">
+          <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+          <div className="flex flex-col gap-1">
             <strong>{t('settings.storageNotPersisted')}</strong>
             <span>{t('settings.storageNotPersistedBody')}</span>
-          </span>
-        </Banner>
+          </div>
+        </div>
       )}
 
-      <div className="card stack">
-        <h3 style={{ fontSize: 'var(--step-0)' }}>{t('settings.exportBackup')}</h3>
-        <p className="muted small">{t('settings.exportBackupBody')}</p>
-        <Field label={t('settings.exportPassphrase')} hint={t('settings.exportPassphraseHint')}>
-          <input
-            className="input"
+      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-4">
+        <h3 className="text-sm font-semibold text-[var(--text)]">{t('settings.exportBackup')}</h3>
+        <p className="text-xs text-[var(--text-muted)]">{t('settings.exportBackupBody')}</p>
+        <div className="flex flex-col gap-1.5">
+          <Label>{t('settings.exportPassphrase')}</Label>
+          <span className="text-xs text-[var(--text-muted)]">{t('settings.exportPassphraseHint')}</span>
+          <Input
             type="password"
             autoComplete="new-password"
             value={exportPassphrase}
             onChange={(event) => setExportPassphrase(event.target.value)}
           />
-        </Field>
-        {hasRecovery ? <p className="hint">{t('settings.exportRecoveryNote')}</p> : null}
-        <Toggle
-          label={t('settings.exportIncludeMessages')}
-          checked={includeMessages}
-          onChange={setIncludeMessages}
-        />
-        <button
-          className="btn btn-primary btn-block"
+        </div>
+        {hasRecovery ? <p className="text-xs text-[var(--text-muted)]">{t('settings.exportRecoveryNote')}</p> : null}
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm font-medium text-[var(--text)]">{t('settings.exportIncludeMessages')}</span>
+          <Switch checked={includeMessages} onCheckedChange={setIncludeMessages} />
+        </div>
+        <Button
+          className="w-full gap-2"
           disabled={exportPassphrase.length < 10 || busy !== null}
           onClick={() => void runExport()}
         >
-          {busy === 'export' ? (
-            <Spinner label={t('common.working')} />
-          ) : (
-            <>
-              <DownloadIcon size={16} />
-              {t('settings.exportCreate')}
-            </>
-          )}
-        </button>
+          {busy === 'export' ? <Spinner label={t('common.working')} /> : <><Download size={16} />{t('settings.exportCreate')}</>}
+        </Button>
       </div>
 
-      <div className="card stack">
-        <h3 style={{ fontSize: 'var(--step-0)' }}>{t('settings.importBackup')}</h3>
-        <Field label={t('settings.importChoose')}>
-          <input
-            className="input"
+      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-4">
+        <h3 className="text-sm font-semibold text-[var(--text)]">{t('settings.importBackup')}</h3>
+        <div className="flex flex-col gap-1.5">
+          <Label>{t('settings.importChoose')}</Label>
+          <Input
             type="file"
             accept=".json,application/json"
             onChange={(event) => setImportFile(event.target.files?.[0] ?? null)}
           />
-        </Field>
-        <Field label={t('settings.exportPassphrase')} error={error ?? undefined}>
-          <input
-            className="input"
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label>{t('settings.exportPassphrase')}</Label>
+          <Input
             type="password"
             autoComplete="off"
             value={importPassphrase}
             onChange={(event) => setImportPassphrase(event.target.value)}
           />
-        </Field>
-        <button
-          className="btn btn-outline btn-block"
+          {error ? (
+            <p className="text-sm text-[var(--danger)]" role="alert">{error}</p>
+          ) : null}
+        </div>
+        <Button
+          variant="outline"
+          className="w-full gap-2"
           disabled={!importFile || !importPassphrase || busy !== null}
           onClick={() => void runImport()}
         >
-          {busy === 'import' ? (
-            <Spinner label={t('common.working')} />
-          ) : (
-            <>
-              <UploadIcon size={16} />
-              {t('settings.importBackup')}
-            </>
-          )}
-        </button>
+          {busy === 'import' ? <Spinner label={t('common.working')} /> : <><Upload size={16} />{t('settings.importBackup')}</>}
+        </Button>
       </div>
 
-      <div className="card stack">
-        <h3 style={{ fontSize: 'var(--step-0)', color: 'var(--danger)' }}>
-          {t('settings.deleteEverything')}
-        </h3>
-        <p className="muted small">{t('settings.deleteEverythingBody')}</p>
-        <Banner tone="danger">
-          <span className="small">{t('lock.startOverConfirm')}</span>
-        </Banner>
-        <Field label={t('settings.deleteEverythingConfirm')}>
-          <input
-            className="input"
+      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-4">
+        <h3 className="text-sm font-semibold text-[var(--danger)]">{t('settings.deleteEverything')}</h3>
+        <p className="text-xs text-[var(--text-muted)]">{t('settings.deleteEverythingBody')}</p>
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--danger-soft)] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] px-3 py-2.5 text-xs text-[var(--danger)]">
+          {t('lock.startOverConfirm')}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label>{t('settings.deleteEverythingConfirm')}</Label>
+          <Input
             dir="ltr"
             value={deleteConfirm}
             onChange={(event) => setDeleteConfirm(event.target.value)}
           />
-        </Field>
-        <button
-          className="btn btn-danger btn-block"
+        </div>
+        <Button
+          variant="destructive"
+          className="w-full gap-2"
           disabled={deleteConfirm !== 'DELETE'}
           onClick={() => void wipeDevice()}
         >
-          <TrashIcon size={16} />
+          <Trash2 size={16} />
           {t('settings.deleteEverything')}
-        </button>
+        </Button>
       </div>
     </SettingsPage>
   )

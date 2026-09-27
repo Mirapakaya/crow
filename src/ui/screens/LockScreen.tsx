@@ -4,27 +4,20 @@ import { useT } from '../../i18n'
 import { type KeyslotType, type SlotSecret } from '../../core/vault/vault'
 import { isGuarded, isValidPin } from '../../core/vault/keyslots'
 import { confirmBiometric, GateCancelledError } from '../../core/crypto/biometricGate'
-import { Banner, Field, Spinner } from '../components/primitives'
 import { EntryLayout } from '../components/EntryLayout'
-import { LockIcon } from '../components/Icons'
 import { PatternPad } from '../components/PatternPad'
 import { gateName, unlockError } from '../biometric'
+import { cn } from '../../lib/utils'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Textarea } from '../../components/ui/textarea'
+import { Label } from '../../components/ui/label'
+import { Progress } from '../../components/ui/progress'
+import { Lock, Fingerprint, Hash, KeyRound, RotateCcw, AlertTriangle, ChevronDown } from 'lucide-react'
 
-/** The ways in, most convenient first: the first one the vault has is offered first. */
 const WAYS: KeyslotType[] = ['device', 'biometric', 'pin', 'passphrase', 'recovery']
-
-/** Digits in any script the PIN field accepts; everything else is dropped as typed. */
 const NOT_A_DIGIT = /[^\d۰-۹٠-٩]/g
 
-/**
- * Opens the vault with whichever of its keyslots the person has (ADR-054,
- * ADR-058, ADR-059).
- *
- * The first way offered is the most convenient one enrolled: open instantly,
- * then biometrics or a security key, then a PIN or pattern, then the
- * passphrase. The recovery phrase is always one tap away, because it is what
- * makes a forgotten PIN, a lockout or a replaced fingerprint survivable.
- */
 export function LockScreen() {
   const t = useT()
   const unlock = useApp((s) => s.unlock)
@@ -35,8 +28,6 @@ export function LockScreen() {
   const consumeAutoPrompt = useApp((s) => s.consumeAutoPrompt)
   const passkeyRetired = useApp((s) => s.passkeyRetired)
 
-  // Opening instantly never stands beside a way that asks for something; the
-  // vault refuses it there, so it is not offered either (ADR-059).
   const guarded = keyslots.some(isGuarded)
   const available = WAYS.filter(
     (type) => keyslots.some((slot) => slot.type === type) && (type !== 'device' || !guarded),
@@ -47,7 +38,6 @@ export function LockScreen() {
   const method = gateName(biometric?.authenticator, t)
 
   const [chosen, setChosen] = useState<KeyslotType | null>(null)
-  // A way that has gone — a PIN erased after too many tries — gives way to the next.
   const way: KeyslotType = chosen && available.includes(chosen) ? chosen : (available[0] ?? 'passphrase')
   const [secret, setSecret] = useState('')
   const [busy, setBusy] = useState(false)
@@ -55,7 +45,6 @@ export function LockScreen() {
   const [error, setError] = useState<string | null>(null)
   const [showForgot, setShowForgot] = useState(false)
 
-  /** `quiet`: nobody asked, so a prompt that did not happen is not an error to show. */
   const attempt = async (make: () => Promise<SlotSecret>, quiet = false) => {
     if (busy) return
     setBusy(true)
@@ -72,8 +61,6 @@ export function LockScreen() {
     }
   }
 
-  // Called in the tap's own task: Safari before iOS 17.4 refuses WebAuthn
-  // that is not.
   const withBiometric = (quiet = false) => {
     if (!biometric?.credentialId) return
     const { credentialId, authenticator, transports } = biometric
@@ -88,10 +75,6 @@ export function LockScreen() {
 
   const withPin = (code: string) => void attempt(async () => ({ type: 'pin', code, onProgress: setProgress }))
 
-  // One unprompted request, on a cold start, once the page is in view and has
-  // focus — Chrome refuses WebAuthn to a page without it, and a tab opened in
-  // the background gets its prompt when it is looked at, not never. Browsers
-  // that want a tap first refuse it, silently, and the button is right there.
   const wayNow = useRef(way)
   useEffect(() => {
     wayNow.current = way
@@ -109,15 +92,12 @@ export function LockScreen() {
       prompted.current = true
       stop()
       consumeAutoPrompt()
-      // After the effect, not inside it: it sets state as it runs. There is
-      // no tap to keep alive, so the delay costs nothing.
       queueMicrotask(() => withBiometric(true))
     }
     document.addEventListener('visibilitychange', ask)
     globalThis.addEventListener('focus', ask)
     ask()
     return stop
-    // Deliberately once, on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -146,71 +126,92 @@ export function LockScreen() {
     recovery: t('lock.useRecovery'),
   }
 
+  const icons: Record<KeyslotType, typeof Lock> = {
+    device: Lock,
+    biometric: Fingerprint,
+    pin: Hash,
+    passphrase: KeyRound,
+    recovery: RotateCcw,
+  }
+
   const typed = way === 'passphrase' || way === 'recovery' || (way === 'pin' && style === 'digits')
   const ready = way === 'pin' ? isValidPin('digits', secret) : secret.trim().length > 0
 
+  const WayIcon = icons[way]
+
   return (
     <EntryLayout>
-      <div className="stack-sm center">
-        <span className="lock-mark" aria-hidden="true">
-          <LockIcon size={20} />
+      <div className="flex flex-col items-center gap-1 text-center">
+        <span
+          className="grid size-11 place-items-center rounded-[var(--radius-lg)] border border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent-text)]"
+          aria-hidden="true"
+        >
+          <WayIcon size={20} strokeWidth={1.75} />
         </span>
-        <h1 className="lock-title">{t('lock.title')}</h1>
-        <p className="muted">{way === 'device' ? t('lock.openBody') : t('lock.body')}</p>
+        <h1 className="text-xl font-bold tracking-tight text-[var(--text)]">{t('lock.title')}</h1>
+        <p className="text-sm text-[var(--text-muted)]">
+          {way === 'device' ? t('lock.openBody') : t('lock.body')}
+        </p>
       </div>
 
-      {autoLocked ? <Banner tone="accent">{t('lock.autoLocked')}</Banner> : null}
-      {passkeyRetired ? <Banner tone="warning">{t('lock.passkeyRetired')}</Banner> : null}
+      {autoLocked ? (
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-sm text-[var(--accent-text)]">
+          {t('lock.autoLocked')}
+        </div>
+      ) : null}
+      {passkeyRetired ? (
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)]">
+          {t('lock.passkeyRetired')}
+        </div>
+      ) : null}
 
       {way === 'device' || way === 'biometric' ? (
-        <>
-          <button
-            className="btn btn-primary btn-block"
+        <div className="flex flex-col gap-3">
+          <Button
+            className="w-full h-10"
             disabled={busy}
             onClick={
               way === 'device' ? () => void attempt(async () => ({ type: 'device' })) : () => withBiometric()
             }
           >
             {busy ? <Spinner label={t('lock.unlocking')} /> : labels[way]}
-          </button>
+          </Button>
           {error ? (
-            <p className="error-text center" role="alert">
+            <p className="text-center text-sm text-[var(--danger)]" role="alert">
               {error}
             </p>
           ) : null}
-        </>
+        </div>
       ) : null}
 
       {way === 'pin' && style === 'pattern' ? (
-        <div className="stack-sm">
+        <div className="flex flex-col gap-2">
           <PatternPad label={t('lock.drawPattern')} disabled={busy} onDone={withPin} />
           {busy ? (
-            <div className="progress">
-              <div style={{ width: `${Math.round(progress * 100)}%` }} />
-            </div>
+            <Progress value={progress * 100} />
           ) : null}
           {error ? (
-            <p className="error-text center" role="alert">
+            <p className="text-center text-sm text-[var(--danger)]" role="alert">
               {error}
             </p>
           ) : (
-            <p className="hint center">{t('lock.drawPattern')}</p>
+            <p className="text-center text-xs text-[var(--text-muted)]">{t('lock.drawPattern')}</p>
           )}
         </div>
       ) : null}
 
       {typed ? (
         <form
-          className="stack"
+          className="flex flex-col gap-4"
           onSubmit={(event) => {
             event.preventDefault()
             submit()
           }}
         >
-          <Field label={way === 'recovery' ? t('lock.recoveryPhrase') : undefined} error={error ?? undefined}>
-            {way === 'recovery' ? (
-              <textarea
-                className="textarea mono"
+          {way === 'recovery' ? (
+            <div className="flex flex-col gap-1.5">
+              <Label>{t('lock.recoveryPhrase')}</Label>
+              <Textarea
                 dir="ltr"
                 autoFocus
                 autoCapitalize="none"
@@ -223,10 +224,12 @@ export function LockScreen() {
                   setSecret(event.target.value)
                   setError(null)
                 }}
+                className="font-mono"
               />
-            ) : (
-              <input
-                className={way === 'pin' ? 'input pin-input' : 'input'}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <Input
                 type="password"
                 dir={way === 'pin' ? 'ltr' : undefined}
                 inputMode={way === 'pin' ? 'numeric' : undefined}
@@ -242,54 +245,83 @@ export function LockScreen() {
                   setSecret(way === 'pin' ? value.replace(NOT_A_DIGIT, '') : value)
                   setError(null)
                 }}
+                className={cn(way === 'pin' && 'text-center tracking-[0.3em]')}
               />
-            )}
-          </Field>
-          {/* A passphrase or a PIN runs scrypt, which takes a second or more on a
-              phone. Without a progress bar that reads as the app having frozen. */}
-          {busy && way !== 'recovery' ? (
-            <div className="progress">
-              <div style={{ width: `${Math.round(progress * 100)}%` }} />
             </div>
+          )}
+          {error ? (
+            <p className="text-sm text-[var(--danger)]" role="alert">
+              {error}
+            </p>
           ) : null}
-          <button className="btn btn-primary btn-block" type="submit" disabled={!ready || busy}>
+          {busy && way !== 'recovery' ? (
+            <Progress value={progress * 100} />
+          ) : null}
+          <Button className="w-full h-10" type="submit" disabled={!ready || busy}>
             {busy ? <Spinner label={t('lock.unlocking')} /> : t('lock.unlock')}
-          </button>
+          </Button>
         </form>
       ) : null}
 
-      <div className="stack-sm center">
+      <div className="flex flex-col items-center gap-1">
         {available
           .filter((other) => other !== way)
-          .map((other) => (
-            <button key={other} className="btn btn-ghost small" onClick={() => choose(other)}>
-              {labels[other]}
-            </button>
-          ))}
-        <button
-          className="btn btn-ghost small"
+          .map((other) => {
+            const OtherIcon = icons[other]
+            return (
+              <Button
+                key={other}
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-[var(--text-muted)]"
+                onClick={() => choose(other)}
+              >
+                <OtherIcon size={14} />
+                {labels[other]}
+              </Button>
+            )
+          })}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1 text-[var(--text-muted)]"
           aria-expanded={showForgot}
-          onClick={() => setShowForgot((value) => !value)}
+          onClick={() => setShowForgot((v) => !v)}
         >
+          <ChevronDown
+            size={14}
+            className={cn('transition-transform', showForgot && 'rotate-180')}
+          />
           {t('lock.forgot')}
-        </button>
+        </Button>
       </div>
 
       {showForgot ? (
-        <div className="stack">
-          <Banner tone="warning">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)]">
+            <AlertTriangle size={16} className="shrink-0" />
             {available.includes('recovery') ? t('lock.forgotBodyRecovery') : t('lock.forgotBody')}
-          </Banner>
-          <button
-            className="btn btn-danger-soft btn-block"
+          </div>
+          <Button
+            variant="destructive"
+            className="w-full"
             onClick={() => {
               if (confirm(t('lock.startOverConfirm'))) void wipeDevice()
             }}
           >
             {t('lock.startOver')}
-          </button>
+          </Button>
         </div>
       ) : null}
     </EntryLayout>
+  )
+}
+
+function Spinner({ label }: { label?: string }) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+      {label ? <span className="text-xs text-[var(--text-muted)]">{label}</span> : null}
+    </span>
   )
 }

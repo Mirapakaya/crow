@@ -26,11 +26,12 @@ import {
   SettingsHome,
   VerifyScreen,
 } from '../ui/lazyViews'
-import { ChatIcon, ContactsIcon, SettingsIcon } from '../ui/components/Icons'
 import { Banner, Spinner } from '../ui/components/primitives'
 import { EntryLayout } from '../ui/components/EntryLayout'
 import { ConnectionBar } from '../ui/components/ConnectionStatus'
 import { UpdatePrompt } from './UpdatePrompt'
+import { cn } from '../lib/utils'
+import { MessageSquare, Users, Settings, X } from 'lucide-react'
 
 export function App() {
   const phase = useApp((s) => s.phase)
@@ -50,9 +51,6 @@ export function App() {
     void boot()
   }, [boot])
 
-  // main.tsx has already done this once from the cache; this keeps <html> in
-  // step with every later change, including the one that arrives when an
-  // unlocked vault restores a preference the cache did not have.
   useEffect(() => {
     applyDisplayPrefs({ locale: settings.locale, theme: settings.theme })
   }, [settings.locale, settings.theme])
@@ -76,22 +74,20 @@ function Shell({ phase }: { phase: ReturnType<typeof useApp.getState>['phase'] }
 
   if (phase === 'boot') {
     return (
-      <div className="app-shell" style={{ display: 'grid', placeItems: 'center' }}>
+      <div className="flex min-h-dvh items-center justify-center bg-[var(--bg)]">
         <Spinner label={t('common.loading')} />
       </div>
     )
   }
 
-  // Nothing here works, but the language switch still does — which is the
-  // difference between a dead end and a message the reader can understand.
   if (phase === 'unsupported') {
     return (
-      <div className="app-shell">
+      <div className="flex min-h-dvh bg-[var(--bg)]">
         <EntryLayout>
           <Banner tone="danger">{t('errors.unsupported')}</Banner>
-          <p className="muted">{t('errors.storageBlocked')}</p>
+          <p className="text-[var(--text-muted)]">{t('errors.storageBlocked')}</p>
           {bootError ? (
-            <p className="hint mono" dir="ltr">
+            <p className="font-mono text-sm text-[var(--text-muted)]" dir="ltr">
               {bootError}
             </p>
           ) : null}
@@ -102,7 +98,7 @@ function Shell({ phase }: { phase: ReturnType<typeof useApp.getState>['phase'] }
 
   if (phase === 'onboarding') {
     return (
-      <div className="app-shell">
+      <div className="flex min-h-dvh bg-[var(--bg)]">
         <Suspense
           fallback={
             <EntryLayout>
@@ -118,14 +114,14 @@ function Shell({ phase }: { phase: ReturnType<typeof useApp.getState>['phase'] }
 
   if (phase === 'locked') {
     return (
-      <div className="app-shell">
+      <div className="flex min-h-dvh bg-[var(--bg)]">
         <LockScreen />
       </div>
     )
   }
 
   return (
-    <div className="app-shell">
+    <div className="flex min-h-dvh max-h-dvh flex-col bg-[var(--bg)]">
       <CallLayer />
       <ConnectionBar />
       <BackupGate />
@@ -140,17 +136,6 @@ const PICK: Record<Section, 'nav.pickChat' | 'nav.pickContact' | 'nav.pickSettin
   settings: 'nav.pickSetting',
 }
 
-/**
- * The route on screen, and on a wide window the list it belongs to beside it,
- * laid out as a desktop messenger is (ADR-060): the list the person is in —
- * chats, contacts or settings — down the side with the tabs under it, and
- * what they opened from it next to it. A page reached from more than one list
- * stays beside the one it was opened from.
- *
- * The route is drawn in the same place in both layouts, so a window resized
- * across the breakpoint keeps the conversation it shows — its scroll position,
- * the reply being written, the draft — rather than mounting a new one.
- */
 function Panes({ route, wide }: { route: Route; wide: boolean }) {
   const t = useTranslate()
   const [kept, keep] = useState<Section>(() => sectionOf(route) ?? 'chats')
@@ -158,27 +143,29 @@ function Panes({ route, wide }: { route: Route; wide: boolean }) {
   if (section !== kept) keep(section)
   const level = levelOf(route)
   return (
-    <div className={wide ? 'panes split' : 'panes'}>
+    <div className={cn('flex min-h-0 flex-1', wide && 'flex-row')}>
       {wide ? (
-        <div className="sidebar">
-          <Suspense fallback={<RouteLoading />}>
-            {section === 'chats' ? (
-              <ChatList />
-            ) : section === 'contacts' ? (
-              <ContactsList />
-            ) : (
-              <SettingsHome />
-            )}
-          </Suspense>
+        <div className="flex w-[clamp(18rem,32%,26rem)] shrink-0 flex-col border-e border-[var(--border)]">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <Suspense fallback={<RouteLoading />}>
+              {section === 'chats' ? (
+                <ChatList />
+              ) : section === 'contacts' ? (
+                <ContactsList />
+              ) : (
+                <SettingsHome />
+              )}
+            </Suspense>
+          </div>
           <TabBar section={section} />
         </div>
       ) : null}
-      <div className="detail" data-level={wide ? level : undefined}>
+      <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col')} data-level={wide ? level : undefined}>
         {wide && level === 0 ? (
-          <p className="detail-empty">{t(PICK[section])}</p>
+          <p className="m-auto rounded-full bg-[var(--surface-3)] px-3 py-1 text-sm text-[var(--text-muted)]">
+            {t(PICK[section])}
+          </p>
         ) : (
-          // One boundary for every route: a lazy screen shows the fallback
-          // while its chunk arrives, and the tabs stay put.
           <Suspense fallback={<RouteLoading />}>
             <RouteView route={route} />
           </Suspense>
@@ -189,11 +176,6 @@ function Panes({ route, wide }: { route: Route; wide: boolean }) {
   )
 }
 
-/*
- * The call screen, from the call chunk. Rendered only while there is a call,
- * and there is one only once that chunk has loaded to place or ring it — so
- * this never fetches anything of its own (ADR-046).
- */
 const CallOverlay = lazy(() => loadCallsChunk().then((chunk) => ({ default: chunk.CallOverlay })))
 
 function CallLayer() {
@@ -206,19 +188,13 @@ function CallLayer() {
   )
 }
 
-/**
- * A fresh identity is worthless without its recovery phrase, so the ceremony
- * takes over the whole screen until it is done or explicitly deferred. Once
- * deferred it degrades to a dismissible reminder rather than nagging on every
- * screen.
- */
 function BackupGate() {
   const identity = useApp((s) => s.identity)
   const deferred = useApp((s) => s.backupDeferred)
   if (!identity || identity.mnemonicBackedUp || !identity.mnemonic) return null
   if (deferred) return null
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'var(--bg)', zIndex: 50, overflow: 'auto' }}>
+    <div className="fixed inset-0 z-50 overflow-auto bg-[var(--bg)]">
       <Suspense fallback={<RouteLoading />}>
         <BackupCeremony mnemonic={identity.mnemonic} />
       </Suspense>
@@ -226,15 +202,10 @@ function BackupGate() {
   )
 }
 
-/**
- * Shown while a lazy screen's chunk loads. Almost always from the runtime
- * cache, so the spinner is held back briefly by CSS and a fast load never
- * flashes one at all.
- */
 function RouteLoading() {
   const t = useTranslate()
   return (
-    <div className="route-loading">
+    <div className="flex min-h-[12rem] flex-1 items-center justify-center animate-in fade-in-0 duration-200 [animation-delay:180ms]">
       <Spinner label={t('common.loading')} />
     </div>
   )
@@ -245,8 +216,6 @@ function RouteView({ route }: { route: Route }) {
     case 'chats':
       return <ChatList />
     case 'chat':
-      // Keyed by address so switching conversations remounts: composer draft,
-      // scroll position, and reply state all reset cleanly.
       return <ChatView key={route.peer} address={route.peer} />
     case 'group':
       return <ChatView key={route.id} address={route.id} />
@@ -281,10 +250,6 @@ function RouteView({ route }: { route: Route }) {
   }
 }
 
-/**
- * On a narrow screen the tab bar is hidden inside a conversation and the pages
- * opened from one, where the header owns the back action.
- */
 const immersive = (route: Route): boolean =>
   route.name === 'chat' ||
   route.name === 'group' ||
@@ -294,34 +259,50 @@ const immersive = (route: Route): boolean =>
   route.name === 'verify' ||
   route.name === 'add-contact'
 
-/** The tabs, with the one for the list the person is in marked as current. */
 function TabBar({ section }: { section: Section | null }) {
   const t = useTranslate()
   const navigate = useNavigate()
   const conversations = useApp((s) => s.conversations)
-  const unread = conversations.reduce((total, conversation) => total + conversation.unread, 0)
+  const unread = conversations.reduce((total, c) => total + c.unread, 0)
 
-  const tabs: { route: Route; label: string; icon: React.ReactNode; badge?: number }[] = [
-    { route: { name: 'chats' }, label: t('nav.chats'), icon: <ChatIcon size={21} />, badge: unread },
-    { route: { name: 'contacts' }, label: t('nav.contacts'), icon: <ContactsIcon size={21} /> },
-    { route: { name: 'settings' }, label: t('nav.settings'), icon: <SettingsIcon size={21} /> },
+  const tabs: { route: Route; label: string; Icon: typeof MessageSquare; badge?: number }[] = [
+    { route: { name: 'chats' }, label: t('nav.chats'), Icon: MessageSquare, badge: unread },
+    { route: { name: 'contacts' }, label: t('nav.contacts'), Icon: Users },
+    { route: { name: 'settings' }, label: t('nav.settings'), Icon: Settings },
   ]
 
   return (
-    <nav className="tabbar" aria-label={t('nav.chats')}>
-      {tabs.map((tab) => (
-        <button
-          key={tab.route.name}
-          aria-current={tab.route.name === section ? 'page' : undefined}
-          onClick={() => navigate(tab.route)}
-        >
-          {tab.icon}
-          <span>{tab.label}</span>
-          {tab.badge && tab.badge > 0 ? (
-            <span className="tab-badge">{tab.badge > 99 ? '99+' : tab.badge}</span>
-          ) : null}
-        </button>
-      ))}
+    <nav
+      className="flex shrink-0 border-t border-[var(--border)] bg-[var(--surface)] pb-[env(safe-area-inset-bottom)]"
+      aria-label={t('nav.chats')}
+    >
+      {tabs.map((tab) => {
+        const active = tab.route.name === section
+        return (
+          <button
+            key={tab.route.name}
+            aria-current={active ? 'page' : undefined}
+            onClick={() => navigate(tab.route)}
+            className={cn(
+              'relative flex flex-1 flex-col items-center gap-0.5 py-2 px-1 border-none bg-transparent cursor-pointer transition-colors',
+              active ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]',
+            )}
+          >
+            <div className="relative">
+              <tab.Icon size={20} strokeWidth={1.75} />
+              {tab.badge && tab.badge > 0 ? (
+                <span className="absolute -top-1 -right-2 flex min-w-[1rem] h-4 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[0.6rem] font-semibold tabular-nums text-[var(--accent-fg)]">
+                  {tab.badge > 99 ? '99+' : tab.badge}
+                </span>
+              ) : null}
+            </div>
+            <span className="text-[0.625rem] font-medium leading-none">{tab.label}</span>
+            {active ? (
+              <span className="absolute top-0 inset-x-1/4 h-0.5 rounded-full bg-[var(--accent)]" />
+            ) : null}
+          </button>
+        )
+      })}
     </nav>
   )
 }
@@ -331,12 +312,26 @@ function ToastRegion() {
   const dismiss = useApp((s) => s.dismissToast)
   if (toasts.length === 0) return null
   return (
-    <div className="toast-region" role="status" aria-live="polite">
+    <div
+      className="fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-60 flex flex-col items-center gap-2 px-4 pointer-events-none"
+      role="status"
+      aria-live="polite"
+    >
       {toasts.map((toast) => (
-        <div key={toast.id} className={`toast ${toast.tone === 'danger' ? 'toast-danger' : ''}`}>
-          <span className="grow">{toast.message}</span>
-          <button className="btn btn-ghost small" onClick={() => dismiss(toast.id)}>
-            ×
+        <div
+          key={toast.id}
+          className={cn(
+            'pointer-events-auto flex w-full max-w-96 items-center gap-3 rounded-[var(--radius-md)] border bg-[var(--surface)] px-4 py-3 text-sm shadow-[var(--shadow-lg)] animate-in slide-in-from-bottom-2 fade-in-0',
+            toast.tone === 'danger' && 'border-[color-mix(in_srgb,var(--danger)_45%,transparent)]',
+          )}
+        >
+          <span className="flex-1">{toast.message}</span>
+          <button
+            className="shrink-0 rounded-[var(--radius-sm)] p-1 text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+            onClick={() => dismiss(toast.id)}
+            aria-label="Dismiss"
+          >
+            <X size={14} />
           </button>
         </div>
       ))}
@@ -344,16 +339,6 @@ function ToastRegion() {
   )
 }
 
-/**
- * Cross-cutting browser lifecycle wiring:
- *  - user activity resets the auto-lock countdown
- *  - regaining focus, visibility or connectivity wakes the transport: stale
- *    reconnect timers are dropped, sockets prove they are alive, and a
- *    catch-up read runs if anything could have been missed
- *  - losing or regaining them also decides whether the open conversation is
- *    being read, which is what keeps its unread badge honest
- *  - hiding the tab optionally locks the vault
- */
 function useLifecycleEffects(): void {
   const settings = useApp((s) => s.settings)
   const lock = useApp((s) => s.lock)
@@ -373,14 +358,7 @@ function useLifecycleEffects(): void {
 
   useEffect(() => {
     if (phase !== 'ready') return
-
-    // Each of these is the earliest signal that the network under the app may
-    // have changed. Waiting for sockets to notice on their own takes a
-    // keepalive interval at best; the browser already knows.
     const onOnline = () => getMessenger()?.wake('online')
-    // Focus and visibility also decide whether the open conversation is
-    // actually being read: a message arriving in a background tab has not
-    // been, and is counted until the window comes back.
     const onFocus = () => {
       setWindowFocus(true)
       getMessenger()?.wake('focus')
@@ -390,20 +368,13 @@ function useLifecycleEffects(): void {
       const visible = document.visibilityState === 'visible'
       setWindowFocus(visible)
       if (visible) getMessenger()?.wake('visible')
-      // Not in the middle of a call: sharing a screen or glancing at another
-      // tab is part of one. The store locks as soon as the call ends instead.
       else if (settings.lockOnHide && !isCallLive(useApp.getState().call)) lock()
     }
-    // Restored from the back/forward cache, or unfrozen by the browser: every
-    // timer was suspended, and sockets that look open may not be.
     const onPageShow = (event: PageTransitionEvent) => {
       setWindowFocus(document.visibilityState === 'visible')
       if (event.persisted) getMessenger()?.wake('resume')
     }
     const onResume = () => getMessenger()?.wake('resume')
-
-    // Losing the network produces no relay event until sockets time out, so
-    // take the browser's word for it and republish the state immediately.
     const onOffline = () => getMessenger()?.refreshSyncState()
 
     addEventListener('online', onOnline)
@@ -424,7 +395,6 @@ function useLifecycleEffects(): void {
     }
   }, [phase, settings.lockOnHide, lock, setWindowFocus])
 
-  // Persist relay health on the way out so ranking survives a restart.
   useEffect(() => {
     const onHide = () => void getMessenger()?.persistRelayHealth()
     addEventListener('pagehide', onHide)
@@ -432,7 +402,6 @@ function useLifecycleEffects(): void {
   }, [])
 }
 
-/** Small helper so components in this file can translate without prop drilling. */
 function useTranslate() {
   const locale = useApp((s) => s.settings.locale)
   return useMemo(

@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react'
 import { getRepo, useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
-import { Banner, Field } from '../components/primitives'
-import { PlusIcon, RefreshIcon, TrashIcon } from '../components/Icons'
 import { SettingsPage } from './SettingsPage'
 import { normalizeRelayUrl, relayLabel } from '../../core/transport/relayUrl'
 import { DEFAULT_DM_RELAYS, SUGGESTED_RELAYS } from '../../core/transport/defaultRelays'
 import type { RelayEntry } from '../../core/models/types'
 import { verdictFor } from '../../core/transport/relayHealth'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import { Badge } from '../../components/ui/badge'
+import { Plus, Trash2, RefreshCw, AlertTriangle } from 'lucide-react'
 
 export function RelaySettings() {
   const { t, locale } = useI18n()
@@ -20,7 +23,6 @@ export function RelaySettings() {
   const [error, setError] = useState<string | null>(null)
 
   const statusByUrl = useMemo(() => new Map(statuses.map((status) => [status.url, status])), [statuses])
-
   const activeCount = entries.filter((entry) => entry.enabled && entry.write).length
 
   const addRelay = async (raw: string) => {
@@ -61,22 +63,24 @@ export function RelaySettings() {
 
   return (
     <SettingsPage title={t('settings.relays')}>
-      <p className="muted">{t('settings.relaysBody')}</p>
+      <p className="text-sm text-[var(--text-muted)]">{t('settings.relaysBody')}</p>
 
-      {activeCount === 0 ? <Banner tone="danger">{t('settings.noRelaysWarning')}</Banner> : null}
+      {activeCount === 0 ? (
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--danger-soft)] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--danger)]">
+          <AlertTriangle size={16} />
+          {t('settings.noRelaysWarning')}
+        </div>
+      ) : null}
 
-      <div className="card-section">
+      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
         {entries.map((entry) => {
           const status = statusByUrl.get(entry.url)
           const verdict = verdictFor(status)
-          const badgeClass =
-            verdict === 'healthy'
-              ? 'badge badge-success'
-              : verdict === 'degraded'
-                ? 'badge badge-warning'
-                : verdict === 'offline'
-                  ? 'badge badge-danger'
-                  : 'badge'
+          const badgeVariant =
+            verdict === 'healthy' ? 'success' as const
+              : verdict === 'degraded' ? 'warning' as const
+                : verdict === 'offline' ? 'destructive' as const
+                  : 'secondary' as const
           const badgeLabel =
             verdict === 'healthy'
               ? t('settings.relayHealthy')
@@ -87,34 +91,35 @@ export function RelaySettings() {
                   : t('settings.relayNever')
 
           return (
-            <div key={entry.id} className="stack-sm" style={{ padding: 'var(--space-3) var(--space-4)' }}>
-              <div className="row-between">
-                <span className="grow truncate" style={{ fontWeight: 550 }}>
+            <div key={entry.id} className="flex flex-col gap-2 p-3 px-4 border-t border-[var(--border-subtle)] first:border-t-0">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex-1 truncate font-medium text-sm text-[var(--text)]">
                   {relayLabel(entry.url)}
                 </span>
-                <span className={badgeClass}>{badgeLabel}</span>
-                <button
-                  className="btn btn-icon"
+                <Badge variant={badgeVariant}>{badgeLabel}</Badge>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   aria-label={t('settings.relayRemove')}
                   onClick={() => void remove(entry)}
                 >
-                  <TrashIcon size={16} />
-                </button>
+                  <Trash2 size={16} />
+                </Button>
               </div>
 
-              <div className="row faint" style={{ flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-                <label className="row" style={{ gap: '0.35rem' }}>
+              <div className="flex items-center gap-3 flex-wrap text-[0.75rem] text-[var(--text-faint)]">
+                <label className="inline-flex items-center gap-1 cursor-pointer">
                   <input
-                    className="checkbox checkbox-sm"
+                    className="h-[0.9375rem] w-[0.9375rem] appearance-none shrink-0 rounded-[var(--radius-xs)] border border-[var(--border-strong)] bg-[var(--surface)] cursor-pointer transition-colors checked:bg-[var(--accent)] checked:border-[var(--accent)] grid place-items-center after:content-[''] after:w-[0.25rem] after:h-[0.5rem] after:border-t-0 after:border-r-[1.5px] after:border-b-[1.5px] after:border-l-0 after:border-solid after:border-[var(--accent-fg)] after:rotate-45 after:translate-[-1px,1px] after:opacity-0 checked:after:opacity-100"
                     type="checkbox"
                     checked={entry.read}
                     onChange={(event) => void update(entry, { read: event.target.checked })}
                   />
                   {t('settings.relayRead')}
                 </label>
-                <label className="row" style={{ gap: '0.35rem' }}>
+                <label className="inline-flex items-center gap-1 cursor-pointer">
                   <input
-                    className="checkbox checkbox-sm"
+                    className="h-[0.9375rem] w-[0.9375rem] appearance-none shrink-0 rounded-[var(--radius-xs)] border border-[var(--border-strong)] bg-[var(--surface)] cursor-pointer transition-colors checked:bg-[var(--accent)] checked:border-[var(--accent)] grid place-items-center after:content-[''] after:w-[0.25rem] after:h-[0.5rem] after:border-t-0 after:border-r-[1.5px] after:border-b-[1.5px] after:border-l-0 after:border-solid after:border-[var(--accent-fg)] after:rotate-45 after:translate-[-1px,1px] after:opacity-0 checked:after:opacity-100"
                     type="checkbox"
                     checked={entry.write}
                     onChange={(event) => void update(entry, { write: event.target.checked })}
@@ -134,24 +139,19 @@ export function RelaySettings() {
                 ) : null}
               </div>
 
-              {/*
-                A relay that refuses our subscription is the failure mode most
-                likely to go unnoticed: it connects, accepts publishes, and
-                simply never delivers. Say so in words, not just an error code.
-              */}
               {status && status.health.readFail > 0 ? (
-                <span className="small" style={{ color: 'var(--warning)' }}>
+                <span className="text-xs text-[var(--warning)]">
                   {t('settings.relayCannotRead')}
                 </span>
               ) : null}
 
               {status?.health.lastError ? (
-                <span className="faint truncate" title={status.health.lastError}>
+                <span className="truncate text-[0.75rem] text-[var(--text-faint)]" title={status.health.lastError}>
                   {status.health.lastError}
                 </span>
               ) : null}
 
-              <code className="mono faint" style={{ wordBreak: 'break-all' }} lang="en" dir="ltr">
+              <code className="font-mono text-[0.75rem] text-[var(--text-faint)] break-all" lang="en" dir="ltr">
                 {entry.url}
               </code>
             </div>
@@ -159,11 +159,11 @@ export function RelaySettings() {
         })}
       </div>
 
-      <div className="card stack-sm">
-        <Field label={t('settings.relayAdd')} error={error ?? undefined}>
-          <div className="row">
-            <input
-              className="input grow"
+      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
+          <Label>{t('settings.relayAdd')}</Label>
+          <div className="flex gap-2">
+            <Input
               dir="ltr"
               lang="en"
               placeholder={t('settings.relayPlaceholder')}
@@ -175,34 +175,40 @@ export function RelaySettings() {
               onKeyDown={(event) => {
                 if (event.key === 'Enter') void addRelay(input)
               }}
+              className="flex-1"
             />
-            <button className="btn btn-primary" disabled={!input.trim()} onClick={() => void addRelay(input)}>
-              <PlusIcon size={16} />
-            </button>
+            <Button disabled={!input.trim()} onClick={() => void addRelay(input)}>
+              <Plus size={16} />
+            </Button>
           </div>
-        </Field>
+          {error ? (
+            <p className="text-sm text-[var(--danger)]" role="alert">{error}</p>
+          ) : null}
+        </div>
       </div>
 
       {unusedSuggestions.length > 0 ? (
-        <div className="card stack-sm">
-          <span className="section-title">{t('settings.relaySuggested')}</span>
-          <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
+          <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-faint)] px-1 [dir=rtl]_[:root]&:normal-case [dir=rtl]_[:root]&:tracking-normal">
+            {t('settings.relaySuggested')}
+          </span>
+          <div className="flex flex-wrap gap-2">
             {unusedSuggestions.map((url) => (
-              <button key={url} className="btn btn-outline small" onClick={() => void addRelay(url)}>
-                <PlusIcon size={13} />
+              <Button key={url} variant="outline" size="sm" onClick={() => void addRelay(url)}>
+                <Plus size={13} />
                 {relayLabel(url)}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
       ) : null}
 
-      <button className="btn btn-outline btn-block" onClick={() => void restoreDefaults()}>
-        <RefreshIcon size={16} />
+      <Button variant="outline" className="w-full gap-2" onClick={() => void restoreDefaults()}>
+        <RefreshCw size={16} />
         {t('settings.relayResetDefaults')}
-      </button>
+      </Button>
 
-      <p className="hint" lang={locale}>
+      <p className="text-xs text-[var(--text-muted)]" lang={locale}>
         {t('privacy.relaysSee')}
       </p>
     </SettingsPage>

@@ -2,24 +2,23 @@ import { useMemo, useState } from 'react'
 import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../app/router'
-import { Avatar, Banner, EmptyState, GroupAvatar } from '../components/primitives'
-import { ContactsIcon, PlusIcon, ShieldCheckIcon } from '../components/Icons'
+import { Avatar, GroupAvatar } from '../components/primitives'
+import { ShieldCheckIcon } from '../components/Icons'
 import { formatListTimestamp } from '../format'
 import { shortNpub, toNpub } from '../../core/identity/keys'
 import type { Contact, Conversation } from '../../core/models/types'
 import type { LocaleCode } from '../../core/models/types'
 import { ConnectionBadge } from '../components/ConnectionStatus'
 import { callSummary, isCallEntry } from '../components/CallBubble'
+import { cn } from '../../lib/utils'
+import { Input } from '../../components/ui/input'
+import { Button } from '../../components/ui/button'
+import { MessageSquare, Users, Plus, Search } from 'lucide-react'
 
 export function displayName(contact: Contact | undefined, pubkey: string): string {
   return contact?.name || contact?.remoteName || shortNpub(toNpub(pubkey))
 }
 
-/**
- * Names as a sentence would list them, in the reader's language — "Bob,
- * Carol and Dave" / «باب، کارول و دیو» — rather than joined with a Latin
- * comma that reads wrongly in Persian.
- */
 export function listNames(names: readonly string[], locale: LocaleCode): string {
   try {
     return new Intl.ListFormat(locale, { style: 'short', type: 'conjunction' }).format(names)
@@ -28,7 +27,6 @@ export function listNames(names: readonly string[], locale: LocaleCode): string 
   }
 }
 
-/** What a conversation is called: its person, or its group's name, or who is in it. */
 export function conversationTitle(
   conversation: Conversation,
   contacts: ReadonlyMap<string, Contact>,
@@ -42,11 +40,6 @@ export function conversationTitle(
   return listNames(names, locale)
 }
 
-/**
- * A request is a conversation the user has not taken: a direct one with a
- * contact they have not accepted, or a group started by someone outside their
- * address book.
- */
 export const isRequest = (conversation: Conversation, contacts: ReadonlyMap<string, Contact>): boolean =>
   conversation.kind === 'group'
     ? !conversation.accepted
@@ -60,7 +53,6 @@ export function ChatList() {
   const typingPeers = useApp((s) => s.typingPeers)
   const previews = useApp((s) => s.previews)
   const [query, setQuery] = useState('')
-  // The conversation open beside this list, on a wide window.
   const route = useRoute()
   const open = route.name === 'chat' ? route.peer : route.name === 'group' ? route.id : null
 
@@ -68,7 +60,6 @@ export function ChatList() {
     const needle = query.trim().toLowerCase()
     const matches = (conversation: Conversation) => {
       if (!needle) return true
-      // A group matches on its name and on anyone in it.
       return (
         conversationTitle(conversation, contacts, locale).toLowerCase().includes(needle) ||
         conversation.members.some(
@@ -91,31 +82,34 @@ export function ChatList() {
     const name = conversationTitle(conversation, contacts, locale)
     const typing = !group && typingPeers.has(conversation.peerPubkey)
     const preview = previews.get(conversation.id)
-    // In a group the preview says who wrote it, as the list in every group
-    // messenger does; "You:" already covers our own.
     const author =
       group && preview?.direction === 'in'
         ? `${displayName(contacts.get(preview.authorPubkey), preview.authorPubkey)}: `
         : null
+    const active = open === (group ? conversation.id : conversation.peerPubkey)
+
     return (
       <button
         key={conversation.id}
-        className="convo-row"
-        aria-current={open === (group ? conversation.id : conversation.peerPubkey) || undefined}
+        aria-current={active || undefined}
         onClick={() =>
           navigate(
             group ? { name: 'group', id: conversation.id } : { name: 'chat', peer: conversation.peerPubkey },
           )
         }
+        className={cn(
+          'flex w-full items-center gap-3 px-4 py-2.5 border-none bg-transparent text-left cursor-pointer transition-colors',
+          active ? 'bg-[var(--accent-soft)]' : 'hover:bg-[var(--surface-hover)] active:bg-[var(--surface-active)]',
+        )}
       >
         {group ? (
           <GroupAvatar seed={conversation.id} />
         ) : (
           <Avatar name={name} seed={conversation.peerPubkey} src={contact?.avatar} />
         )}
-        <span className="convo-main">
-          <span className="convo-top">
-            <span className="convo-name" dir="auto">
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="flex items-center justify-between gap-2">
+            <span className="truncate text-sm font-medium text-[var(--text)]" dir="auto">
               {name}
               {contact?.verification === 'verified' ? (
                 <ShieldCheckIcon
@@ -124,33 +118,35 @@ export function ChatList() {
                 />
               ) : null}
             </span>
-            <span className="convo-time">{formatListTimestamp(conversation.lastActivity, locale)}</span>
+            <span className="shrink-0 text-[0.6875rem] tabular-nums text-[var(--text-faint)]">
+              {formatListTimestamp(conversation.lastActivity, locale)}
+            </span>
           </span>
-          <span className="convo-preview">
-            <span className="convo-preview-text" dir="auto">
+          <span className="flex items-center justify-between gap-2">
+            <span className="truncate text-xs text-[var(--text-muted)]" dir="auto">
               {typing ? (
                 <em>{t('chat.typing')}</em>
               ) : contact?.blocked ? (
                 t('chat.blocked')
               ) : conversation.draft ? (
                 <>
-                  <span style={{ color: 'var(--warning)' }}>{t('chats.draft')}: </span>
+                  <span className="text-[var(--warning)]">{t('chats.draft')}: </span>
                   {conversation.draft}
                 </>
               ) : preview && isCallEntry(preview) ? (
-                <span className={preview.call.outcome === 'missed' ? 'convo-preview-missed' : undefined}>
+                <span className={preview.call.outcome === 'missed' ? 'text-[var(--danger)]' : undefined}>
                   {callSummary(preview, t)}
                 </span>
               ) : preview ? (
                 <>
-                  {preview.direction === 'out' ? <span className="faint">{t('chats.you')}</span> : null}
-                  {author ? <span className="faint">{author}</span> : null}
+                  {preview.direction === 'out' ? <span className="text-[var(--text-faint)] text-[0.75rem]">{t('chats.you')}</span> : null}
+                  {author ? <span className="text-[var(--text-faint)] text-[0.75rem]">{author}</span> : null}
                   {preview.body}
                 </>
               ) : null}
             </span>
             {conversation.unread > 0 ? (
-              <span className="unread-dot" aria-label={String(conversation.unread)}>
+              <span className="flex min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-[var(--accent)] px-1 h-5 text-[0.6875rem] font-semibold tabular-nums text-[var(--accent-fg)]">
                 {conversation.unread > 99 ? '99+' : conversation.unread}
               </span>
             ) : null}
@@ -161,60 +157,66 @@ export function ChatList() {
   }
 
   return (
-    <div className="screen">
-      <header className="app-header">
-        <h1 className="grow">{t('chats.title')}</h1>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <header className="flex items-center gap-2 shrink-0 min-h-[3.25rem] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 bg-[var(--surface)] border-b border-[var(--border)]">
+        <h1 className="flex-1 text-base font-semibold tracking-tight text-[var(--text)]">{t('chats.title')}</h1>
         <ConnectionBadge />
-        <button
-          className="btn btn-icon"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           aria-label={t('groups.newGroup')}
           title={t('groups.newGroup')}
           onClick={() => navigate({ name: 'new-group' })}
         >
-          <ContactsIcon />
-        </button>
-        <button
-          className="btn btn-icon"
+          <Users size={18} strokeWidth={1.75} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
           aria-label={t('contacts.add')}
           title={t('contacts.add')}
           onClick={() => navigate({ name: 'add-contact' })}
         >
-          <PlusIcon />
-        </button>
+          <Plus size={18} strokeWidth={1.75} />
+        </Button>
       </header>
 
       <Notices />
 
       {conversations.length > 4 ? (
-        <div style={{ padding: 'var(--space-2) var(--space-3)' }}>
-          <input
-            className="input"
-            type="search"
-            placeholder={t('chats.searchPlaceholder')}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
+        <div className="px-3 py-1.5">
+          <div className="relative">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-faint)]" />
+            <Input
+              type="search"
+              placeholder={t('chats.searchPlaceholder')}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="pl-8 h-8 text-sm"
+            />
+          </div>
         </div>
       ) : null}
 
-      <div className="screen-scroll">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
         {conversations.length === 0 ? (
-          <EmptyState
-            title={t('chats.empty')}
-            body={t('chats.emptyBody')}
-            action={
-              <button className="btn btn-primary" onClick={() => navigate({ name: 'add-contact' })}>
-                {t('chats.addContact')}
-              </button>
-            }
-          />
+          <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-[var(--text-muted)]">
+            <MessageSquare size={32} strokeWidth={1.25} className="text-[var(--text-faint)]" />
+            <h3 className="text-[var(--text)]">{t('chats.empty')}</h3>
+            <p className="max-w-[28rem] text-sm">{t('chats.emptyBody')}</p>
+            <Button className="mt-2" onClick={() => navigate({ name: 'add-contact' })}>
+              {t('chats.addContact')}
+            </Button>
+          </div>
         ) : (
           <>
             {requests.length > 0 ? (
               <>
-                <div className="stack-sm" style={{ padding: 'var(--space-3) var(--space-4) var(--space-1)' }}>
-                  <span className="section-title">{t('chats.requests')}</span>
-                  <span className="hint">{t('chats.requestsBody')}</span>
+                <div className="flex flex-col gap-1 px-4 pt-3 pb-1">
+                  <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-faint)] px-1 [dir=rtl]_[:root]&:normal-case [dir=rtl]_[:root]&:tracking-normal">
+                    {t('chats.requests')}
+                  </span>
+                  <span className="text-xs text-[var(--text-muted)]">{t('chats.requestsBody')}</span>
                 </div>
                 {requests.map(renderRow)}
               </>
@@ -227,12 +229,6 @@ export function ChatList() {
   )
 }
 
-/**
- * What the person still has to do — write down the recovery phrase, or choose
- * a new way in after the phrase opened this device — said at the top of the
- * list they keep coming back to, not above every screen and every
- * conversation, where it pushed the header down and away from the safe area.
- */
 function Notices() {
   const { t } = useI18n()
   const navigate = useNavigate()
@@ -245,31 +241,29 @@ function Notices() {
   const backup = !!identity?.mnemonic && !identity.mnemonicBackedUp && deferred
   if (!backup && !opened && !retired) return null
   return (
-    <div className="stack-sm" style={{ padding: 'var(--space-2) var(--space-3) 0' }}>
+    <div className="flex flex-col gap-2 px-3 pt-2">
       {backup ? (
-        <Banner tone="warning">
-          <span className="grow">{t('onboarding.backupTitle')}</span>
-          <button className="btn btn-ghost small" onClick={() => resumeBackup()}>
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)]">
+          <span className="flex-1">{t('onboarding.backupTitle')}</span>
+          <Button variant="ghost" size="sm" onClick={() => resumeBackup()}>
             {t('common.show')}
-          </button>
-        </Banner>
+          </Button>
+        </div>
       ) : null}
-      {/* Opened with the recovery phrase, which usually means the everyday
-          way in was lost — or a passkey way in this build retired (ADR-058).
-          Offer a new one rather than leave the person typing twelve words. */}
       {opened || retired ? (
-        <Banner tone="accent">
-          <span className="grow small">{retired ? t('lock.retired') : t('lock.recovered')}</span>
-          <button
-            className="btn btn-ghost small"
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-xs text-[var(--accent-text)]">
+          <span className="flex-1">{retired ? t('lock.retired') : t('lock.recovered')}</span>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => {
               dismiss()
               navigate({ name: 'settings-security' })
             }}
           >
             {t('lock.recoveredAction')}
-          </button>
-        </Banner>
+          </Button>
+        </div>
       ) : null}
     </div>
   )

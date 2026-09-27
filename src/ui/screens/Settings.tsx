@@ -1,22 +1,25 @@
 import { useApp } from '../../app/store'
 import { useI18n, LOCALE_NAMES } from '../../i18n'
 import { useNavigate, useRoute, type Route } from '../../app/router'
-import { Avatar, Banner, Field, Toggle } from '../components/primitives'
-import {
-  ChevronIcon,
-  GlobeIcon,
-  LockIcon,
-  MonitorIcon,
-  MoonIcon,
-  ShieldIcon,
-  SunIcon,
-  DownloadIcon,
-  PhoneIcon,
-} from '../components/Icons'
+import { Avatar } from '../components/primitives'
+import { MonitorIcon, MoonIcon, SunIcon } from '../components/Icons'
 import { SegmentedControl } from '../components/SegmentedControl'
 import { SettingsPage } from './SettingsPage'
 import type { LocaleCode, ThemePreference } from '../../core/models/types'
 import { APP_VERSION, SOURCE_URL } from '../../app/meta'
+import { cn } from '../../lib/utils'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import { Switch } from '../../components/ui/switch'
+import {
+  Globe,
+  Shield,
+  Lock,
+  Phone,
+  Download,
+  ChevronRight,
+} from 'lucide-react'
 
 export function SettingsHome() {
   const { t } = useI18n()
@@ -43,37 +46,32 @@ export function SettingsHome() {
   }
 
   return (
-    <div className="screen">
-      <header className="app-header">
-        <h1 className="grow">{t('settings.title')}</h1>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <header className="flex items-center gap-2 shrink-0 min-h-[3.25rem] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 bg-[var(--surface)] border-b border-[var(--border)]">
+        <h1 className="flex-1 text-base font-semibold tracking-tight text-[var(--text)]">{t('settings.title')}</h1>
       </header>
 
-      <div className="screen-scroll">
-        <div className="container stack" style={{ maxWidth: '34rem' }}>
-          <span className="section-title">{t('settings.profile')}</span>
-          <div className="card stack">
-            <div className="row">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+        <div className="mx-auto w-full max-w-[34rem] flex flex-col gap-4 p-4">
+          <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-faint)] px-1 [dir=rtl]_[:root]&:normal-case [dir=rtl]_[:root]&:tracking-normal">
+            {t('settings.profile')}
+          </span>
+          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
               <Avatar name={identity.name} seed={identity.pubkey} src={identity.avatar} size="lg" />
-              <div className="grow stack-sm">
-                <span style={{ fontWeight: 600 }}>{identity.name}</span>
-                <code className="mono faint" style={{ wordBreak: 'break-all' }}>
+              <div className="flex flex-1 flex-col gap-1 min-w-0">
+                <span className="font-semibold text-[var(--text)]">{identity.name}</span>
+                <code className="font-mono text-[0.75rem] text-[var(--text-faint)] break-all">
                   {identity.npub}
                 </code>
               </div>
             </div>
-            <p className="hint">{t('settings.profileBody')}</p>
+            <p className="text-xs text-[var(--text-muted)]">{t('settings.profileBody')}</p>
 
-            {/*
-              Uncontrolled and keyed by the stored value: the vault is the
-              source of truth, edits commit on blur, and a profile update from
-              anywhere else re-seeds the field by remounting it. Mirroring the
-              identity into component state instead would mean a setState in an
-              effect and a render cascade on every keystroke elsewhere.
-            */}
-            <Field label={t('settings.displayName')}>
-              <input
+            <div className="flex flex-col gap-1.5">
+              <Label>{t('settings.displayName')}</Label>
+              <Input
                 key={`name:${identity.name}`}
-                className="input"
                 defaultValue={identity.name}
                 maxLength={64}
                 onBlur={(event) => {
@@ -81,27 +79,27 @@ export function SettingsHome() {
                   if (next && next !== identity.name) void updateProfile({ name: next })
                 }}
               />
-            </Field>
+            </div>
 
-            <Field label={t('settings.about')}>
-              <input
+            <div className="flex flex-col gap-1.5">
+              <Label>{t('settings.about')}</Label>
+              <Input
                 key={`about:${identity.about}`}
-                className="input"
                 defaultValue={identity.about}
                 maxLength={200}
                 onBlur={(event) => {
                   if (event.target.value !== identity.about) void updateProfile({ about: event.target.value })
                 }}
               />
-            </Field>
+            </div>
 
-            <div className="row">
-              <label className="btn btn-outline grow">
+            <div className="flex items-center gap-2">
+              <label className="flex h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-transparent text-sm font-medium text-[var(--text)] transition-colors hover:bg-[var(--surface-2)]">
                 {t('settings.avatarChoose')}
                 <input
                   type="file"
                   accept="image/*"
-                  className="visually-hidden"
+                  className="sr-only"
                   onChange={(event) => {
                     const file = event.target.files?.[0]
                     if (file) void pickAvatar(file)
@@ -109,19 +107,22 @@ export function SettingsHome() {
                 />
               </label>
               {identity.avatar ? (
-                <button className="btn btn-ghost" onClick={() => void updateProfile({ avatar: undefined })}>
+                <Button variant="ghost" onClick={() => void updateProfile({ avatar: undefined })}>
                   {t('settings.avatarRemove')}
-                </button>
+                </Button>
               ) : null}
             </div>
           </div>
 
-          <span className="section-title">{t('settings.appearance')}</span>
-          <div className="card-section">
-            <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
-              <Field label={t('settings.language')}>
+          <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-faint)] px-1 [dir=rtl]_[:root]&:normal-case [dir=rtl]_[:root]&:tracking-normal">
+            {t('settings.appearance')}
+          </span>
+          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+            <div className="p-3 px-4">
+              <div className="flex flex-col gap-1.5">
+                <Label>{t('settings.language')}</Label>
                 <select
-                  className="input select"
+                  className="flex h-9 w-full rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] transition-colors focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
                   value={settings.locale}
                   onChange={(event) => void saveSettings({ locale: event.target.value as LocaleCode })}
                 >
@@ -131,12 +132,11 @@ export function SettingsHome() {
                     </option>
                   ))}
                 </select>
-              </Field>
+              </div>
             </div>
-            <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
-              {/* The same control as on the entry screens, so the theme switch
-                  looks and behaves identically wherever it is met. */}
-              <Field label={t('settings.theme')}>
+            <div className="border-t border-[var(--border-subtle)] p-3 px-4">
+              <div className="flex flex-col gap-1.5">
+                <Label>{t('settings.theme')}</Label>
                 <SegmentedControl
                   label={t('settings.theme')}
                   value={settings.theme}
@@ -147,75 +147,73 @@ export function SettingsHome() {
                   ]}
                   onChange={(theme: ThemePreference) => void saveSettings({ theme })}
                 />
-              </Field>
+              </div>
             </div>
-            <Toggle
-              label={t('settings.enterToSend')}
-              checked={settings.enterToSend}
-              onChange={(enterToSend) => void saveSettings({ enterToSend })}
-            />
+            <div className="border-t border-[var(--border-subtle)] flex items-center justify-between gap-3 px-4 py-3">
+              <div>
+                <span className="text-sm font-medium text-[var(--text)]">{t('settings.enterToSend')}</span>
+              </div>
+              <Switch
+                checked={settings.enterToSend}
+                onCheckedChange={(checked) => void saveSettings({ enterToSend: checked })}
+              />
+            </div>
           </div>
 
-          <div className="card-section">
-            <NavRow
-              icon={<GlobeIcon size={18} />}
-              label={t('settings.relays')}
-              to={{ name: 'settings-relays' }}
-            />
-            <NavRow
-              icon={<ShieldIcon size={18} />}
-              label={t('settings.privacy')}
-              to={{ name: 'settings-privacy' }}
-            />
-            <NavRow
-              icon={<PhoneIcon size={18} />}
-              label={t('settings.calls')}
-              to={{ name: 'settings-calls' }}
-            />
-            <NavRow
-              icon={<LockIcon size={18} />}
-              label={t('settings.security')}
-              to={{ name: 'settings-security' }}
-            />
-            <NavRow
-              icon={<DownloadIcon size={18} />}
-              label={t('settings.data')}
-              to={{ name: 'settings-data' }}
-            />
+          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+            <NavRow icon={<Globe size={18} strokeWidth={1.75} />} label={t('settings.relays')} to={{ name: 'settings-relays' }} />
+            <NavRow icon={<Shield size={18} strokeWidth={1.75} />} label={t('settings.privacy')} to={{ name: 'settings-privacy' }} />
+            <NavRow icon={<Phone size={18} strokeWidth={1.75} />} label={t('settings.calls')} to={{ name: 'settings-calls' }} />
+            <NavRow icon={<Lock size={18} strokeWidth={1.75} />} label={t('settings.security')} to={{ name: 'settings-security' }} />
+            <NavRow icon={<Download size={18} strokeWidth={1.75} />} label={t('settings.data')} to={{ name: 'settings-data' }} />
           </div>
 
-          <span className="section-title">{t('settings.aboutSection')}</span>
-          <div className="card-section">
+          <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-faint)] px-1 [dir=rtl]_[:root]&:normal-case [dir=rtl]_[:root]&:tracking-normal">
+            {t('settings.aboutSection')}
+          </span>
+          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
             <NavRow label={t('settings.whatLeaves')} to={{ name: 'about' }} />
-            <a className="list-row" href={SOURCE_URL} target="_blank" rel="noreferrer noopener">
-              <span className="grow">{t('settings.sourceCode')}</span>
-              <ChevronIcon size={16} />
+            <a
+              className="flex items-center gap-3 w-full px-4 py-3 border-none bg-transparent text-left cursor-pointer text-[var(--text)] transition-colors hover:bg-[var(--surface-hover)] border-t border-[var(--border-subtle)] [&:not(:first-child)]:border-t"
+              href={SOURCE_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              <span className="flex-1">{t('settings.sourceCode')}</span>
+              <ChevronRight size={16} className="text-[var(--text-faint)]" />
             </a>
-            <div className="list-row" style={{ cursor: 'default' }}>
-              <span className="grow muted">{t('settings.version')}</span>
-              <code className="mono small">{APP_VERSION}</code>
+            <div className="flex items-center gap-3 px-4 py-3 border-t border-[var(--border-subtle)] cursor-default">
+              <span className="flex-1 text-[var(--text-muted)]">{t('settings.version')}</span>
+              <code className="font-mono text-xs">{APP_VERSION}</code>
             </div>
           </div>
 
-          <button className="btn btn-outline btn-block" onClick={() => lock()}>
-            <LockIcon size={16} />
+          <Button variant="outline" className="w-full gap-2" onClick={() => lock()}>
+            <Lock size={16} strokeWidth={1.75} />
             {t('settings.lockNow')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
   )
 }
 
-/** A row that opens a settings page, marked as current while that page is open beside the list. */
 export function NavRow({ icon, label, to }: { icon?: React.ReactNode; label: string; to: Route }) {
   const navigate = useNavigate()
   const current = useRoute().name === to.name
   return (
-    <button className="list-row" aria-current={current || undefined} onClick={() => navigate(to)}>
-      {icon ? <span style={{ color: 'var(--text-muted)' }}>{icon}</span> : null}
-      <span className="grow">{label}</span>
-      <ChevronIcon size={16} style={{ color: 'var(--text-faint)' }} />
+    <button
+      className={cn(
+        'flex items-center gap-3 w-full px-4 py-3 border-none bg-transparent text-left cursor-pointer text-[var(--text)] transition-colors',
+        current ? 'bg-[var(--accent-soft)]' : 'hover:bg-[var(--surface-hover)]',
+        '[&:not(:first-child)]:border-t [&:not(:first-child)]:border-[var(--border-subtle)]',
+      )}
+      aria-current={current || undefined}
+      onClick={() => navigate(to)}
+    >
+      {icon ? <span className="text-[var(--text-muted)]">{icon}</span> : null}
+      <span className="flex-1">{label}</span>
+      <ChevronRight size={16} className="text-[var(--text-faint)]" />
     </button>
   )
 }
@@ -228,11 +226,6 @@ export function PrivacySettings() {
 
   const notificationsBlocked = typeof Notification === 'undefined' || Notification.permission === 'denied'
 
-  /**
-   * Ask for permission at the moment the user turns the toggle on, never on
-   * page load. A permission prompt that appears unprompted is the fastest way
-   * to get permanently denied.
-   */
   const setNotifications = async (enabled: boolean) => {
     if (!enabled) {
       await saveSettings({ notificationsEnabled: false })
@@ -250,48 +243,49 @@ export function PrivacySettings() {
 
   return (
     <SettingsPage title={t('settings.privacy')}>
-      <div className="card-section">
-        <Toggle
+      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+        <SettingsToggle
           label={t('settings.notifications')}
           description={t('settings.notificationsBody')}
           checked={settings.notificationsEnabled && !notificationsBlocked}
           disabled={notificationsBlocked}
-          onChange={(enabled) => void setNotifications(enabled)}
+          onCheckedChange={(enabled) => void setNotifications(enabled)}
         />
-        <Toggle
+        <SettingsToggle
           label={t('settings.readReceipts')}
           checked={settings.sendReadReceipts}
-          onChange={(sendReadReceipts) => void saveSettings({ sendReadReceipts })}
+          onCheckedChange={(sendReadReceipts) => void saveSettings({ sendReadReceipts })}
         />
-        <Toggle
+        <SettingsToggle
           label={t('settings.typingIndicators')}
           checked={settings.sendTypingIndicators}
-          onChange={(sendTypingIndicators) => void saveSettings({ sendTypingIndicators })}
+          onCheckedChange={(sendTypingIndicators) => void saveSettings({ sendTypingIndicators })}
         />
-        <Toggle
+        <SettingsToggle
           label={t('settings.directConnection')}
           description={t('settings.directConnectionBody')}
           checked={settings.enableDirectConnection}
-          onChange={(enableDirectConnection) => void saveSettings({ enableDirectConnection })}
+          onCheckedChange={(enableDirectConnection) => void saveSettings({ enableDirectConnection })}
         />
-        <Toggle
+        <SettingsToggle
           label={t('settings.publicProfile')}
           description={t('settings.publicProfileBody')}
           checked={settings.publishPublicProfile}
-          onChange={(publishPublicProfile) => void saveSettings({ publishPublicProfile })}
+          onCheckedChange={(publishPublicProfile) => void saveSettings({ publishPublicProfile })}
         />
-        <Toggle
+        <SettingsToggle
           label={t('settings.mlsInvites')}
           description={t('settings.mlsInvitesBody')}
           checked={settings.mlsInvites}
-          onChange={(mlsInvites) => void saveSettings({ mlsInvites })}
+          onCheckedChange={(mlsInvites) => void saveSettings({ mlsInvites })}
         />
       </div>
 
-      <div className="card stack-sm">
-        <Field label={t('settings.retention')}>
+      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
+          <Label>{t('settings.retention')}</Label>
           <select
-            className="input select"
+            className="flex h-9 w-full rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] transition-colors focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
             value={settings.retention}
             onChange={(event) =>
               void saveSettings({ retention: event.target.value as typeof settings.retention })
@@ -302,13 +296,15 @@ export function PrivacySettings() {
             <option value="30d">{t('settings.retentionDays', { n: 30 })}</option>
             <option value="7d">{t('settings.retentionDays', { n: 7 })}</option>
           </select>
-        </Field>
+        </div>
       </div>
 
-      <div className="card stack-sm">
-        <Field label={t('settings.messageExpiry')} hint={t('settings.messageExpiryBody')}>
+      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
+          <Label>{t('settings.messageExpiry')}</Label>
+          <span className="text-xs text-[var(--text-muted)]">{t('settings.messageExpiryBody')}</span>
           <select
-            className="input select"
+            className="flex h-9 w-full rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] transition-colors focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
             value={String(settings.messageExpirationDays)}
             onChange={(event) => void saveSettings({ messageExpirationDays: Number(event.target.value) })}
           >
@@ -318,23 +314,42 @@ export function PrivacySettings() {
               </option>
             ))}
           </select>
-        </Field>
+        </div>
       </div>
 
-      <Banner tone="accent">
-        <span className="small">{t('privacy.limitsForwardSecrecy')}</span>
-      </Banner>
+      <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-xs text-[var(--accent-text)]">
+        {t('privacy.limitsForwardSecrecy')}
+      </div>
     </SettingsPage>
   )
 }
 
-/**
- * Re-encode an avatar to a small square JPEG data URI.
- *
- * Two reasons this is not just `FileReader.readAsDataURL`: the original may be
- * megabytes (and gets sent to every contact), and re-encoding through a canvas
- * strips EXIF, which routinely carries GPS coordinates.
- */
+function SettingsToggle({
+  label,
+  description,
+  checked,
+  disabled,
+  onCheckedChange,
+}: {
+  label: string
+  description?: string
+  checked: boolean
+  disabled?: boolean
+  onCheckedChange: (checked: boolean) => void
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-[var(--border-subtle)] first:border-t-0">
+      <div className="flex-1 min-w-0">
+        <span className={cn('text-sm font-medium text-[var(--text)]', disabled && 'text-[var(--text-faint)]')}>{label}</span>
+        {description ? (
+          <span className="block mt-0.5 text-xs text-[var(--text-muted)]">{description}</span>
+        ) : null}
+      </div>
+      <Switch checked={checked} disabled={disabled} onCheckedChange={onCheckedChange} />
+    </div>
+  )
+}
+
 async function downscaleToDataUri(file: File, size: number): Promise<string | null> {
   try {
     const bitmap = await createImageBitmap(file)

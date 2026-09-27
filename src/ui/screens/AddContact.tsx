@@ -2,8 +2,6 @@ import { Suspense, useCallback, useMemo, useState } from 'react'
 import { useApp } from '../../app/store'
 import { useT } from '../../i18n'
 import { goBack, useNavigate } from '../../app/router'
-import { Banner, CopyButton, Field } from '../components/primitives'
-import { BackIcon, CameraIcon, QrIcon } from '../components/Icons'
 import { QrCode, QrScanner } from '../lazyViews'
 import { QrPlaceholder } from '../components/QrPlaceholder'
 import {
@@ -14,16 +12,14 @@ import {
   type Invite,
 } from '../../core/identity/invite'
 import { parseProfilePointer } from '../../core/identity/keys'
+import { cn } from '../../lib/utils'
+import { Button } from '../../components/ui/button'
+import { Textarea } from '../../components/ui/textarea'
+import { CopyButton } from '../components/primitives'
+import { ArrowLeft, QrCode as QrIcon, Camera, Share2, Shield } from 'lucide-react'
 
 type Mode = 'share' | 'scan' | 'paste'
 
-/**
- * Contact exchange without a directory server.
- *
- * Three routes to the same place: show a QR in person, send a link over a
- * channel you already trust, or paste a key. The QR encodes the full invite
- * link so a generic camera app opens Crow directly.
- */
 export function AddContact() {
   const t = useT()
   const navigate = useNavigate()
@@ -37,13 +33,6 @@ export function AddContact() {
   const [pasted, setPasted] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  /*
-   * Signed once per choice of relays, not once per render. It used to be
-   * signed afresh on every render — every keystroke in the paste field — which
-   * was wasted work and a QR code that never held still. And the relay choice
-   * does change shortly after unlock: which relays are reachable is not known
-   * for the first second or two.
-   */
   const inviteRelays = useApp((s) => s.inviteRelays)
   const invite = useMemo(() => (identity ? myInvite(inviteRelays) : null), [myInvite, identity, inviteRelays])
   const link = invite ? inviteLink(invite) : ''
@@ -53,8 +42,6 @@ export function AddContact() {
       setError(null)
       const payload = extractInvitePayload(raw)
 
-      // Either a signed invite (carries a name and relay hints) or a bare
-      // npub/nprofile, which carries less but is still perfectly usable.
       let parsed: { pubkey: string; name: string; relays: string[] } | null = null
 
       if (payload) {
@@ -96,23 +83,28 @@ export function AddContact() {
   )
 
   return (
-    <div className="screen">
-      <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
-          <BackIcon />
-        </button>
-        <h1 className="grow">{t('contacts.addTitle')}</h1>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <header className="flex items-center gap-2 shrink-0 min-h-[3.25rem] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 bg-[var(--surface)] border-b border-[var(--border)]">
+        <Button variant="ghost" size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
+          <ArrowLeft size={18} strokeWidth={1.75} />
+        </Button>
+        <h1 className="flex-1 text-base font-semibold tracking-tight text-[var(--text)]">{t('contacts.addTitle')}</h1>
       </header>
 
-      <div className="screen-scroll">
-        <div className="container stack" style={{ maxWidth: '32rem' }}>
-          <p className="muted">{t('contacts.addBody')}</p>
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+        <div className="mx-auto w-full max-w-[32rem] flex flex-col gap-4 p-4">
+          <p className="text-sm text-[var(--text-muted)]">{t('contacts.addBody')}</p>
 
-          <div className="row" role="tablist" style={{ gap: 'var(--space-2)' }}>
+          <div className="flex gap-2" role="tablist">
             <button
               role="tab"
               aria-selected={mode === 'share'}
-              className={`btn grow ${mode === 'share' ? 'btn-primary' : 'btn-outline'}`}
+              className={cn(
+                'flex flex-1 items-center justify-center gap-2 h-9 rounded-[var(--radius-md)] border text-sm font-medium cursor-pointer transition-colors',
+                mode === 'share'
+                  ? 'bg-[var(--accent)] text-[var(--accent-fg)] border-transparent'
+                  : 'bg-transparent text-[var(--text)] border-[var(--border-strong)] hover:bg-[var(--surface-2)]',
+              )}
               onClick={() => setMode('share')}
             >
               <QrIcon size={16} />
@@ -121,35 +113,38 @@ export function AddContact() {
             <button
               role="tab"
               aria-selected={mode === 'scan'}
-              className={`btn grow ${mode === 'scan' ? 'btn-primary' : 'btn-outline'}`}
+              className={cn(
+                'flex flex-1 items-center justify-center gap-2 h-9 rounded-[var(--radius-md)] border text-sm font-medium cursor-pointer transition-colors',
+                mode === 'scan'
+                  ? 'bg-[var(--accent)] text-[var(--accent-fg)] border-transparent'
+                  : 'bg-transparent text-[var(--text)] border-[var(--border-strong)] hover:bg-[var(--surface-2)]',
+              )}
               onClick={() => setMode('scan')}
             >
-              <CameraIcon size={16} />
+              <Camera size={16} />
               {t('contacts.scan')}
             </button>
           </div>
 
           {mode === 'share' && invite ? (
-            <div className="stack">
-              <p className="muted small">{t('contacts.myInviteBody')}</p>
+            <div className="flex flex-col gap-4">
+              <p className="text-xs text-[var(--text-muted)]">{t('contacts.myInviteBody')}</p>
               <Suspense fallback={<QrPlaceholder />}>
                 <QrCode value={link} label={t('contacts.myInvite')} />
               </Suspense>
-              <div className="card stack-sm">
-                <code className="mono small" style={{ wordBreak: 'break-all' }}>
+              <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
+                <code className="font-mono text-xs text-[var(--text)] break-all">
                   {link}
                 </code>
-                <div className="row">
-                  <CopyButton value={link} className="btn btn-outline grow" />
+                <div className="flex gap-2">
+                  <CopyButton value={link} className="flex-1 rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-transparent text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] h-9 px-4 cursor-pointer transition-colors" />
                   {typeof navigator !== 'undefined' && 'share' in navigator ? (
-                    <button
-                      className="btn btn-outline grow"
-                      onClick={() => {
-                        void navigator.share({ title: 'Crow', text: link }).catch(() => undefined)
-                      }}
-                    >
+                    <Button variant="outline" className="flex-1 gap-2" onClick={() => {
+                      void navigator.share({ title: 'Crow', text: link }).catch(() => undefined)
+                    }}>
+                      <Share2 size={14} />
                       {t('common.add')}
-                    </button>
+                    </Button>
                   ) : null}
                 </div>
               </div>
@@ -157,19 +152,20 @@ export function AddContact() {
           ) : null}
 
           {mode === 'scan' ? (
-            <div className="stack">
-              <p className="muted small">{t('contacts.scanBody')}</p>
+            <div className="flex flex-col gap-4">
+              <p className="text-xs text-[var(--text-muted)]">{t('contacts.scanBody')}</p>
               <Suspense fallback={<QrPlaceholder scanner />}>
                 <QrScanner onResult={(text) => void accept(text)} onCancel={() => setMode('share')} />
               </Suspense>
             </div>
           ) : null}
 
-          <div className="stack-sm">
-            <span className="section-title">{t('contacts.pasteInvite')}</span>
-            <Field error={error ?? undefined}>
-              <textarea
-                className="textarea"
+          <div className="flex flex-col gap-2">
+            <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-faint)] px-1 [dir=rtl]_[:root]&:normal-case [dir=rtl]_[:root]&:tracking-normal">
+              {t('contacts.pasteInvite')}
+            </span>
+            <div className="flex flex-col gap-1.5">
+              <Textarea
                 dir="ltr"
                 style={{ minHeight: '4.5rem' }}
                 placeholder={t('contacts.pastePlaceholder')}
@@ -179,19 +175,23 @@ export function AddContact() {
                   setError(null)
                 }}
               />
-            </Field>
-            <button
-              className="btn btn-primary btn-block"
+              {error ? (
+                <p className="text-sm text-[var(--danger)]" role="alert">{error}</p>
+              ) : null}
+            </div>
+            <Button
+              className="w-full"
               disabled={!pasted.trim()}
               onClick={() => void accept(pasted)}
             >
               {t('common.add')}
-            </button>
+            </Button>
           </div>
 
-          <Banner tone="accent">
-            <span className="small">{t('chat.verifyPromptBody')}</span>
-          </Banner>
+          <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-xs text-[var(--accent-text)]">
+            <Shield size={14} />
+            {t('chat.verifyPromptBody')}
+          </div>
         </div>
       </div>
     </div>
