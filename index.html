@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a1a1e" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
+    <meta name="description" content="Crow — Privacy-first, end-to-end encrypted web messenger" />
+    <meta name="application-name" content="Crow" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Crow" />
+    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Crow</title>
+    <style>
+      /* Prevent flash-of-wrong-theme */
+      html {
+        background-color: #1a1a1e;
+      }
+      @media (prefers-color-scheme: light) {
+        html {
+          background-color: #fafaf9;
+        }
+      }
+      html[data-theme='light'] {
+        background-color: #fafaf9;
+      }
+      html[data-theme='dark'] {
+        background-color: #1a1a1e;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/app/bootstrap.tsx"></script>
+  </body>
+</html>
