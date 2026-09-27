@@ -2,26 +2,18 @@ import { useMemo, useState } from 'react'
 import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
 import { goBack, useNavigate } from '../../app/router'
-import { Avatar, Banner, EmptyState, Field } from '../components/primitives'
+import { Avatar } from '../components/primitives'
 import { SegmentedControl } from '../components/SegmentedControl'
-import { BackIcon, ContactsIcon, LockIcon, ShieldCheckIcon } from '../components/Icons'
 import { displayName } from '../screens/ChatList'
 import { MAX_GROUP_MEMBERS, MAX_MLS_MEMBERS, MAX_SUBJECT_CHARS } from '../../core/models/protocol'
 import { explainFailure, useSecureText } from './secureText'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import { ArrowLeft, Lock, Users, ShieldCheck, Plus, AlertTriangle } from 'lucide-react'
 
 type Kind = 'small' | 'secure'
 
-/**
- * Start a group from the address book — a small group, or a forward-secret
- * one.
- *
- * The difference is stated before anyone is chosen, because it decides what
- * the group can do: a small group is a fixed set of up to eight people, each
- * message sent to each of them (ADR-044); a forward-secret group is an MLS
- * group whose keys move on as people join and leave, up to a hundred of them,
- * carrying text only (ADR-049). "Why can't I add more?" and "why can't I send
- * a photo here?" both deserve an answer before they are asked.
- */
 export function NewGroup() {
   const { t } = useI18n()
   const text = useSecureText()
@@ -36,8 +28,6 @@ export function NewGroup() {
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
 
-  // Only people the user has taken: a group made from message requests would
-  // hand strangers each other's keys.
   const candidates = useMemo(
     () =>
       [...contacts.values()]
@@ -62,7 +52,6 @@ export function NewGroup() {
   const switchKind = (next: Kind) => {
     setKind(next)
     setProblem(null)
-    // A small group cannot hold what a secure one was given.
     if (next === 'small') setChosen((current) => current.slice(0, MAX_GROUP_MEMBERS - 1))
   }
 
@@ -72,8 +61,6 @@ export function NewGroup() {
     if (!secure) {
       const id = await createGroup(chosen, subject)
       setBusy(false)
-      // Replaces this screen in history, so "back" from the new group goes to
-      // the chat list rather than to a half-filled form.
       if (id) navigate({ name: 'group', id }, true)
       return
     }
@@ -96,26 +83,26 @@ export function NewGroup() {
   }
 
   return (
-    <div className="screen">
-      <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
-          <BackIcon />
-        </button>
-        <h1 className="grow">{t('groups.newGroup')}</h1>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <header className="flex items-center gap-2 shrink-0 min-h-[3.25rem] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 bg-[var(--surface)] border-b border-[var(--border)]">
+        <Button variant="ghost" size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
+          <ArrowLeft size={18} strokeWidth={1.75} />
+        </Button>
+        <h1 className="flex-1 text-base font-semibold tracking-tight text-[var(--text)]">{t('groups.newGroup')}</h1>
       </header>
 
-      <div className="screen-scroll">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
         {candidates.length < (secure ? 1 : 2) ? (
-          <EmptyState
-            title={t('groups.noContacts')}
-            action={
-              <button className="btn btn-primary" onClick={() => navigate({ name: 'add-contact' })}>
-                {t('chats.addContact')}
-              </button>
-            }
-          />
+          <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-[var(--text-muted)]">
+            <Users size={32} strokeWidth={1.25} className="text-[var(--text-faint)]" />
+            <h3 className="text-[var(--text)]">{t('groups.noContacts')}</h3>
+            <Button className="mt-2" onClick={() => navigate({ name: 'add-contact' })}>
+              <Plus size={16} />
+              {t('chats.addContact')}
+            </Button>
+          </div>
         ) : (
-          <div className="container stack" style={{ maxWidth: '34rem' }}>
+          <div className="mx-auto w-full max-w-[34rem] flex flex-col gap-4 p-4">
             <SegmentedControl
               label={text('kindLabel')}
               value={kind}
@@ -127,89 +114,86 @@ export function NewGroup() {
             />
 
             {secure ? (
-              <Banner tone="accent">
-                <LockIcon size={18} />
-                <span className="stack-sm">
+              <div className="flex items-start gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-sm text-[var(--accent-text)]">
+                <Lock size={18} className="shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-1">
                   <strong>{text('secureTitle')}</strong>
-                  <span className="small">{text('secureBody', { max: MAX_MLS_MEMBERS })}</span>
-                </span>
-              </Banner>
+                  <span className="text-xs">{text('secureBody', { max: MAX_MLS_MEMBERS })}</span>
+                </div>
+              </div>
             ) : (
-              <Banner tone="accent">
-                <ContactsIcon size={18} />
-                <span className="stack-sm">
+              <div className="flex items-start gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-sm text-[var(--accent-text)]">
+                <Users size={18} className="shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-1">
                   <strong>{t('groups.limitTitle', { max: MAX_GROUP_MEMBERS })}</strong>
-                  <span className="small">{t('groups.limitBody')}</span>
-                </span>
-              </Banner>
+                  <span className="text-xs">{t('groups.limitBody')}</span>
+                </div>
+              </div>
             )}
 
-            <Field label={t('groups.name')}>
-              <input
-                className="input"
+            <div className="flex flex-col gap-1.5">
+              <Label>{t('groups.name')}</Label>
+              <Input
                 dir="auto"
                 value={subject}
                 maxLength={MAX_SUBJECT_CHARS}
                 placeholder={t('groups.namePlaceholder')}
                 onChange={(event) => setSubject(event.target.value)}
               />
-            </Field>
+            </div>
 
-            <div className="row-between">
-              <span className="section-title" id="group-members-label">
+            <div className="flex items-center justify-between">
+              <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-faint)] px-1 [dir=rtl]_[:root]&:normal-case [dir=rtl]_[:root]&:tracking-normal" id="group-members-label">
                 {t('groups.pickMembers')}
               </span>
-              <span className="hint tabular" aria-live="polite">
+              <span className="text-xs text-[var(--text-muted)] tabular-nums" aria-live="polite">
                 {full ? t('groups.full') : t('groups.chosen', { n: chosen.length, max: room })}
               </span>
             </div>
 
-            <div className="card-section" role="group" aria-labelledby="group-members-label">
+            <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden" role="group" aria-labelledby="group-members-label">
               {candidates.map((contact) => {
                 const on = chosen.includes(contact.pubkey)
                 const name = displayName(contact, contact.pubkey)
                 return (
-                  <label key={contact.pubkey} className={`list-row${!on && full ? ' is-disabled' : ''}`}>
+                  <label key={contact.pubkey} className={`flex items-center gap-3 px-4 py-3 border-t border-[var(--border-subtle)] first:border-t-0 cursor-pointer transition-colors hover:bg-[var(--surface-hover)]${!on && full ? ' opacity-50 cursor-not-allowed' : ''}`}>
                     <input
                       type="checkbox"
-                      className="checkbox"
+                      className="h-[1.125rem] w-[1.125rem] appearance-none shrink-0 rounded-[var(--radius-xs)] border border-[var(--border-strong)] bg-[var(--surface)] cursor-pointer transition-colors checked:bg-[var(--accent)] checked:border-[var(--accent)] grid place-items-center after:content-[''] after:w-[0.3rem] after:h-[0.6rem] after:border-t-0 after:border-r-[2px] after:border-b-[2px] after:border-l-0 after:border-solid after:border-[var(--accent-fg)] after:rotate-45 after:translate-[-1px,1px] after:opacity-0 checked:after:opacity-100"
                       checked={on}
                       aria-label={name}
                       disabled={!on && full}
                       onChange={() => toggle(contact.pubkey)}
                     />
                     <Avatar name={name} seed={contact.pubkey} src={contact.avatar} size="sm" />
-                    {/* Isolated rather than dir="auto": a Persian name in an
-                        English list keeps its own direction but lines up with
-                        the other names instead of flushing to the far edge. */}
-                    <span className="grow truncate">
+                    <span className="flex-1 truncate text-sm text-[var(--text)]">
                       <bdi>{name}</bdi>
                     </span>
                     {contact.verification === 'verified' ? (
-                      <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
+                      <ShieldCheck size={15} className="text-[var(--success)]" />
                     ) : null}
                   </label>
                 )
               })}
             </div>
 
-            {secure ? null : <p className="hint">{t('groups.fixedMembers')}</p>}
+            {secure ? null : <p className="text-xs text-[var(--text-muted)]">{t('groups.fixedMembers')}</p>}
 
             {problem ? (
-              <Banner tone="danger">
-                <span className="grow">{problem}</span>
-              </Banner>
+              <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--danger-soft)] border border-[color-mix(in_srgb,var(--danger)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--danger)]">
+                <AlertTriangle size={16} />
+                <span className="flex-1">{problem}</span>
+              </div>
             ) : null}
 
-            <button
-              type="button"
-              className="btn btn-primary btn-block"
+            <Button
+              className="w-full"
               disabled={!enough || busy}
               aria-busy={busy}
               onClick={() => void create()}
             >
               {busy && secure ? text('finding') : t('groups.create')}
-            </button>
+            </Button>
           </div>
         )}
       </div>
