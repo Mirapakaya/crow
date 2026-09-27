@@ -9,7 +9,7 @@ before they touch the network; everything is stored encrypted on your own device
 Crow is a static site. There is no Crow backend to compel, subpoena, breach, or
 shut down — because there isn't one.
 
-**[Open Crow →](https://noormohammadiazad.github.io/Crow/)**
+**[Open Crow →](https://crow-deploy.vercel.app)**
 
 ---
 
@@ -89,7 +89,7 @@ anything.
 
 ## Try it
 
-The live app: **<https://noormohammadiazad.github.io/Crow/>**
+The live app: **<https://crow-deploy.vercel.app>**
 
 Or run it yourself:
 
