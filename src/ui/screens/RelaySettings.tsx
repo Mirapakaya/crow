@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { getRepo, useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
-import { Plus, Refresh, Trash } from 'lucide-react'
+import { Plus, RefreshCw, Trash } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
@@ -207,7 +207,7 @@ export function RelaySettings() {
       ) : null}
 
       <Button variant="outline" className="w-full" onClick={() => void restoreDefaults()}>
-        <Refresh size={16} />
+        <RefreshCw size={16} />
         {t('settings.relayResetDefaults')}
       </Button>
 

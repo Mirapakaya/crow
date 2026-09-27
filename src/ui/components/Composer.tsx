@@ -10,7 +10,6 @@ import { Popover } from './Popover'
 import { LazyPicker } from './LazyPicker'
 import { Spinner } from './primitives'
 import { ChecklistComposer, LAZY_CHUNKS, PollComposer } from '../lazyViews'
-import { Button } from '../../components/ui/button'
 
 const MicIcon = ({ size = 18 }: { size?: number }) => (
   <svg
