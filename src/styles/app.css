@@ -1104,6 +1104,20 @@ time,
   animation: modal-in var(--duration-slow) var(--ease-out);
 }
 
+/* A question in the app's own dialog (see `dialog.tsx`): the answers stacked,
+   what goes ahead first and the way out last, as a phone's action sheet has
+   them. */
+.dialog-body {
+  margin-block-end: var(--space-4);
+  white-space: pre-line;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

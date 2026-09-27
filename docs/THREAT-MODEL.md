@@ -135,10 +135,19 @@ Ring you, if you have accepted them — and learn from the `ringing` reply that 
 open on your device. Learn your IP address when you answer their call or call them,
 unless calls are relayed (§3.2).
 
+Delete anything in your conversation with them from your device: what they wrote, what
+you wrote, and calls (ADR-061). That is Telegram's rule for a conversation between two,
+and what people now expect of one. It means your copy of your own words is not evidence
+they cannot remove. Keep a backup, or a screenshot, of anything you may need to show
+later. They cannot touch any other conversation, a group included.
+
 **Cannot do.** Impersonate someone else — the seal is signed by their real key and the
 rumor's author must match it. Forge a message id (checked against the content hash).
-Reorder your history (the `ms` tag is rejected unless it agrees with the event second,
-and future-dated rumors are refused). Learn your IP address, _unless_ a direct connection
+Reorder your history. The `ms` tag is rejected unless it agrees with the event second, and
+a rumor dated more than a day ahead is refused. Within that day they choose their own
+stamp and sort key, as any author does. A message keyed hours ahead sits at the bottom
+only until someone answers it: anything sent after seeing it sorts after it, on every
+device (ADR-063). Learn your IP address, _unless_ a direct connection
 or a call connects — see §3.2. Ring you if you have not accepted them: a call from a
 stranger or a message request is dropped without a reply, so it does not even learn
 whether you are online. Listen in on or alter a call: its media keys are bound to the
@@ -312,9 +321,10 @@ a copy that old is refused anyway: nothing created before the point the table wa
 to is ever processed (ADR-051). A backup restored after that can still contain what was
 deleted.
 
-A call has no author, so **either person in a call can delete it from the other's
-conversation** (ADR-047). Nobody else can. A request to delete a message someone did not
-write, or a call they were not in, is ignored.
+**Between two people, either can delete anything in their conversation from the other's
+device**: messages either of them wrote, and calls (ADR-047, ADR-061). In a group, only
+the author can. Anyone else's request is ignored: a stranger's, or a group member's
+reaching into another conversation.
 
 ### 3.10 Forward-secret groups rest on newer, unaudited code
 

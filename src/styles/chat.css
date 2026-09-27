@@ -252,6 +252,78 @@ button.call-bubble-back:active {
   margin-top: var(--space-3);
 }
 
+/*
+ * Selecting, as Telegram selects: a check at the start edge of every row, the
+ * picked rows lit across the column, and received bubbles moved over to make
+ * room for the check. The header becomes the selection's bar.
+ */
+.message-stream.selecting .bubble-row {
+  position: relative;
+  padding-inline-start: 2.25rem;
+  cursor: pointer;
+}
+
+.message-stream.selecting .bubble-actions {
+  display: none;
+}
+
+.bubble-row.selected {
+  background: var(--accent-soft);
+  border-radius: var(--radius-md);
+}
+
+.select-mark {
+  position: absolute;
+  inset-inline-start: var(--space-1);
+  inset-block-end: var(--space-1);
+  width: 1.375rem;
+  height: 1.375rem;
+  padding: 0;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.bubble-row.selected .select-mark {
+  border-color: var(--accent);
+  background: var(--accent)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E")
+    center / 70% no-repeat;
+}
+
+.selection-count {
+  font-weight: var(--weight-semibold);
+}
+
+/* The way back to the newest message, over the conversation's end corner. */
+.jump-dock {
+  position: relative;
+  height: 0;
+}
+
+.jump-latest {
+  position: absolute;
+  inset-block-end: var(--space-3);
+  inset-inline-end: var(--chat-gutter);
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text-muted);
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  animation: popover-in var(--duration-fast) var(--ease-out);
+}
+
+.jump-latest:hover {
+  color: var(--text);
+}
+
 .bubble {
   position: relative;
   padding: 0.5rem 0.75rem 0.4rem;
@@ -268,13 +340,77 @@ button.call-bubble-back:active {
 .bubble-row.out .bubble {
   background: var(--bubble-out);
   color: var(--bubble-out-text);
-  border-end-end-radius: var(--radius-xs);
 }
 
 .bubble-row.in .bubble {
   background: var(--bubble-in);
   color: var(--bubble-in-text);
-  border-end-start-radius: var(--radius-xs);
+}
+
+/*
+ * A run of bubbles from one side reads as one block, as Telegram draws it
+ * (ADR-061): on the sender's side the corners where two bubbles meet are
+ * small, the first keeps its open top, and the last ends in a tail. Every
+ * corner is logical, so the whole shape mirrors in Persian.
+ */
+.bubble-row.out .bubble {
+  border-start-end-radius: var(--radius-bubble-joined);
+  border-end-end-radius: var(--radius-bubble-joined);
+}
+
+.bubble-row.in .bubble {
+  border-start-start-radius: var(--radius-bubble-joined);
+  border-end-start-radius: var(--radius-bubble-joined);
+}
+
+.bubble-row.out.group-start .bubble {
+  border-start-end-radius: var(--radius-bubble);
+}
+
+.bubble-row.in.group-start .bubble {
+  border-start-start-radius: var(--radius-bubble);
+}
+
+.bubble-row.out.group-end .bubble {
+  border-end-end-radius: 0;
+}
+
+.bubble-row.in.group-end .bubble {
+  border-end-start-radius: 0;
+}
+
+/* The tail: the bubble's own fill, cut to a curve that sweeps out from its
+   last corner. Drawn pointing towards the end edge and turned for the other
+   side and for right-to-left, so one shape serves all four. */
+.bubble-row.group-end .bubble::after {
+  content: '';
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: -8px;
+  width: 9px;
+  height: 17px;
+  background: inherit;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 17'%3E%3Cpath d='M0 0v17h7.6c1.2 0 1.7-1.4.8-2.1C4.2 11.8 1 7.4 0 0Z'/%3E%3C/svg%3E")
+    no-repeat;
+}
+
+.bubble-row.in.group-end .bubble::after {
+  inset-inline-end: auto;
+  inset-inline-start: -8px;
+  transform: scaleX(-1);
+}
+
+:root[dir='rtl'] .bubble-row.out.group-end .bubble::after {
+  transform: scaleX(-1);
+}
+
+:root[dir='rtl'] .bubble-row.in.group-end .bubble::after {
+  transform: none;
+}
+
+/* A failed bubble's outline cannot follow the tail, so it has none. */
+.bubble-row.failed .bubble::after {
+  content: none;
 }
 
 .bubble-row.failed .bubble {
@@ -572,31 +708,12 @@ button.call-bubble-back:active {
   box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.35);
 }
 
-.safety-number {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--step-1);
-  letter-spacing: 0.05em;
-  text-align: center;
-  direction: ltr;
-}
-
 .security-code {
   font-family: var(--font-mono);
   font-size: var(--step-1);
   letter-spacing: 0.05em;
   direction: ltr;
   unicode-bidi: isolate;
-}
-
-.safety-emoji {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-2);
-  font-size: var(--step-2);
-  direction: ltr;
 }
 
 .mnemonic-grid {
@@ -695,7 +812,7 @@ button.call-bubble-back:active {
   inset-block-start: 50%;
   inset-inline-end: 100%;
   transform: translateY(-50%);
-  margin-inline-end: var(--space-1);
+  margin-inline-end: var(--space-3);
   display: flex;
   gap: 2px;
   opacity: 0;
@@ -706,7 +823,7 @@ button.call-bubble-back:active {
   /* Incoming bubbles sit at the start edge, so their gutter is the other side. */
   inset-inline-end: auto;
   inset-inline-start: 100%;
-  margin-inline: var(--space-1) 0;
+  margin-inline: var(--space-3) 0;
 }
 
 .bubble:hover .bubble-actions,
@@ -1254,130 +1371,6 @@ button.call-bubble-back:active {
   font-size: var(--step--1);
 }
 
-.picker-tabs {
-  display: flex;
-  gap: var(--space-1);
-  padding: var(--space-1);
-  border-block-end: var(--border-width) solid var(--border-subtle);
-}
-
-.picker-tab {
-  flex: 1;
-  padding-block: var(--space-1);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--step--1);
-  cursor: pointer;
-}
-
-.picker-tab.active {
-  background: var(--surface-2);
-  color: var(--text);
-  font-weight: var(--weight-medium);
-}
-
-.picker-panel {
-  overflow-y: auto;
-  /* `min-height: 0` is what actually lets this scroll: a flex item defaults to
-     `min-height: auto`, which refuses to shrink below its content and pushes
-     the overflow outside the card instead of scrolling inside it. */
-  min-height: 0;
-  /* Scrolling to the end of the list must not then scroll the conversation. */
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-  padding: var(--space-2);
-}
-
-.picker-group + .picker-group {
-  margin-block-start: var(--space-3);
-}
-
-.picker-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin: 0 0 var(--space-1);
-  font-size: var(--step--2);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.picker-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(2rem, 1fr));
-  gap: var(--space-0-5);
-}
-
-.picker-grid.stickers {
-  grid-template-columns: repeat(auto-fill, minmax(3.5rem, 1fr));
-  gap: var(--space-1);
-}
-
-.picker-emoji {
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  width: 100%;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.picker-emoji:hover {
-  background: var(--surface-hover);
-}
-
-.picker-sticker {
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-1);
-  border: var(--border-width) solid transparent;
-  border-radius: var(--radius-md);
-  background: none;
-  cursor: pointer;
-}
-
-.picker-sticker:hover {
-  border-color: var(--border);
-  background: var(--surface-hover);
-}
-
-.picker-sticker img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.picker-sticker-loading {
-  width: 100%;
-  height: 100%;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-}
-
-.picker-empty {
-  margin: var(--space-3) 0;
-  text-align: center;
-}
-
-.picker-import {
-  align-self: center;
-  margin-block: var(--space-3) var(--space-1);
-  cursor: pointer;
-}
-
 /* ---------------------------------------------------------------- groups -- */
 
 /* The people glyph inherits the avatar's white text colour. */
@@ -1410,147 +1403,4 @@ button.call-bubble-back:active {
 .list-row.is-disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-
-/* ------------------------------------------------------ polls, checklists -- */
-
-/*
- * Drawn with currentColor so one set of rules reads on both bubbles: light
- * lines on the accent-filled outgoing bubble, dark ones on the incoming one,
- * in every theme, without a second palette to keep in step.
- */
-.poll,
-.checklist {
-  display: grid;
-  gap: var(--space-2);
-  min-inline-size: min(16rem, 62vw);
-  white-space: normal;
-}
-
-.poll-question {
-  font-weight: var(--weight-semibold);
-  line-height: var(--leading-snug);
-}
-
-.poll .hint,
-.checklist .hint {
-  color: inherit;
-  opacity: 0.75;
-}
-
-.poll-options,
-.checklist-items {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: var(--space-1);
-}
-
-.poll-option {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  inline-size: 100%;
-  min-block-size: var(--control-sm);
-  padding: var(--space-1) var(--space-2);
-  border: var(--border-width) solid color-mix(in srgb, currentColor 28%, transparent);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.poll-option:hover {
-  border-color: color-mix(in srgb, currentColor 55%, transparent);
-}
-
-.poll-option.mine {
-  border-color: currentColor;
-}
-
-/* Fills from the reading edge: rightwards in English, leftwards in Persian. */
-.poll-bar {
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  z-index: -1;
-  background: color-mix(in srgb, currentColor 16%, transparent);
-  transition: inline-size var(--duration-slow) var(--ease-out);
-}
-
-.poll-mark {
-  display: grid;
-  place-items: center;
-  inline-size: 1rem;
-  block-size: 1rem;
-  flex: none;
-  border: var(--border-width) solid color-mix(in srgb, currentColor 45%, transparent);
-  border-radius: var(--radius-full);
-}
-
-.poll-option.mine .poll-mark {
-  border-color: currentColor;
-}
-
-.poll-label {
-  flex: 1;
-  min-inline-size: 0;
-  overflow-wrap: anywhere;
-}
-
-.poll-count {
-  flex: none;
-  font-size: var(--step--1);
-  opacity: 0.8;
-}
-
-.checklist-item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  padding-block: var(--space-0-5);
-  cursor: pointer;
-  overflow-wrap: anywhere;
-}
-
-.checklist-item .checkbox {
-  margin-block-start: 0.2em;
-}
-
-.checklist-item.done > span {
-  text-decoration: line-through;
-  opacity: 0.65;
-}
-
-.checklist-add {
-  display: flex;
-  gap: var(--space-1);
-  align-items: center;
-}
-
-.checklist-add .input {
-  flex: 1;
-  min-inline-size: 0;
-  min-block-size: var(--control-sm);
-  padding-block: var(--space-1);
-  font-size: var(--step--1);
-}
-
-.composer-lines {
-  border: 0;
-  margin: 0;
-  padding: 0;
-  min-inline-size: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .poll-bar {
-    transition: none;
-  }
 }

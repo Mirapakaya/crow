@@ -7,7 +7,6 @@ import { CallInIcon, CallOutIcon, MoreIcon, PhoneIcon, VideoIcon } from './Icons
 import { Popover } from './Popover'
 import { usePress } from './hold'
 import { EntryRow, MenuItem, type EntryProps } from './EntryRow'
-import { cn } from '@/lib/utils'
 
 export type CallEntry = Message & { call: CallRecord }
 

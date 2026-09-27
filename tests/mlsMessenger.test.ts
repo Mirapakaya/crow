@@ -4,7 +4,7 @@ import { Messenger } from '@/core/engine/messenger'
 import { DEFAULT_SETTINGS, type AppSettings, type Conversation, type Message } from '@/core/models/types'
 import { bytesToHex, hexToBytes } from '@/core/util/bytes'
 import { createRumor, giftWrap } from '@/core/crypto/giftwrap'
-import { KIND_MLS_WELCOME, MAX_MLS_MEMBERS } from '@/core/models/protocol'
+import { groupChatTags, KIND_GROUP_CHAT, KIND_MLS_WELCOME, MAX_MLS_MEMBERS } from '@/core/models/protocol'
 import { FakeRelayNetwork, FakeRelayPool } from './fakeRelay'
 import { makeVault, type TestVault } from './helpers'
 // Loaded up front so the engine's lazy import resolves at once under fake timers.
@@ -329,6 +329,68 @@ describe('forward-secret groups through the engine', () => {
     expect(network.events.filter((e) => e.kind === 1059).length).toBe(wraps)
     alice.messenger.stop()
     await expect(alice.messenger.createSecureGroup([bob.pubkey])).rejects.toThrow(/not running/)
+  })
+
+  it('keeps a reply after what it answers when the members’ clocks are an hour apart (ADR-063)', async () => {
+    const { id } = await alice.messenger.createSecureGroup([bob.pubkey, carol.pubkey], 'Clocks')
+    await settle()
+    const bobId = await on(bob, alice, id)
+    const carolId = await on(carol, alice, id)
+    const now = Date.now()
+
+    // Alice's clock is an hour ahead; Bob answers her from an hour behind,
+    // and Carol, on time, answers him.
+    vi.setSystemTime(now + 60 * 60_000)
+    await alice.messenger.sendMessage(id, 'from an hour ahead')
+    await settle()
+    vi.setSystemTime(now - 60 * 60_000 + 60_000)
+    const answer = await bob.messenger.sendMessage(bobId, 'from an hour behind')
+    await settle()
+    vi.setSystemTime(now + 2 * 60_000)
+    await carol.messenger.sendMessage(carolId, 'on time')
+    await settle()
+
+    const expected = ['from an hour ahead', 'from an hour behind', 'on time']
+    expect(await bodies(alice, id)).toEqual(expected)
+    expect(await bodies(bob, bobId)).toEqual(expected)
+    expect(await bodies(carol, carolId)).toEqual(expected)
+    // Shown at Bob's own time; sorted past Alice's key, which it carried.
+    const onCarol = (await carol.vault.repo.getMessage(answer.id))!
+    expect(onCarol.ts).toBe(answer.ts)
+    expect(onCarol.order).toBe(answer.order)
+    expect(answer.order).toBeGreaterThan(answer.ts)
+  })
+
+  it('sends a message stored before keys existed again under its old id, and it sorts by its time', async () => {
+    const { id } = await alice.messenger.createSecureGroup([bob.pubkey], '')
+    await settle()
+    // What an older build stored: a message whose rumor carried no key.
+    const ts = Date.now()
+    const secretKey = hexToBytes((await alice.vault.repo.getIdentity())!.secretKeyHex)
+    const rumor = createRumor(
+      {
+        kind: KIND_GROUP_CHAT,
+        content: 'from an older build',
+        tags: groupChatTags({ ts }),
+        created_at: Math.floor(ts / 1000),
+      },
+      secretKey,
+    )
+    await alice.vault.repo.putMessage({
+      id: rumor.id,
+      convoId: id,
+      direction: 'out',
+      status: 'failed',
+      ts,
+      tsCoarse: 0,
+      body: 'from an older build',
+      authorPubkey: alice.pubkey,
+      via: 'relay',
+    })
+    await alice.messenger.retryMessage(rumor.id)
+    await settle()
+    const arrived = await bob.vault.repo.getMessage(rumor.id)
+    expect(arrived).toMatchObject({ body: 'from an older build', ts, order: ts })
   })
 
   it('sends a message again through the group, under its id', async () => {

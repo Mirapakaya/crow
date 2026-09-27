@@ -21,9 +21,11 @@ export default defineConfig({
       include: ['src/core/**/*.ts'],
       exclude: ['src/core/**/*.worker.ts'],
       reporter: [['text', { skipFull: true }], 'html'],
-      // Forward-secret groups, inbox sync, attachment transfer and every way
-      // the vault opens are held to every line and branch: a gap there is a
-      // path through the protocol, or into someone's messages, nobody has run.
+      // Forward-secret groups, inbox sync, attachment transfer, every way the
+      // vault opens and the order a conversation is shown in are held to every
+      // line and branch: a gap there is a path through the protocol, into
+      // someone's messages, or out of the order things were said, that nobody
+      // has run.
       thresholds: {
         'src/core/mls/**': { 100: true },
         'src/core/engine/inboxSync.ts': { 100: true },
@@ -35,6 +37,7 @@ export default defineConfig({
         'src/core/vault/exportImport.ts': { 100: true },
         'src/core/crypto/biometricGate.ts': { 100: true },
         'src/core/crypto/biometricEnrol.ts': { 100: true },
+        'src/core/models/timeline.ts': { 100: true },
       },
     },
   },

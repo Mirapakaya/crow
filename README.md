@@ -9,7 +9,7 @@ before they touch the network; everything is stored encrypted on your own device
 Crow is a static site. There is no Crow backend to compel, subpoena, breach, or
 shut down — because there isn't one.
 
-**[Open Crow →](https://crow-deploy-hyzieo.vercel.app)**
+**[Open Crow →](https://noormohammadiazad.github.io/Crow/)**
 
 ---
 
@@ -77,8 +77,11 @@ anything.
 - **Encrypted export/import** for moving between devices — a backup opens with its own
   passphrase or with your recovery phrase, so a new device needs only the file and the
   twelve words
-- **Drafts, replies, copy, and local delete** — with delete labelled honestly as
-  local-only, because nothing can unsend a message
+- **Drafts, replies, copy, forward and select**, as Telegram handles a message: tap for its
+  menu, hold to select. Either person in a conversation may delete anything in it for
+  both, and the app says plainly that deleting for them is a request no one can enforce
+- **Ticks that mean what they say**: one on its way, two only once read, and when each
+  happened in the message's details
 - **Installable PWA**, works offline
 - **Persian and English**, full RTL, light and dark themes
 - **One layout from 320 pixels to a desktop**: a phone's single pane, and on a wide
@@ -89,7 +92,7 @@ anything.
 
 ## Try it
 
-The live app: **<https://crow-deploy-hyzieo.vercel.app>**
+The live app: **<https://noormohammadiazad.github.io/Crow/>**
 
 Or run it yourself:
 
@@ -173,13 +176,14 @@ configure because there is no backend.
 
 ## Documentation
 
-| Document                                       | Contents                                                               |
-| ---------------------------------------------- | ---------------------------------------------------------------------- |
-| [`docs/PROTOCOL.md`](docs/PROTOCOL.md)         | Wire format, validation rules, delivery semantics, storage layout      |
-| [`docs/DECISIONS.md`](docs/DECISIONS.md)       | Why each choice was made, including ones revised during implementation |
-| [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) | Adversaries, guarantees, limitations, and how to check them            |
-| [`SECURITY.md`](SECURITY.md)                   | Reporting a vulnerability                                              |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md)           | Development setup and standards                                        |
+| Document                                       | Contents                                                                        |
+| ---------------------------------------------- | ------------------------------------------------------------------------------- |
+| [`docs/PROTOCOL.md`](docs/PROTOCOL.md)         | Wire format, validation rules, delivery semantics, storage layout               |
+| [`docs/DECISIONS.md`](docs/DECISIONS.md)       | Why each choice was made, including ones revised during implementation          |
+| [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) | Adversaries, guarantees, limitations, and how to check them                     |
+| [`docs/UI-PARITY.md`](docs/UI-PARITY.md)       | The conversation against Telegram Web's open-source clients, pattern by pattern |
+| [`SECURITY.md`](SECURITY.md)                   | Reporting a vulnerability                                                       |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)           | Development setup and standards                                                 |
 
 ---
 
@@ -212,18 +216,10 @@ A messenger that only lists its strengths is not being straight with you.
 ## Technology
 
 TypeScript · React 19 · Vite 8 · Dexie (IndexedDB) · Zustand · `nostr-tools` ·
-`@noble/{ciphers,curves,hashes,post-quantum}` · `ts-mls` · `qr` · Workbox
+`@noble/{ciphers,curves,hashes}` · `ts-mls` · `qr` · Workbox
 
-Fifteen direct runtime dependencies, no CDN, no analytics, no tracking, no telemetry. Every
+Fourteen direct runtime dependencies, no CDN, no analytics, no tracking, no telemetry. Every
 byte is served from the app's own origin under a strict Content-Security-Policy.
-
-### Post-quantum protection
-
-Crow integrates Zerion's post-quantum technology (ML-KEM-768, ML-DSA-65) as an
-additional defence layer. On direct WebRTC connections, every message key
-incorporates ML-KEM-768 alongside X25519, so an attacker must break both
-classical and post-quantum primitives to succeed — and recorded traffic stays
-safe against future quantum computers. See [`docs/PROTOCOL.md §6`](docs/PROTOCOL.md).
 
 ---
 

@@ -172,6 +172,9 @@ describe('small groups', () => {
     mine = await alice.vault.repo.getMessage(sent.id)
     expect(mine?.receipts?.[bob.pubkey]).toBe('read')
     expect(mine?.status).toBe('delivered')
+    // Each member's own time, for the message's details.
+    expect(mine?.receiptsAt?.[bob.pubkey]).toBeGreaterThanOrEqual(sent.ts)
+    expect(mine?.receiptsAt?.[carol.pubkey]).toBeGreaterThanOrEqual(sent.ts)
 
     await carol.messenger.openConversation(roomOn(carol, [alice.pubkey, bob.pubkey]))
     await settle()
@@ -441,6 +444,21 @@ describe('small groups', () => {
     await settle()
     expect(await bob.vault.repo.getMessage(sent.id)).toBeNull()
     expect(await carol.vault.repo.getMessage(sent.id)).toBeNull()
+  })
+
+  it('keeps deleting for everyone to what one wrote, in a group', async () => {
+    // Between two people either may delete anything (ADR-061); a group has no
+    // one whose conversation it is.
+    const group = await startGroup()
+    const sent = await alice.messenger.sendMessage(group.id, 'Alice’s to take back')
+    await settle()
+    const bobRoom = roomOn(bob, [alice.pubkey, carol.pubkey])
+    await expect(bob.messenger.redactMessage(bobRoom, sent.id)).rejects.toThrow(/did not write/)
+
+    // Nor does a request sent person to person reach into the group.
+    await bob.messenger.sendRedactForTesting(carol.pubkey, [sent.id])
+    await settle()
+    expect(await carol.vault.repo.getMessage(sent.id)).not.toBeNull()
   })
 
   it('does not let a member withdraw what someone else wrote', async () => {

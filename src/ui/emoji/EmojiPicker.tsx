@@ -170,21 +170,19 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
         ))
       )}
 
-      <label className="picker-import">
-        <Button variant="ghost" size="sm" asChild>
-          <span>
-            {busy ? t('emoji.importing') : t('emoji.addPack')}
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              multiple
-              hidden
-              disabled={busy}
-              onChange={(event) => void onFiles(event.target.files)}
-            />
-          </span>
-        </Button>
+      <label className="picker-import cursor-pointer">
+        <span className="inline-flex items-center gap-2 h-8 rounded-sm px-3 text-xs font-medium text-text-muted hover:bg-surface-hover transition-colors">
+          {busy ? t('emoji.importing') : t('emoji.addPack')}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            disabled={busy}
+            onChange={(event) => void onFiles(event.target.files)}
+          />
+        </span>
       </label>
     </div>
   )

@@ -47,17 +47,17 @@
   --n-900: #181c24;
   --n-950: #0e1116;
 
-  /* Accent. A restrained cool-silver: authoritative at button weight, legible
-     as text on both canvases. Reads as premium and private, not corporate. */
-  --blue-100: #eceef1;
-  --blue-200: #d5d9e0;
-  --blue-300: #a8afc0;
-  --blue-400: #8790a5;
-  --blue-500: #6b7590;
-  --blue-600: #4f5772;
-  --blue-700: #3e455c;
-  --blue-800: #2f3549;
-  --blue-900: #1e2233;
+  /* Accent. A single restrained blue: authoritative at button weight, legible
+     as text on both canvases. */
+  --blue-100: #e4edfb;
+  --blue-200: #c6dbf6;
+  --blue-300: #8fb8ec;
+  --blue-400: #6da2e4;
+  --blue-500: #2f6fd0;
+  --blue-600: #1a56b8;
+  --blue-700: #14458f;
+  --blue-800: #123a72;
+  --blue-900: #16283f;
 
   --green-100: #dcf2e5;
   --green-400: #4fb583;
@@ -123,7 +123,10 @@
   --radius-sm: 5px;
   --radius-md: 7px;
   --radius-lg: 10px;
-  --radius-bubble: 12px;
+  /* Telegram's bubble metrics (ADR-061): the open corners, and the ones
+     where two bubbles of one run meet. */
+  --radius-bubble: 15px;
+  --radius-bubble-joined: 6px;
   --radius-full: 999px;
 
   /* Control heights, so every button, input, and select in a row lines up. */
@@ -246,8 +249,8 @@
   --danger-fg: var(--n-950);
   --danger-soft: var(--red-950);
 
-  --bubble-out: #3a3f52;
-  --bubble-out-text: #e8eaf0;
+  --bubble-out: #24558f;
+  --bubble-out-text: #eef4fc;
   --bubble-in: var(--n-850);
   --bubble-in-text: var(--n-50);
 

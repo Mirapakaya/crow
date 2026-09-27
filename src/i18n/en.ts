@@ -142,34 +142,7 @@ export const en = {
     file: 'Photo or file',
     poll: 'Poll',
     checklist: 'Checklist',
-    newPoll: 'New poll',
-    newChecklist: 'New checklist',
-    question: 'Question',
-    questionPlaceholder: 'Ask something',
-    options: 'Options',
-    option: 'Option {n}',
-    addOption: 'Add an option',
-    removeRow: 'Remove',
-    multi: 'Allow more than one answer',
-    title: 'Title',
-    titlePlaceholder: 'What is this list for?',
-    items: 'Items',
-    item: 'Item {n}',
-    addItem: 'Add an item',
-    send: 'Send',
     loading: 'Loading',
-    votes: '{n} voted',
-    noVotes: 'No votes yet',
-    chooseOne: 'Choose one',
-    chooseAny: 'Choose any',
-    progress: '{done} of {total} done',
-    newItemPlaceholder: 'Add to the list',
-    tickedBy: 'Ticked by {name}',
-    addedBy: 'Added later',
-    needQuestion: 'Write the question first.',
-    needOptions: 'A poll needs at least two options.',
-    needTitle: 'Give the list a title.',
-    needItems: 'Add at least one item.',
   },
 
   calls: {
@@ -188,9 +161,6 @@ export const en = {
     failed: 'Failed',
     callBack: 'Call back',
     duration: 'Duration',
-    deleteLocalHint: 'Removes it from this device only.',
-    deleteEveryoneConfirm:
-      'Delete this call for both of you? Their device is asked to remove it, which cannot be guaranteed.',
     unsupported: 'Calls are not supported in this browser.',
     offline: 'You are offline. Calls need a connection.',
     alreadyInCall: 'You are already in a call.',
@@ -236,12 +206,28 @@ export const en = {
     fromThem: '{name} said',
     replyingTo: 'Replying to',
     copyText: 'Copy text',
-    deleteEveryone: 'Delete for everyone',
-    deleteEveryoneConfirm:
-      'Delete this message for both of you? Their device is asked to remove it, which cannot be guaranteed.',
-    deleteEveryoneHint: 'Asks their device to delete it too. Cannot be guaranteed.',
-    deleteLocal: 'Delete for me',
-    deleteLocalHint: 'Removes it from this device only. It cannot be unsent.',
+    forward: 'Forward',
+    forwardTitle: 'Forward to…',
+    forwardSkipped:
+      '{n} could not be forwarded: a file that has not fully arrived, or a group that takes text only.',
+    select: 'Select',
+    selected: '{n} selected',
+    cancelSelection: 'Cancel selection',
+    info: 'Details',
+    infoTitle: 'Message details',
+    infoNotYet: 'Not yet',
+    infoVia: 'Carried by',
+    infoHint:
+      'Delivered and read are what their device reports, in its own time. One that sends no read receipts never shows as read.',
+    delete: 'Delete',
+    deleteOne: 'Delete this message?',
+    deleteMany: 'Delete {n} messages?',
+    deleteForBoth: 'Delete for me and {name}',
+    deleteForAll: 'Delete for everyone',
+    deleteForMe: 'Delete for me',
+    deleteBody:
+      'Deleting for them too asks their device to do the same. That cannot be guaranteed: a modified app can ignore the request.',
+    jumpToLatest: 'Go to the newest message',
     retrySend: 'Retry sending',
     failed: 'Not delivered',
     verifyPromptBody: 'Compare safety numbers to be sure nobody is in the middle.',
@@ -339,17 +325,6 @@ export const en = {
     copyKey: 'Copy public key',
     cameraDenied: 'Camera access was refused. You can paste an invite instead.',
     cameraUnavailable: 'No camera is available on this device.',
-  },
-
-  verify: {
-    title: 'Safety number',
-    body: 'Compare these numbers with {name} in person or over a call you trust. If they match, nobody is intercepting your conversation.',
-    markVerified: 'They match — mark as verified',
-    markUnverified: 'Mark as not verified',
-    verifiedAt: 'Verified on this device',
-    mismatchTitle: 'If they do not match',
-    mismatchBody:
-      'Someone may have given you the wrong key. Do not send anything sensitive, and exchange invites again in person.',
   },
 
   settings: {
@@ -454,36 +429,10 @@ export const en = {
   },
 
   privacy: {
-    title: 'What leaves your device',
     intro:
       'Crow is a static web page. There is no Crow server, no account database, and no analytics. Here is precisely what goes out over the network, and what each party can see.',
-    relaysTitle: 'To relays you choose',
-    relaysBody:
-      'Encrypted, gift-wrapped messages addressed to your contact. Every message is signed by a throwaway key, so a relay cannot tell who sent it — only who it is for. Timestamps are randomised by up to two days.',
-    relaysSee:
-      'A relay can see: that someone sent a message to a given public key, at a fuzzy time, and the size class of the ciphertext.',
-    relaysCannot: 'A relay cannot see: the message text, who sent it, your name, or your contact list.',
-    hostTitle: 'To the web host',
-    hostBody:
-      'Only requests for the app files themselves, the first time you visit or after an update. Invite links keep their payload in the URL fragment, which browsers never send to a server.',
-    directTitle: 'To your contacts',
-    directBody:
-      'If a direct connection succeeds, your contact learns your IP address — the same as any peer-to-peer call. Turn direct connections off in Settings to always route through relays.',
-    stunTitle: 'To STUN servers',
-    stunBody:
-      'When setting up a direct connection, your browser asks a public STUN server for your externally visible address. It learns your IP and nothing else.',
-    deviceTitle: 'On this device',
     deviceBody:
       'Your keys, contacts, and messages are stored in your browser, encrypted under a key that only the ways you chose in Settings → Security can open. Index keys are blinded, so even the database structure does not reveal who you talk to.',
-    limitsTitle: 'Known limits',
-    limitsForwardSecrecy:
-      'Direct messages and small groups have no forward secrecy: if your key is stolen, an attacker who also kept copies of old ciphertexts could read them. They are asked to expire from relays after 30 days. Forward-secret groups do not share this limit: their keys change with every change of members and at least weekly, and old keys are deleted.',
-    limitsMetadata:
-      'Your relay set is visible to your network provider, and the fact that a public key is fetching mail is visible to relays.',
-    limitsNoPush:
-      'No push notifications. Delivering them would need a server we do not run, so new messages arrive when the app is open.',
-    limitsXss:
-      'A cross-site scripting flaw in this app would defeat all of the above. There is no inline script, no eval, no third-party code, and a strict Content-Security-Policy.',
   },
 
   errors: {

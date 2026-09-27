@@ -80,12 +80,16 @@ src/
   ui/         screens and components — no transport or database access.
               `lazyViews.tsx` is the one table of `import()` split points;
               `chunks/` holds their entry modules (settings, verify, qr,
-              backup, access, people, groups, interactive, media, calls), and
+              backup, access, people, groups, interactive, media,
+              conversation, calls), and
               `access/`, `groups/`, `interactive/`, `emoji/` and `calls/`
               exist only inside lazy chunks. `access` is onboarding,
               restoring a backup and Settings → Security; `people` is adding
               a contact, an invite link's page and a contact's own page;
-              `media` is re-encoding a picture and recording a voice note.
+              `media` is re-encoding a picture and recording a voice note;
+              `conversation` is forwarding and a message's details. A chunk
+              that has words of its own carries them (`*Text.ts`), so the
+              dictionaries every cold start loads hold only the shell's.
               The lock screen, its PIN field and its pattern pad stay in the
               shell
   styles/     design tokens, then components; no framework, no runtime cost
@@ -98,6 +102,7 @@ src/
               the access chunk only, setting it up)
     identity/ keygen, mnemonic, invite binary codec
     models/   protocol frames and validation, rooms (who a rumor is between),
+              the timeline's causal clock (ADR-063),
               poll and checklist specs and their deterministic tallies,
               domain types
     vault/    Dexie schema, key hierarchy and its keyslots, typed repository,

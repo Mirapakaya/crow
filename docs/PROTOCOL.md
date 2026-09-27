@@ -101,6 +101,7 @@ verification entirely. Crow never consults that cache.
 | `content` | UTF-8 plaintext, 1 … 16 000 characters                         |
 | `tags`    | `["p", <recipient hex>]`, one per recipient, sorted (required) |
 |           | `["ms", "<epoch ms>"]` (optional, see below)                   |
+|           | `["hlc", "<epoch ms>"]` (optional, see below)                  |
 |           | `["subject", "<group name>"]` (groups, optional; §3.3)         |
 |           | `["e", <rumor id>, "", "root" \| "reply"]` (optional)          |
 
@@ -110,6 +111,33 @@ The tag carries millisecond precision inside the encrypted rumor, so only the re
 sees it, and other clients ignore an unknown tag. It is **ignored unless it agrees with
 `created_at` to within one second**, so a peer cannot use it to reorder history or jump
 to the top of a conversation.
+
+**Where an entry sits: a hybrid logical clock (ADR-063).** Two times travel with a message,
+and they answer different questions.
+
+- **When it was sent.** The `ms` tag, or `created_at`, is the author's own clock in UTC epoch
+  time. It is what the bubble shows, in the reader's time zone, and it is never adjusted.
+- **Where it sorts.** The `hlc` tag is the conversation's causal clock when it was sent.
+
+Each device keeps one clock per conversation, a high-water mark past every entry it has
+held. A message is keyed `max(now, mark + 1 ms)`, and the mark moves to that key.
+Receiving an entry moves the mark past the entry's key.
+
+So anything sent after seeing an entry sorts after it, on every device, however far apart
+the clocks: a reply from a clock an hour behind comes after its question. The order is by
+key, then by rumor id, and every device holds the same keys, so every device shows the same
+order. Messages that neither author had seen sort by their keys, which is near their
+authors' clocks.
+
+A received key is taken if it is at least the rumor's own stamp and at most a day ahead of
+the receiving clock, the same bound the unwrap enforces (§2.1). Otherwise the entry sorts by
+its stamp. So does a rumor from another client, which carries no key, and an entry stored
+before keys existed. The gift wrap's `created_at` is never used for either time: NIP-59
+backdates it at random.
+
+The index holds only the hour of each entry's key (§6), and inside one hour IndexedDB orders
+rows by their blinded id — at random. A page of history therefore reads the hour it stops in whole,
+and settles the exact order after decryption.
 
 ### kind 20014 — Crow control frame
 
@@ -218,12 +246,15 @@ if it is not available. See ADR-028 through ADR-033.
 A `redact` frame asks the peer to delete messages, and takes any attachment payload with
 it on both devices. It is queued durably, so an offline peer honours it on reconnect.
 
-A client only sends a withdrawal for messages it authored, and only honours one for
-messages the _sender_ authored. Without the second rule anyone who could reach your inbox
-could delete your own words out of your own conversation. A call is the exception: it has
-no author, so either person in it may withdraw it, and a withdrawal naming a call is
-honoured when it comes from the other person in that call — which is to say, when the
-record is in the direct conversation with the sender (§5.1).
+**Between two people, either may withdraw anything in their conversation**, as Telegram
+allows (ADR-061). That covers what the sender wrote, what the receiver wrote, and calls.
+A withdrawal is honoured when the message is in the direct conversation with its sender.
+
+**In a group, a client withdraws and honours withdrawals only for what the sender wrote.**
+A group has no one whose conversation it is.
+
+Nothing else is honoured: a stranger, or one member of a group, cannot delete anything
+from any other conversation. A reaction is only ever withdrawn by the person who placed it.
 
 Every deletion leaves a tombstone keyed by rumor id and author, blinded and kept with the
 seen marks for 45 days. A copy of the rumor that arrives afterwards is dropped: a sender's
@@ -366,7 +397,7 @@ varints, canonical only.
 
 | kind | Meaning  | Tags                                                            |
 | ---- | -------- | --------------------------------------------------------------- |
-| 9    | message  | `["ms", …]`; a reply adds NIP-10 `e` tags (`root` / `reply`)    |
+| 9    | message  | `["ms", …]`, `["hlc", …]`; a reply adds NIP-10 `e` tags         |
 | 7    | reaction | `["e", <message id>]`, `["k", "9"]`; `content` is the emoji     |
 | 5    | deletion | `["e", <id>]`, `["k", "9" \| "7"]` — only one's own is honoured |
 
@@ -440,7 +471,13 @@ queued ──▶ sending ──▶ sent ──▶ delivered ──▶ read
 - `read` — the peer opened the conversation (only if they have read receipts on).
 
 State only ever moves **forward**. A `delivered` receipt arriving after a `read` receipt
-does not downgrade the tick.
+does not downgrade it.
+
+**Ticks follow Telegram (ADR-061).** A clock means not yet sent. One tick means `sent` or
+`delivered`; two mean `read`, and nothing else. When each receipt came is kept on the
+message (`deliveredAt`, `readAt`, and per member `receiptsAt`) and shown in its details.
+It is the receipt's own time, never earlier than the message and never later than its
+arrival.
 
 In a group each member has their own state — their copy reaches the relays, is received
 and is read on its own — and the message shows the **least advanced** of them. A receipt
@@ -455,7 +492,8 @@ backoff and full jitter (2 s base, 5 min cap, 12 attempts) before being marked f
 A message is idempotent across retries because the rumor — and therefore its id — is
 built once and stored, not rebuilt per attempt. A manual retry after that does rebuild
 it, from the stored message, with every tag in the same fixed order (recipients, `ms`,
-`subject`, attachment, poll or checklist, thread), so it keeps its id.
+`hlc`, `subject`, attachment, poll or checklist, thread), so it keeps its id. A message
+stored before keys existed is rebuilt without an `hlc` tag, as it was first sent.
 
 Each recipient's copy is judged on its own relay quorum. When some members' copies reach
 the relays and others do not, only the missing members are retried; nobody receives a
@@ -588,7 +626,10 @@ bye {call, reason}          ─────────────────�
   (`call-state`, stream id 0), within the same DTLS session as the media, never over
   relays.
 
-**Call records.** Each side writes its own entry into the conversation under the call id:
+**Call records.** The opening offer carries an `hlc` tag. Both sides enter the call at that
+key, and move their conversation's clock past it when the offer is sent or received. Both
+therefore show the call in the same place, before anything either says after it
+(ADR-063). Each side writes its own entry into the conversation under the call id:
 media, outcome (`completed`, `missed`, `declined`, `unanswered`, `cancelled`, `busy`,
 `failed`) and, for a completed call, its length. It is local and never sent. It is never
 acknowledged either: its id is the caller's offer, which the caller would recognise in a
@@ -659,7 +700,7 @@ first place.
 | Data key → subkeys | HKDF-SHA256: `record`, `index`, `identity`                             |
 | Record bodies      | XChaCha20-Poly1305, random 24-byte nonce, AAD = `crow/<table>/<id>`  |
 | Primary keys       | `HMAC-SHA256(indexKey, "<domain> <value>")`, truncated to 32 hex chars |
-| Indexed timestamps | truncated to the hour                                                  |
+| Indexed timestamps | the hour of each entry's sort key (ADR-063)                            |
 
 **Keyslots (ADR-054, ADR-058).** `meta.keyslots` holds one entry per way the vault
 opens, each a sealed copy of the same data key under AAD `crow/keyslot/v1|<type>|<id>`,
@@ -811,104 +852,3 @@ index key rather than trusted from the file.
 A forward-secret group's MLS state is **never** in a backup. Two devices holding the same
 leaf would break the group for everyone. Its history is restored read-only, marked as
 left, unless the importing device is still in that group — then its own state stands.
-
----
-
-## 6. Post-quantum integration (from Zerion)
-
-Crow integrates Zerion's post-quantum cryptographic technology as an additional
-defence layer against harvest-now-decrypt-later attacks. The integration follows
-Zerion's Mode 3-Full design: every message key incorporates ML-KEM-768 in
-addition to the existing classical primitives, so an attacker must break both
-X25519 and ML-KEM-768 to derive a shared secret.
-
-### 6.1 Cryptographic primitives
-
-| Purpose | Primitive | Source |
-| --- | --- | --- |
-| Key encapsulation (post-quantum) | ML-KEM-768 (FIPS 203) | `@noble/post-quantum` |
-| Signature (post-quantum) | ML-DSA-65 (FIPS 204) | `@noble/post-quantum` |
-| Key agreement (classical) | X25519 | `@noble/curves` |
-| Signature (classical) | Ed25519 | `@noble/curves` |
-| Authenticated encryption | XChaCha20-Poly1305 | `@noble/ciphers` |
-| Key derivation | HKDF-SHA-512, HKDF-SHA-256 | `@noble/hashes` |
-
-All post-quantum primitives come from `@noble/post-quantum` (same author and
-audit philosophy as the existing `@noble/*` packages), keeping the bundle pure
-TypeScript with no WASM and preserving Crow's strict CSP.
-
-### 6.2 Hybrid key agreement
-
-Two peers performing key agreement run X25519 ECDH and ML-KEM-768 encapsulation
-in parallel, then mix both shared secrets through HKDF-SHA-512 with domain
-separation:
-
-```
-classicalSs = X25519(ourSk, theirPk)
-pqSs = ML-KEM-768.encapsulate(theirKemPk)
-sharedSecret = HKDF-SHA-512(classicalSs || pqSs, "crow/pq-hybrid-agree/v1", context)
-```
-
-The context string binds the key to its use (handshake, envelope sealing, etc.),
-preventing cross-protocol attacks.
-
-### 6.3 Hybrid signatures
-
-Identity signatures are hybrid Ed25519 + ML-DSA-65. Both halves must verify
-independently. Signature layout on the wire:
-
-```
-signature = Ed25519-sig(64) || ML-DSA-65-sig(3309)
-```
-
-### 6.4 ZWF framing (WebRTC data channels)
-
-Direct WebRTC data channels use Zerion Wire Format framing:
-
-- Every frame is exactly 4096 bytes on the wire
-- Three authenticated segments: frame header, KEM header, body
-- KEM header carries the sender's current ML-KEM-768 encapsulation key and a
-  ciphertext to the peer's advertised key
-- The body segment is encrypted under a hybrid body key derived from both the
-  classical message key and the per-message ML-KEM-768 shared secret
-- ML-KEM keys rotate every 16 sends
-- The receiver retains 32 recent decapsulation keypairs for in-flight messages
-- After the first real ML-KEM contribution, zero-sentinel frames are rejected
-
-See `src/core/transport/zwf/`.
-
-### 6.5 Constant-rate traffic shaping (ZPP)
-
-The paced sender emits exactly one fixed-size ZWF frame per time slot, carrying
-the next queued record or a cover frame if the queue is empty. An observer of
-the data channel sees a stream of identical frames whether the user is chatting
-or idle.
-
-Two regimes: an active interval (~750 ms) while messages are flowing, and a
-slower idle interval (~5 s) after 30 seconds with no queued messages. Each slot
-adds zero-mean jitter of up to one-third of the interval. Pacing is self-paced:
-a stall lengthens the cadence, never producing a catch-up burst.
-
-See `src/core/transport/zwf/pacing.ts`.
-
-### 6.6 Async sealed-sender envelopes
-
-For relay-based delivery of post-quantum-protected messages to offline peers,
-Crow supports async sealed-sender envelopes. The sender encrypts to the
-recipient's published prekey bundle (ML-KEM-768 + X25519 agreement key) with
-no interactive handshake. Inside the sealed envelope is a hybrid signature
-(Ed25519 + ML-DSA-65) authenticating the sender.
-
-A relay sees only the prekey selector, the ephemeral key, the KEM ciphertext,
-an advisory TTL, a dedup identifier, and an opaque blob — never the sender,
-recipient, or content.
-
-See `src/core/crypto/asyncSealedSender.ts`.
-
-### 6.7 Relationship to NIP-17
-
-The post-quantum layer is additive. NIP-17 gift wrapping remains the primary
-envelope for Nostr relay delivery, preserving interoperability with other Nostr
-clients. The ZWF + ZPP stack applies to direct WebRTC connections, where both
-peers are Crow users and can negotiate the stronger protocol. Async sealed-sender
-envelopes apply to future relay-based PQ delivery when both peers support it.

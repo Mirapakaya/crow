@@ -1,10 +1,11 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, createElement } from 'react'
+import { act, createElement, Fragment } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { useApp } from '@/app/store'
 import { ChatView } from '@/ui/screens/ChatView'
-import { HOLD_MS } from '@/ui/components/hold'
+import { HOLD_MS, ownEvent } from '@/ui/components/hold'
+import { DialogHost } from '@/ui/components/dialog'
 import { levelOf, sectionOf } from '@/app/layout'
 import { parseHash } from '@/app/router'
 import type { Contact, Conversation, Message } from '@/core/models/types'
@@ -13,8 +14,9 @@ import type { Contact, Conversation, Message } from '@/core/models/types'
  * A conversation is one column (ADR-060): every date, message and call is a
  * child of the same stream, in the order it happened, with its side carried by
  * the row — never two lists, one per person, and never a status beside a
- * bubble as a column of its own. On a touch screen a held finger opens a
- * message's menu, since the buttons beside a bubble are hover-only.
+ * bubble as a column of its own. A message answers a finger and a mouse as
+ * Telegram's do (ADR-061): held, it is selected; tapped, its menu opens; and
+ * deleting asks in the app's own dialog.
  */
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -89,7 +91,11 @@ async function renderChat(messages: Message[]) {
   host = document.createElement('div')
   document.body.append(host)
   root = createRoot(host)
-  await act(async () => root.render(createElement(ChatView, { address: peer })))
+  await act(async () =>
+    root.render(
+      createElement(Fragment, null, createElement(ChatView, { address: peer }), createElement(DialogHost)),
+    ),
+  )
   // Mounting opens the conversation, which starts from an empty page; the
   // history is what a load would put there.
   await act(async () => useApp.setState({ messages }))
@@ -141,39 +147,92 @@ describe('the conversation column', () => {
   })
 })
 
-describe('holding a message', () => {
-  beforeEach(() => renderChat(history.slice(0, 3)))
+describe('touching, holding and selecting, as Telegram does', () => {
+  // Bob's two messages around one of ours, then a read one of ours.
+  const exchange = [
+    message('m1', 'in', start),
+    message('m2', 'out', start + 60_000, { status: 'delivered' }),
+    message('m3', 'in', start + 120_000),
+    message('m4', 'out', start + 180_000, { status: 'read' }),
+  ]
+  let deleteMessages: ReturnType<typeof vi.fn>
+  let confirmSpy: ReturnType<typeof vi.fn>
+
+  beforeEach(async () => {
+    deleteMessages = vi.fn(async () => undefined)
+    useApp.setState({ deleteMessages } as never)
+    // The browser's own dialog must never be asked.
+    confirmSpy = vi.fn(() => true)
+    Object.defineProperty(window, 'confirm', { value: confirmSpy, configurable: true })
+    await renderChat(exchange)
+  })
 
   const bubble = (id: string) => host.querySelector<HTMLElement>(`#msg-${id} .bubble`)!
+  const row = (id: string) => host.querySelector<HTMLElement>(`#msg-${id}`)!
   const menu = () => document.querySelector('.popover')
+  const dialog = () => document.querySelector<HTMLElement>('[role=dialog]')
   const press = (target: HTMLElement, type: string, init: PointerEventInit = {}) =>
     act(() => {
       target.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: 'touch', ...init }))
     })
+  const click = (target: Element) =>
+    act(async () => {
+      target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    })
+  const labels = (scope: Element | null) =>
+    [...(scope?.querySelectorAll(':scope > button') ?? [])].map((b) => b.textContent?.trim())
 
-  it('opens its menu after a held finger, with reactions and reply', async () => {
+  it('selects what a finger holds, and turns the header into the selection’s bar', async () => {
     vi.useFakeTimers()
     await press(bubble('m1'), 'pointerdown', { clientX: 10, clientY: 10 })
     await act(() => vi.advanceTimersByTime(HOLD_MS - 50))
-    expect(menu()).toBeNull()
+    expect(host.querySelector('.selection-bar')).toBeNull()
     await act(() => vi.advanceTimersByTime(50))
-    expect(menu()).not.toBeNull()
-    expect(menu()!.querySelectorAll('.quick-emoji').length).toBeGreaterThan(0)
-    const items = [...menu()!.querySelectorAll(':scope > button')].map((b) => b.textContent)
-    expect(items).toContain('Reply')
 
-    // The click the lifted finger produces does not also press what was under it.
+    expect(host.querySelector('.selection-count')?.textContent).toBe('1 selected')
+    expect(row('m1').classList.contains('selected')).toBe(true)
+    expect(host.querySelector('.selection-bar [aria-label="Forward"]')).not.toBeNull()
+    expect(host.querySelector('.selection-bar [aria-label="Delete"]')).not.toBeNull()
+
+    // The click the lifted finger produces does not also unpick it.
     await press(bubble('m1'), 'pointerup')
-    const click = new MouseEvent('click', { bubbles: true, cancelable: true })
-    await act(() => void bubble('m1').dispatchEvent(click))
-    expect(click.defaultPrevented).toBe(true)
+    await click(bubble('m1'))
+    expect(row('m1').classList.contains('selected')).toBe(true)
+
+    // A tap anywhere on another row picks it; on a picked one, unpicks it.
+    await click(row('m3'))
+    expect(host.querySelector('.selection-count')?.textContent).toBe('2 selected')
+    await click(row('m1'))
+    await click(row('m3'))
+    expect(host.querySelector('.selection-bar')).toBeNull()
   })
 
-  it('leaves a held mouse button alone: a mouse has hover and a right button', async () => {
+  it('opens the menu on a tap, reactions first and delete last', async () => {
+    await press(bubble('m2'), 'pointerdown', { clientX: 10, clientY: 10 })
+    await press(bubble('m2'), 'pointerup')
+    await click(bubble('m2'))
+    expect(menu()?.querySelectorAll('.quick-emoji').length).toBeGreaterThan(0)
+    expect(labels(menu())).toEqual(['More…', 'Reply', 'Copy text', 'Forward', 'Select', 'Details', 'Delete'])
+  })
+
+  it('leaves a held mouse button alone, and opens the menu on the right one — not over a link', async () => {
     vi.useFakeTimers()
     await press(bubble('m1'), 'pointerdown', { pointerType: 'mouse' })
     await act(() => vi.advanceTimersByTime(HOLD_MS * 2))
-    expect(menu()).toBeNull()
+    expect(host.querySelector('.selection-bar')).toBeNull()
+    vi.useRealTimers()
+
+    const right = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
+    await act(async () => void bubble('m3').dispatchEvent(right))
+    expect(right.defaultPrevented).toBe(true)
+    expect(labels(menu())).toContain('Select')
+
+    const link = document.createElement('a')
+    link.href = 'https://example.com'
+    bubble('m1').append(link)
+    const onLink = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
+    await act(async () => void link.dispatchEvent(onLink))
+    expect(onLink.defaultPrevented).toBe(false)
   })
 
   it('lets a finger that moves scroll instead', async () => {
@@ -181,21 +240,79 @@ describe('holding a message', () => {
     await press(bubble('m2'), 'pointerdown', { clientX: 10, clientY: 10 })
     await press(bubble('m2'), 'pointermove', { clientX: 10, clientY: 40 })
     await act(() => vi.advanceTimersByTime(HOLD_MS * 2))
-    expect(menu()).toBeNull()
+    expect(host.querySelector('.selection-bar')).toBeNull()
   })
 
-  it('opens on a right click, but leaves a link to the browser', async () => {
-    const right = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
-    await act(() => void bubble('m2').dispatchEvent(right))
-    expect(right.defaultPrevented).toBe(true)
-    expect(menu()).not.toBeNull()
+  it('asks, in its own dialog, whether to delete for both or for me alone', async () => {
+    await act(async () => void bubble('m3').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true })))
+    await click([...menu()!.querySelectorAll('button')].find((b) => b.textContent === 'Delete')!)
 
-    const link = document.createElement('a')
-    link.href = 'https://example.com'
-    bubble('m3').append(link)
-    const onLink = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
-    await act(() => void link.dispatchEvent(onLink))
-    expect(onLink.defaultPrevented).toBe(false)
+    expect(confirmSpy).not.toHaveBeenCalled()
+    expect(dialog()?.querySelector('h2')?.textContent).toBe('Delete this message?')
+    expect(labels(dialog()?.querySelector('.dialog-actions') ?? null)).toEqual([
+      'Delete for me and Alex',
+      'Delete for me',
+      'Cancel',
+    ])
+    // It opens on the way out, not on either delete.
+    expect(document.activeElement?.textContent).toBe('Cancel')
+
+    await click(
+      [...dialog()!.querySelectorAll('button')].find((b) => b.textContent === 'Delete for me and Alex')!,
+    )
+    expect(deleteMessages).toHaveBeenCalledWith(['m3'], 'everyone')
+    expect(dialog()).toBeNull()
+  })
+
+  it('draws one tick until it is read, and two only then', () => {
+    const tick = (id: string) => row(id).querySelector('.tick')
+    expect(tick('m2')?.getAttribute('aria-label')).toBe('Delivered')
+    expect(tick('m2')?.querySelectorAll('path')).toHaveLength(1)
+    expect(tick('m4')?.getAttribute('aria-label')).toBe('Read')
+    expect(tick('m4')?.querySelectorAll('path').length).toBeGreaterThan(1)
+  })
+
+  it('gives the last bubble of each run its tail', () => {
+    const ends = ['m1', 'm2', 'm3', 'm4'].filter((id) => row(id).classList.contains('group-end'))
+    expect(ends).toEqual(['m1', 'm2', 'm3', 'm4'])
+  })
+})
+
+describe('a conversation whose clocks disagree (ADR-063)', () => {
+  it('shows each time as its author gave it, and never announces a day going backwards', async () => {
+    // Bob's clock is an hour behind, and his answer crosses midnight on it:
+    // it sorts after Alice's question but shows the day before.
+    const midnight = new Date(2026, 8, 21).getTime()
+    await renderChat([
+      message('q', 'out', midnight + 20 * 60_000, { order: midnight + 20 * 60_000 }),
+      message('a', 'in', midnight - 35 * 60_000, { order: midnight + 20 * 60_000 + 1 }),
+      message('b', 'out', midnight + 30 * 60_000, { order: midnight + 30 * 60_000 }),
+    ])
+    const stream = host.querySelector('.message-stream')!
+    const read = [...stream.children]
+      .filter((entry) => !entry.matches('.faint, .btn'))
+      .map((entry) => (entry.classList.contains('day-separator') ? 'day' : entry.id.replace('msg-', '')))
+    expect(read).toEqual(['day', 'q', 'a', 'b'])
+    expect(host.querySelector('#msg-a time')?.getAttribute('datetime')).toBe(
+      new Date(midnight - 35 * 60_000).toISOString(),
+    )
+  })
+})
+
+describe('what counts as pressing a message', () => {
+  it('is what began inside it — not in a menu portalled out of it, nor its lightbox', () => {
+    const bubble = document.createElement('div')
+    const text = document.createElement('span')
+    const lightbox = document.createElement('div')
+    lightbox.setAttribute('role', 'dialog')
+    const picture = document.createElement('img')
+    lightbox.append(picture)
+    bubble.append(text, lightbox)
+    const portalled = document.createElement('button')
+
+    expect(ownEvent({ target: text, currentTarget: bubble })).toBe(true)
+    expect(ownEvent({ target: portalled, currentTarget: bubble })).toBe(false)
+    expect(ownEvent({ target: picture, currentTarget: bubble })).toBe(false)
   })
 })
 

@@ -96,20 +96,33 @@ describe('end-to-end messaging over relays', () => {
     expect(stored?.relayAcks).toBeGreaterThan(0)
   })
 
-  it('carries a delivered receipt back to the sender', async () => {
+  it('carries a delivered receipt back to the sender, with when', async () => {
     const sent = await alice.messenger.sendMessage(bob.pubkey, 'receipt please')
     await settle(4000)
 
-    expect((await alice.vault.repo.getMessage(sent.id))?.status).toBe('delivered')
+    const stored = await alice.vault.repo.getMessage(sent.id)
+    expect(stored?.status).toBe('delivered')
+    // Kept for the message's details: a second tick means read, not this.
+    expect(stored?.deliveredAt).toBeGreaterThanOrEqual(sent.ts)
+    expect(stored?.deliveredAt).toBeLessThanOrEqual(Date.now())
+    expect(stored?.readAt).toBeUndefined()
   })
 
-  it('upgrades to read when Bob opens the conversation', async () => {
+  it('upgrades to read when Bob opens the conversation, with when', async () => {
     const sent = await alice.messenger.sendMessage(bob.pubkey, 'read me')
     await settle(4000)
     await bob.messenger.openConversation(alice.pubkey)
     await settle(4000)
 
-    expect((await alice.vault.repo.getMessage(sent.id))?.status).toBe('read')
+    const stored = await alice.vault.repo.getMessage(sent.id)
+    expect(stored?.status).toBe('read')
+    expect(stored?.readAt).toBeGreaterThanOrEqual(stored!.deliveredAt!)
+  })
+
+  it('records a receipt at the time the recipient’s device gave it', async () => {
+    const sent = await alice.messenger.sendMessage(bob.pubkey, 'as stamped')
+    const stored = await alice.vault.repo.advanceMessageStatus(sent.id, 'read', sent.ts + 60_000)
+    expect(stored?.readAt).toBe(sent.ts + 60_000)
   })
 
   it('never downgrades a status that already advanced', async () => {
@@ -518,7 +531,10 @@ describe('attachments end to end', () => {
     const pack = await bob.messenger.importStickerPack('Kept', [{ bytes: bytes(3), mime: 'image/webp' }])
     // The first message is ten days old by the time the janitor looks.
     const stale = (await bob.vault.repo.getMessage(old.id))!
-    await bob.vault.repo.putMessage({ ...stale, ts: Date.now() - 10 * 86_400_000 })
+    // Old by both its times: retention reads the index, which holds the hour
+    // of each entry's key (ADR-063).
+    const tenDaysAgo = Date.now() - 10 * 86_400_000
+    await bob.vault.repo.putMessage({ ...stale, ts: tenDaysAgo, order: tenDaysAgo })
     vi.setSystemTime(Date.now() + 2 * 3_600_000)
     // A payload written a moment ago, whose message is not stored yet.
     const pending = sealBlob(bytes(4))
@@ -643,27 +659,39 @@ describe('delete for everyone', () => {
     expect(await messagesOf(bob, alice.pubkey)).toHaveLength(0)
   })
 
-  it('refuses to withdraw a message the peer wrote', async () => {
-    // Otherwise anyone who can reach your inbox could delete your own words out
-    // of your own conversation.
-    await bob.messenger.sendMessage(alice.pubkey, 'you cannot unsay this for me')
+  it('lets either of two people delete any message between them, for both', async () => {
+    // Telegram's rule for a conversation between two (ADR-061): it is theirs
+    // alike, so either may take anything out of it — what they wrote, and
+    // what the other did.
+    await bob.messenger.sendMessage(alice.pubkey, 'from Bob')
+    const mine = await alice.messenger.sendMessage(bob.pubkey, 'from Alice')
     await settle(4000)
-    const [received] = await messagesOf(alice, bob.pubkey)
+    const received = (await messagesOf(alice, bob.pubkey)).find((m) => m.body === 'from Bob')
     expect(received).toBeDefined()
 
-    await expect(alice.messenger.redactMessage(bob.pubkey, received!.id)).rejects.toThrow(/did not write/)
-    expect(await messagesOf(alice, bob.pubkey)).toHaveLength(1)
-  })
-
-  it('ignores a redact frame naming a message the sender did not author', async () => {
-    const mine = await alice.messenger.sendMessage(bob.pubkey, 'mine, and staying')
-    await settle(4000)
-
-    // Bob forges a request to delete Alice's own message from Alice's device.
-    await bob.messenger.sendRedactForTesting(alice.pubkey, [mine.id])
+    // Alice deletes what Bob wrote; Bob deletes what Alice wrote.
+    await alice.messenger.redactMessage(bob.pubkey, received!.id)
+    await bob.messenger.redactMessage(alice.pubkey, mine.id)
     await settle(6000)
 
-    expect(await messagesOf(alice, bob.pubkey)).toHaveLength(1)
+    expect(await messagesOf(alice, bob.pubkey)).toHaveLength(0)
+    expect(await messagesOf(bob, alice.pubkey)).toHaveLength(0)
+  })
+
+  it('does not let someone outside a conversation delete anything in it', async () => {
+    const carol = await makePeer(network, 'Carol')
+    try {
+      const mine = await alice.messenger.sendMessage(bob.pubkey, 'between Alice and Bob')
+      await settle(4000)
+      // Carol can reach Alice's inbox, and names a message she has seen the
+      // id of — but it is not in any conversation of hers.
+      await carol.messenger.sendRedactForTesting(alice.pubkey, [mine.id])
+      await settle(6000)
+      expect(await messagesOf(alice, bob.pubkey)).toEqual([expect.objectContaining({ id: mine.id })])
+    } finally {
+      carol.messenger.stop()
+      await carol.vault.destroy()
+    }
   })
 
   /** A chat rumor from Alice to Bob, built by hand so it can be wrapped more than once. */

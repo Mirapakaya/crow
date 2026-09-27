@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { makeVault, type TestVault } from './helpers'
 import type { Message } from '@/core/models/types'
+import { bytesToHex, utf8ToBytes } from '@/core/util/bytes'
+import { sha256 } from '@noble/hashes/sha2.js'
 import { blindId } from '@/core/crypto/vaultCrypto'
 import { blobRef, openChunk, sealBlob, type BlobEnvelope, type BlobRef } from '@/core/crypto/blobCrypto'
 import type { Attachment } from '@/core/models/attachment'
@@ -48,14 +50,15 @@ describe('conversation paging', () => {
     let decryptions = 0
     const realOpen = t.vault.openRecord.bind(t.vault)
     t.vault.openRecord = ((blob: Uint8Array, aad: string) => {
-      if (aad.startsWith('crow/messages/')) decryptions += 1
+      if (aad.startsWith('textor/messages/')) decryptions += 1
       return realOpen(blob, aad)
     }) as typeof t.vault.openRecord
 
     const page = await t.repo.listMessages(convo.id, 50)
     expect(page).toHaveLength(50)
-    // 50 asked for, plus the fixed 64-row boundary over-read.
-    expect(decryptions).toBeLessThanOrEqual(50 + 64)
+    // 50 asked for, plus the rest of the hour the walk stopped in — here one
+    // message an hour, so nothing more.
+    expect(decryptions).toBeLessThanOrEqual(50)
     expect(decryptions).toBeLessThan(400)
 
     t.vault.openRecord = realOpen
@@ -89,6 +92,35 @@ describe('conversation paging', () => {
     expect((await t.repo.listMessages(convo.id, 20)).map((m) => m.body)).toEqual(
       Array.from({ length: 20 }, (_, i) => `message ${i}`),
     )
+    await t.destroy()
+  })
+
+  it('returns the newest page of a busy hour, not a random part of it', async () => {
+    // Inside one hour bucket IndexedDB orders rows by their blinded id, which
+    // is random. Cutting the walk at a row count gave a scattering of that
+    // hour: older messages on screen, newer ones missing (ADR-061).
+    const t = await makeVault()
+    const convo = await t.repo.ensureConversation(SELF, PEER)
+    const base = Date.UTC(2026, 5, 1, 12, 0, 0)
+    const ids = Array.from({ length: 300 }, (_, i) => bytesToHex(sha256(utf8ToBytes(`busy ${i}`))))
+    for (let i = 0; i < 300; i++)
+      await t.repo.putMessage({ ...build(convo.id, i, base + i * 1000), id: ids[i]! })
+
+    const page = await t.repo.listMessages(convo.id, 60)
+    expect(page.map((m) => m.body)).toEqual(Array.from({ length: 60 }, (_, i) => `message ${240 + i}`))
+
+    // And paging back from inside that hour continues exactly where it left off.
+    const earlier = await t.repo.listMessages(convo.id, 60, page[0]!.ts)
+    expect(earlier.map((m) => m.body)).toEqual(Array.from({ length: 60 }, (_, i) => `message ${180 + i}`))
+    await t.destroy()
+  }, 60_000)
+
+  it('orders a tie in time by id, the same on every device', async () => {
+    const t = await makeVault()
+    const convo = await t.repo.ensureConversation(SELF, PEER)
+    const at = Date.UTC(2026, 5, 1, 12, 0, 0)
+    for (const i of [3, 1, 2]) await t.repo.putMessage(build(convo.id, i, at))
+    expect((await t.repo.listMessages(convo.id)).map((m) => m.id)).toEqual([1, 2, 3].map(messageId))
     await t.destroy()
   })
 

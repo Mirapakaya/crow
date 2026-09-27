@@ -755,7 +755,8 @@ component exists to prevent.
 
 **Update.** ADR-060 took the controls out of the gutter on a touch screen, which has no
 hover to reveal them and, on a phone, no gutter to spare. There, holding the bubble opens
-its menu, measured against the bubble.
+its menu, measured against the bubble. ADR-061 changed that to Telegram's arrangement: a
+tap opens the menu, and holding selects.
 
 ---
 
@@ -783,6 +784,9 @@ bubble no resend could fix.
 The name is deliberate. This is a tombstone the other client is asked to honour, not an
 erasure anyone can enforce — a modified client can ignore it and a relay may still hold
 the wrap. The confirmation says exactly that rather than promising more.
+
+**Update.** ADR-061 widened who may ask. Between two people, either may delete anything in
+their conversation for both. In a group, only the author may delete their own message.
 
 ---
 
@@ -1484,6 +1488,10 @@ words add 4.8 KiB to the shell: the precache goes from 767.3 to 772.1 KiB, leavi
 a deletion for everyone would need the group rules of ADR-044. Revisit too if tombstones
 ever need to outlive the seen table: a backup restored after 45 days can still bring back
 a message that was deleted, just as it always could.
+
+**Update.** ADR-061 applied this rule to every entry between two people, not only calls.
+The check was already where the entry is kept, the direct conversation with the sender,
+so it now simply asks nothing more.
 
 ---
 
@@ -2469,3 +2477,290 @@ the microphone stays. The precache went from 796.3 to 795.6 KiB, of 800.
 
 **Revisit if** something in a conversation needs the full width, such as a wide table,
 or people ask to resize the list.
+
+**Update.** ADR-061 changed what touch does, to match Telegram. A tap opens a message's
+menu, and holding it selects it, starting a selection that the header then acts on.
+
+---
+
+## ADR-061 — A conversation keeps the order things were said, and handles a message as Telegram does · **found in use**
+
+**Problem.** An audit of the timeline against NIP-59, and of the conversation against
+Telegram Web's two open-source clients (Web A/Z, Web K).
+
+- **Ingest was sound.** Every entry takes its time from the rumor: the `ms` tag, or its
+  `created_at`. NIP-59's randomised wrap time was never used. A test now pins that
+  entries interleave correctly when caught up in wrap order.
+- **Three things still broke the order.**
+  - _A busy hour came back as a scattering of itself._ The index holds hour buckets, and
+    inside one IndexedDB orders rows by their blinded id — at random. A page read
+    `limit + 64` rows and cut there. In any hour with more than 124 messages (a page is
+    60), the page showed older messages and left newer ones out. A test with 300 in one
+    hour reproduced it.
+  - _A clock running behind put a message just sent in the middle of the history._ Sent
+    entries were stamped with the local clock. Answering a peer whose clock ran ahead
+    placed the answer above the question, on both devices.
+  - _A stamp from later today held the bottom._ Rumors up to a day ahead were accepted
+    at face value and sat below everything said until then.
+- **Two ticks did not mean read.** One tick meant a relay had it, two meant their device
+  had it, and two in another colour meant read. People read two ticks as "seen", as
+  Telegram taught them.
+- **Deleting for both was the author's alone, and asked in `window.confirm`.** Telegram
+  lets either person delete anything in their conversation. Ten confirmations across the
+  app used the browser's own dialog, which blocks the page, reads as the browser rather
+  than the app, and is suppressed outright by some embedded browsers.
+- **Selecting, forwarding and a message's details did not exist.** Nor did Telegram's
+  runs of bubbles with a tail, history loading as the reader scrolls back, or the way
+  back to the newest message.
+
+**Decision — order (`core/models/timeline.ts`).**
+
+- **One order.** By the rumor's own time, then by id, on every device.
+- **Sent after everything held.** A message is stamped `max(now, newest + 1 ms)`. The
+  newest comes from the conversation's `lastActivity`, so nothing is decrypted to find
+  it. It is capped at 10 minutes ahead of this clock, which receivers accept. Briar
+  stamps the same way.
+- **Placed on arrival past the slack.** A rumor stamped more than 10 minutes ahead is
+  placed when it arrived. More than a day ahead is still refused at unwrap.
+- **A page reads its edge hours whole.** The hour the walk stops in, and the hour
+  `beforeTs` falls in, are read in full, then decrypted and sorted. Exact times stay out
+  of the index, which is why it holds hours in the first place.
+
+**Decision — ticks and details.** One tick for sent or delivered, two for read only.
+When each receipt came is kept (`deliveredAt`, `readAt`, per member `receiptsAt`). It is
+the recipient's own time, never before the message and never after it arrived. A sent
+message's details, opened from its menu, show sent, delivered and read — and in a
+group, each member's state.
+
+**Decision — deleting, between two and in a group.**
+
+- **Between two people, either may delete anything in their conversation for both**:
+  what they wrote, what the other wrote, calls. It is honoured when the message is in the
+  direct conversation with the sender, which is where ADR-047 already checked calls.
+- **In a group, only what one wrote.** A group has no one whose conversation it is.
+- **Nothing else is honoured.** A stranger, or a group member reaching into another
+  conversation, is still refused.
+- **The cost, said plainly.** Your copy of your own words is no longer something the
+  other person cannot remove. The threat model says to keep a backup or screenshot of
+  anything you may need to show.
+
+**Decision — handling a message as Telegram does.**
+
+- **Touch.** A tap opens the menu; holding selects. A right click opens the menu too.
+- **The menu.** Reactions first, then Reply, Copy, Forward, Select, Details, Delete.
+- **Selecting.** A check at each row's start edge, received bubbles moved over for it.
+  The header becomes the selection's bar: how many, Forward, Delete. Escape, or
+  unpicking the last one, ends it.
+- **Delete asks how.** "Delete for me and {name}" or "Delete for me" — Telegram's mobile
+  wording, as two answers rather than Web A's checkbox, so nothing rides on a box left
+  ticked. In a group, "Delete for everyone" only for one's own.
+- **Every confirmation is the app's own dialog.** It opens on Cancel; no
+  `window.confirm` or `alert` is left.
+- **Forward sends a copy, naming nobody.** Telegram names the original author; that
+  would tell someone who said it to a person they never told. Attachments are sent
+  afresh, sealed for their new readers; a payload still arriving is left out, and said
+  so.
+- **Runs, history and the way back.** Runs of bubbles use Web A's metrics: 15 px corners,
+  6 px where two meet, and a tail on the last. Earlier history loads as the reader nears
+  the top, holding their place; the button remains for a keyboard. A button returns to
+  the newest message once the reader is a screen or more above it.
+
+**Adapted, not copied.** Both Telegram clients are GPL-3.0; Crow is AGPL-3.0. Their
+behaviour and metrics were studied and written anew here, not their code. The ledger in
+`docs/UI-PARITY.md` lists each pattern, where it lives, and what was left out and why.
+
+**Not done.**
+
+- _A windowed timeline._ Windowing drops rows far from view. The window here grows only
+  as someone scrolls back, 60 at a time. Windowing variable-height rows reintroduces
+  jumps and gaps — the class of fault this decision fixes — and Safari has no scroll
+  anchoring to lean on.
+- _Deleting on one's own other devices._ Control frames go person to person, so another
+  device of one's own keeps what this one deleted, as before.
+
+**Cost.** In the shell: the timeline rules, selection, the dialog and the delete flow. To
+pay for them, three things left the shell for their chunks: the verify screen's words,
+most of the poll and checklist words, and the About screen's account; so did the
+picker's, the polls' and the safety number's styles. Forwarding and details are a new
+`conversation` chunk. The precache went from 795.6 to 793.1 KiB, of 800.
+`timeline.ts` is held to 100% coverage.
+
+**Revisit if** a group gains admins, who in Telegram may delete others' messages. Revisit
+too if Safari gains scroll anchoring, which would make a windowed timeline safe, or if
+people ask for a setting to refuse deletion by the other person.
+
+**Update.** ADR-062 removed the two clock rules above: the send-time bump and its 10-minute
+cap, and placing far-future arrivals on arrival. It also removed the clamping of receipt
+times. The busy-hour paging fix stands.
+
+---
+
+## ADR-062 — Time is UTC epoch from end to end, and a stamp is taken as given · **found by audit**
+
+**Problem.** Messages between a device in Los Angeles (UTC−7) and one in Tehran (UTC+3:30)
+were reported out of order. The suspicion was that a local time zone had leaked into how
+stamps are made, bucketed, parsed or sorted. Separately, ADR-061 had added rules that
+adjusted stamps when clocks disagree.
+
+**The audit found no time zone anywhere in the order.**
+
+- **Stamps** are `Date.now()`, and `created_at` is `Math.floor(ms / 1000)`. The `ms` tag
+  is compared with `created_at` in epoch time.
+- **Index buckets** are `Math.floor(ms / HOUR) * HOUR`, so UTC hours. Relay `since` and
+  `until` filters, sync marks and the dedup floor are epoch seconds.
+- **Nothing parses a date string.** No `Date.parse`, and no `new Date(string)`.
+- **Local time appears only in display.** It sets the time shown, which is the reader's
+  own, and which day a separator names. Neither affects where an entry sorts.
+
+Two devices with correct clocks agree on every stamp in any zones. A misorder that
+follows a time zone is a clock set wrong, which moves `Date.now()` itself. Iran is a
+common case: it ended daylight saving time in 2022. A device with old time-zone data then
+shows an hour too late in summer, and a person who corrects the clock by hand, rather
+than the zone, puts it an hour behind UTC.
+
+**ADR-061's clock rules were arbitrary, and made devices disagree.**
+
+- _The send-time bump_ stamped a message `max(now, newest + 1)`, capped at 10 minutes. That
+  cap was too small for exactly that one-hour error.
+- _The arrival rule_ placed a rumor more than 10 minutes ahead at the moment it arrived.
+  It moved that entry on one device and not on the other.
+- _The receipt clamps_ kept a receipt's time between the message and its arrival. That
+  showed a time the recipient never gave.
+
+**Decision.**
+
+- **One canonical order.** By the author's UTC stamp, then by id, taken as given with no
+  adjustment on any device. `core/models/timeline.ts` is that comparator alone.
+- **Receipts too.** A receipt's time is what the recipient's device stamped.
+- **What stays.** The busy-hour paging of ADR-061 stays: it was a fault in reading the
+  index, not a heuristic. The refusal of rumors more than a day ahead stays; it predates
+  both decisions (§2.1 of the protocol).
+- **What this means for a wrong clock.** A device whose clock is wrong stamps wrongly,
+  and every device sorts those stamps the same. An answer from a clock an hour behind
+  sits above its question on both sides alike. Nothing on another device can know the
+  clock was wrong.
+
+**Verified.** `tests/timeline.test.ts` acts out both zones in one process, since Node
+re-reads `TZ` when it is assigned:
+
+- A device in Los Angeles and one in Tehran take turns across Tehran's half-hour and its
+  midnight. Both sides show the same order, with stamps equal to the UTC send times.
+- The same holds when one side catches up later, in the relay's order.
+- A device that moves between the zones pages its history exactly.
+- The index bucket is the UTC hour in every zone.
+
+Two faults were planted to check the tests: buckets made by the local hour, and stamps
+shifted by the zone offset. Both failed them.
+
+**Cost.** Code removed, none added. The precache fell with it.
+
+**Revisit if** people with wrong clocks keep seeing answers above questions. The one fix
+that works without a trusted clock is an uncapped causal stamp, `max(now, newest + 1)`,
+which is how Briar orders a conversation. It is a deliberate adjustment of the stamp, and
+it would be decided as one.
+
+**Update.** Real devices did keep showing it, and ADR-063 made the decision. The causal key
+is a separate time from the stamp, which is still shown as given.
+
+---
+
+## ADR-063 — A conversation is ordered by a causal clock, and shown by its authors' clocks · **found on real devices**
+
+**Problem.** Windows and macOS machines in different time zones showed the timeline
+inverted: answers above questions, and the two sides interleaved wrongly.
+
+- **Real clocks are wrong in ordinary ways.** They drift between synchronisations.
+  Windows keeps the hardware clock in local time and macOS in UTC, so a machine booting
+  both is off by its zone's offset. Stale zone data puts a clock an hour out, and people
+  correct the hour by hand.
+- **ADR-062 ordered by each author's stamp as given.** That is deterministic, and right
+  only while clocks agree. An answer from a clock an hour behind sorted above its
+  question, on every device alike.
+
+**Options weighed.**
+
+| Model                        | Causal? | Stays near real time? | Carried per message  | Verdict                   |
+| ---------------------------- | ------- | --------------------- | -------------------- | ------------------------- |
+| The author's stamp (ADR-062) | No      | Yes                   | Nothing new          | Replaced                  |
+| The stamp, bumped (ADR-061)  | Capped  | Yes                   | Nothing new          | Mixed up shown and sorted |
+| Lamport clock                | Yes     | No                    | One counter          | Loses time                |
+| Vector clock                 | Exactly | No                    | One entry per member | Still needs a tie-break   |
+| Hybrid logical clock (HLC)   | Yes     | Within the skew       | One number           | Chosen                    |
+
+A Lamport clock orders two messages nobody had seen by counter, which can be far from when
+they were said. A vector clock gives only a partial order, which a timeline must still
+break by something. It also grows with every member, and travels with every message.
+
+**Decision — two times, one of them for sorting.**
+
+- **`ts` is shown, never adjusted.** It is when the author sent it, by the author's
+  clock, in UTC epoch milliseconds, displayed in the reader's time zone.
+- **`order` is sorted by.** It is a hybrid logical clock with the logical counter folded
+  into the millisecond, so the key one past a mark is `mark + 1`.
+- **One clock per conversation, not per device.** Each conversation keeps a sealed
+  high-water mark, `clock`. A conversation from before keys existed starts at its newest
+  entry, `lastActivity`. A skewed peer therefore moves only the conversations it is in,
+  and no conversation's keys carry anything from another.
+- **Sending** keys a message `max(now, clock + 1)`. The key is taken and stored in one
+  transaction, so two sends never share one.
+- **Every entry stored moves the clock past its key**: sent, received, a call, or
+  restored from a backup.
+
+**Decision — carried, checked and used.**
+
+- **Carried.** The key travels in an `hlc` tag in chat messages (kind 14), forward-secret
+  messages (kind 9) and opening call offers. Both sides enter a call at its offer's key.
+  A retry rebuilds the tag, and a message from before keys existed is rebuilt without it,
+  so every id is unchanged.
+- **Checked.** A received key is taken if it is at least the rumor's own stamp and at
+  most a day ahead of this clock. That is the bound the unwrap already enforced, now one
+  constant, `MAX_CLOCK_AHEAD_MS`. Otherwise the entry sorts by its stamp, as does a
+  rumor from another client.
+- **Used for everything that means "after".** The index buckets each entry by the hour
+  of its key, so paging and retention read keys. A read receipt covers what sorts before
+  the message it names, and unread counts compare keys.
+- **The screen.** Times are shown as their authors' clocks gave them. Down a
+  conversation whose clocks disagree they need not rise, so a day separator is announced
+  only when the day moves forward, and a run's pause is measured either way.
+- **Removed.** The calls subsystem clamped a missed call's time to now. That clamp is
+  gone: the time shown is the offer's own.
+
+**The guarantee.** If B's author had received A before sending B, B's key is greater than
+A's, and every device sorts them that way. That holds however far apart the two clocks
+are, provided neither is more than a day ahead of the device reading them. Two messages
+neither author had seen sort by their keys, which are near their authors' clocks, and
+every device agrees on that order too.
+
+**Limits, said plainly.**
+
+- _"Seen" means arrived on the author's device._ A message can sort after one its author
+  never looked at.
+- _A clock more than a day ahead is still refused._ That is the bound the unwrap enforced
+  before this decision, and a clock that far out is not drift.
+- _A contact can choose a key up to a day ahead._ Such a message sits at the bottom only
+  until someone answers it.
+
+**Verified.** `tests/timeline.test.ts` covers:
+
+- a reply from an hour behind;
+- a question from an hour ahead;
+- a group chain across clocks an hour apart each way;
+- two messages neither author had seen;
+- catching up in the relay's order;
+- a rumor with no key, and one with a forged key;
+- a call between skewed clocks;
+- the time-zone cases of ADR-062.
+
+`mlsMessenger.test.ts` covers the same for forward-secret groups, and a retried message
+from before keys existed. Four faults were planted, and each broke these tests:
+
+- sending ignoring the clock;
+- receiving ignoring the key;
+- calls ignoring their offer's key;
+- forward-secret ingest ignoring it.
+
+**Cost.** The precache went from 792.9 to 794.2 KiB, of 800. `timeline.ts`, `mls/**`,
+`exportImport.ts`, `vault.ts` and `keyslots.ts` stay at 100% coverage.
+
+**Revisit if** reactions or votes, which are not timeline entries and still resolve by
+their own stamps, ever need causal order too.
