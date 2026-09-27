@@ -12,10 +12,10 @@
  *   HMAC-SHA256 MAC for authenticated encryption.
  */
 
-import { secp256k1 } from "@noble/curves/secp256k1";
-import { xchacha20 } from "@noble/ciphers/chacha";
-import { hmac } from "@noble/hashes/hmac";
-import { sha256 } from "@noble/hashes/sha256";
+import { secp256k1 } from '@noble/curves/secp256k1';
+import { xchacha20 } from '@noble/ciphers/chacha';
+import { hmac } from '@noble/hashes/hmac';
+import { sha256 } from '@noble/hashes/sha256';
 
 // NIP-44 v2 constants
 const VERSION = 0x02;
@@ -55,7 +55,7 @@ function pad(plaintext: string): Uint8Array {
 
 /** Unpad a padded plaintext buffer back to a string. */
 function unpad(data: Uint8Array): string {
-  if (data[0] !== PAD_PREFIX) throw new Error("nip44: invalid padding prefix");
+  if (data[0] !== PAD_PREFIX) throw new Error('nip44: invalid padding prefix');
   const len = (data[1] << 8) | data[2];
   return new TextDecoder().decode(data.slice(3, 3 + len));
 }
@@ -69,10 +69,7 @@ function unpad(data: Uint8Array): string {
  * @param publicKey  - Recipient's 32-byte compressed (or raw) public key.
  * @returns 32-byte shared secret.
  */
-export function getSharedSecret(
-  privateKey: Uint8Array,
-  publicKey: Uint8Array,
-): Uint8Array {
+export function getSharedSecret(privateKey: Uint8Array, publicKey: Uint8Array): Uint8Array {
   // secp256k1.getSharedSecret returns 65 bytes (04 || x || y);
   // we return only the x-coordinate as the 32-byte shared secret.
   const full = secp256k1.getSharedSecret(privateKey, publicKey);
@@ -102,10 +99,7 @@ export function getConversationKey(sharedSecret: Uint8Array): Uint8Array {
  * @param conversationKey - 32-byte conversation key.
  * @returns Base64-encoded sealed message.
  */
-export function encrypt(
-  plaintext: string,
-  conversationKey: Uint8Array,
-): string {
+export function encrypt(plaintext: string, conversationKey: Uint8Array): string {
   const nonce = new Uint8Array(24);
   crypto.getRandomValues(nonce);
 
@@ -138,10 +132,7 @@ export function encrypt(
  * @returns Decrypted UTF-8 string.
  * @throws Error on version mismatch, MAC failure, or invalid padding.
  */
-export function decrypt(
-  ciphertext: string,
-  conversationKey: Uint8Array,
-): string {
+export function decrypt(ciphertext: string, conversationKey: Uint8Array): string {
   const sealed = base64Decode(ciphertext);
 
   if (sealed[0] !== VERSION) {
@@ -160,7 +151,7 @@ export function decrypt(
   const expectedMac = hmac(sha256, conversationKey, macInput);
 
   if (!constantTimeEqual(mac, expectedMac)) {
-    throw new Error("nip44: MAC verification failed");
+    throw new Error('nip44: MAC verification failed');
   }
 
   const padded = xchacha20(conversationKey, nonce, ct);
@@ -180,7 +171,7 @@ function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
 }
 
 function base64Encode(data: Uint8Array): string {
-  let binary = "";
+  let binary = '';
   for (let i = 0; i < data.length; i++) binary += String.fromCharCode(data[i]);
   return btoa(binary);
 }

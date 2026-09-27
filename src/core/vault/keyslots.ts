@@ -46,9 +46,10 @@ function unwrapKey(wrapped: Uint8Array, wrappingKey: Uint8Array): Uint8Array {
  * Compute an unlock verifier for the master key.
  * Encrypts a known constant with AES-256-GCM; successful decryption proves key correctness.
  */
-function computeVerifier(
-  masterKey: Uint8Array,
-): { verifier: Uint8Array; verifierNonce: Uint8Array } {
+function computeVerifier(masterKey: Uint8Array): {
+  verifier: Uint8Array;
+  verifierNonce: Uint8Array;
+} {
   const nonce = crypto.getRandomValues(new Uint8Array(NONCE_LEN));
   const verifier = gcm(masterKey, nonce).encrypt(VERIFY_CONSTANT);
   return { verifier, verifierNonce: nonce };
@@ -163,11 +164,7 @@ export class KeySlotManager {
    * @returns The 32-byte master key on success.
    * @throws If the keyslot doesn't exist or the credential is wrong.
    */
-  static async unlockSlot(
-    db: VaultDB,
-    slotId: number,
-    credential: string,
-  ): Promise<Uint8Array> {
+  static async unlockSlot(db: VaultDB, slotId: number, credential: string): Promise<Uint8Array> {
     const slot = await db.keyslots.get(slotId);
     if (!slot) throw new Error(`Keyslot ${slotId} not found`);
 
@@ -232,7 +229,7 @@ export class KeySlotManager {
     const newParams = { ...DEFAULT_SCRYPT_PARAMS };
     const newWrappingKey = deriveFromCredential(newCredential, newSalt, newParams);
     const newWrappedKey = wrapKey(masterKey, newWrappingKey);
-    const { verifier: newVerifier, nonce: newVerifierNonce } = computeVerifier(masterKey);
+    const { verifier: newVerifier, verifierNonce: newVerifierNonce } = computeVerifier(masterKey);
 
     await db.keyslots.update(slotId, {
       salt: newSalt,

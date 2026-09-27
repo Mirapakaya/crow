@@ -129,8 +129,8 @@ describe('KeySlotManager', () => {
   }, 60_000);
 
   it('changeSlotCredential on non-existent slot throws', async () => {
-    await expect(
-      KeySlotManager.changeSlotCredential(db, 99, 'old', 'new'),
-    ).rejects.toThrow(/Keyslot 99 not found/);
+    await expect(KeySlotManager.changeSlotCredential(db, 99, 'old', 'new')).rejects.toThrow(
+      /Keyslot 99 not found/,
+    );
   });
 });

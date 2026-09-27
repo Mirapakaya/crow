@@ -53,7 +53,10 @@ export class RelaySocket {
    * Resolves when the connection is established, rejects on timeout.
    */
   public connect(): Promise<void> {
-    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+    if (
+      this.ws &&
+      (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)
+    ) {
       return Promise.resolve();
     }
 
@@ -184,7 +187,12 @@ export class RelaySocket {
     if (type === 'EVENT' && msg.length >= 3) {
       const event = msg[2] as RelayEvent;
       // Basic shape validation
-      if (event && typeof event.kind === 'number' && typeof event.pubkey === 'string' && typeof event.id === 'string') {
+      if (
+        event &&
+        typeof event.kind === 'number' &&
+        typeof event.pubkey === 'string' &&
+        typeof event.id === 'string'
+      ) {
         this.onEvent?.(event);
       }
     } else if (type === 'OK') {
@@ -234,7 +242,11 @@ export class RelaySocket {
 
   private cleanupConnection(): void {
     if (this.ws) {
-      try { this.ws.close(); } catch { /* ignore */ }
+      try {
+        this.ws.close();
+      } catch {
+        /* ignore */
+      }
       this.ws = null;
     }
   }

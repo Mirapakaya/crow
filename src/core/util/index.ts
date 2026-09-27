@@ -17,14 +17,7 @@ export {
   randomHex,
 } from './bytes';
 
-export {
-  nowMs,
-  nowSec,
-  formatTimestamp,
-  isExpired,
-  timeAgo,
-  clampToUnixSeconds,
-} from './time';
+export { nowMs, nowSec, formatTimestamp, isExpired, timeAgo, clampToUnixSeconds } from './time';
 
 export { EventEmitter } from './emitter';
 

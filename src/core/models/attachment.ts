@@ -11,12 +11,12 @@ export interface AttachmentRef {
   width?: number;
   height?: number;
   durationMs?: number;
-  thumbnail?: Uint8Array;    // Encrypted thumbnail
+  thumbnail?: Uint8Array; // Encrypted thumbnail
 }
 
 export interface AttachmentChunk {
   index: number;
-  eventId?: string;          // Relay event ID after upload
+  eventId?: string; // Relay event ID after upload
   size: number;
-  hash: string;              // SHA-256 integrity check
+  hash: string; // SHA-256 integrity check
 }

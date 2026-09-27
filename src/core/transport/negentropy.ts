@@ -41,7 +41,7 @@ export class NegentropySync {
       for (const pos of positions) {
         const byteIdx = Math.floor(pos / 8);
         const bitIdx = pos % 8;
-        filter[byteIdx] |= (1 << bitIdx);
+        filter[byteIdx] |= 1 << bitIdx;
       }
     }
 

@@ -211,9 +211,21 @@
   object-fit: cover;
 }
 
-.avatar-sm { width: 32px; height: 32px; font-size: var(--text-xs); }
-.avatar-lg { width: 56px; height: 56px; font-size: var(--text-lg); }
-.avatar-xl { width: 80px; height: 80px; font-size: var(--text-2xl); }
+.avatar-sm {
+  width: 32px;
+  height: 32px;
+  font-size: var(--text-xs);
+}
+.avatar-lg {
+  width: 56px;
+  height: 56px;
+  font-size: var(--text-lg);
+}
+.avatar-xl {
+  width: 80px;
+  height: 80px;
+  font-size: var(--text-2xl);
+}
 
 /* ─── Buttons ─── */
 .btn {
@@ -447,10 +459,22 @@
   gap: var(--space-1);
 }
 
-.badge-success { background-color: var(--success-subtle); color: var(--success); }
-.badge-warning { background-color: var(--warning-subtle); color: var(--warning); }
-.badge-error { background-color: var(--error-subtle); color: var(--error); }
-.badge-info { background-color: var(--info-subtle); color: var(--info); }
+.badge-success {
+  background-color: var(--success-subtle);
+  color: var(--success);
+}
+.badge-warning {
+  background-color: var(--warning-subtle);
+  color: var(--warning);
+}
+.badge-error {
+  background-color: var(--error-subtle);
+  color: var(--error);
+}
+.badge-info {
+  background-color: var(--info-subtle);
+  color: var(--info);
+}
 
 /* ─── Connection Status ─── */
 .connection-indicator {
@@ -468,9 +492,15 @@
   background-color: var(--text-tertiary);
 }
 
-.connection-dot.connected { background-color: var(--success); }
-.connection-dot.connecting { background-color: var(--warning); }
-.connection-dot.offline { background-color: var(--error); }
+.connection-dot.connected {
+  background-color: var(--success);
+}
+.connection-dot.connecting {
+  background-color: var(--warning);
+}
+.connection-dot.offline {
+  background-color: var(--error);
+}
 
 /* ─── Settings ─── */
 .settings-section {
@@ -573,7 +603,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-screen {

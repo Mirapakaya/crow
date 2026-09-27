@@ -52,7 +52,11 @@ export default function RelaySettings() {
               placeholder="wss://relay.example.com"
               aria-label="New relay URL"
             />
-            <button className="btn btn-primary" onClick={handleAdd} disabled={!newRelayUrl.startsWith('wss://')}>
+            <button
+              className="btn btn-primary"
+              onClick={handleAdd}
+              disabled={!newRelayUrl.startsWith('wss://')}
+            >
               Add
             </button>
           </div>
@@ -61,19 +65,47 @@ export default function RelaySettings() {
         <div className="settings-section">
           <h2 className="settings-section-title">Active Relays ({relays.length})</h2>
           {relays.map((relay) => (
-            <div key={relay.url} className="settings-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 'var(--space-2)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div
+              key={relay.url}
+              className="settings-item"
+              style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 'var(--space-2)' }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                   <span className={`connection-dot ${relay.state}`} />
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--text-primary)' }}>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 'var(--text-sm)',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
                     {relay.url}
                   </span>
                 </div>
-                <button className="btn btn-ghost btn-sm" onClick={() => handleRemove(relay.url)} aria-label={`Remove ${relay.url}`}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => handleRemove(relay.url)}
+                  aria-label={`Remove ${relay.url}`}
+                >
                   ✕
                 </button>
               </div>
-              <div style={{ display: 'flex', gap: 'var(--space-4)', fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 'var(--space-4)',
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--text-tertiary)',
+                }}
+              >
                 <span>Score: {relay.score}/100</span>
                 <span>Latency: {relay.latency > 0 ? `${relay.latency}ms` : '—'}</span>
                 <span>{relay.state}</span>

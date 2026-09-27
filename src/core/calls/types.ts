@@ -7,13 +7,7 @@
 
 /** Possible states a call can be in during its lifecycle. */
 export type CallState =
-  | 'idle'
-  | 'ringing'
-  | 'connecting'
-  | 'connected'
-  | 'reconnecting'
-  | 'ended'
-  | 'missed';
+  'idle' | 'ringing' | 'connecting' | 'connected' | 'reconnecting' | 'ended' | 'missed';
 
 /** Whether the call carries voice only or voice + video. */
 export type CallKind = 'voice' | 'video';

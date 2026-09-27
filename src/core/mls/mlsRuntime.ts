@@ -38,10 +38,7 @@ export class MLSRuntime {
    * @returns The initial group state (epoch 0).
    * @throws MLS_NOT_IMPLEMENTED until a concrete backend is wired in.
    */
-  async createGroup(
-    _creatorPubKey: string,
-    _creatorDeviceId: string,
-  ): Promise<MLSGroupState> {
+  async createGroup(_creatorPubKey: string, _creatorDeviceId: string): Promise<MLSGroupState> {
     throw new Error(MLS_NOT_IMPLEMENTED);
   }
 

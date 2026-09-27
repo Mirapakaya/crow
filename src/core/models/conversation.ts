@@ -3,7 +3,7 @@ export type ConversationType = 'direct' | 'group';
 export interface Conversation {
   id: string;
   type: ConversationType;
-  participants: string[];     // pubKeys
+  participants: string[]; // pubKeys
   displayName?: string;
   avatarUrl?: string;
   lastMessageAt: number;

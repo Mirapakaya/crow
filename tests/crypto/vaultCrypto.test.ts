@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  sealRecord,
-  unsealRecord,
-  deriveVaultKey,
-  generateSalt,
-} from '@crypto/vaultCrypto';
+import { sealRecord, unsealRecord, deriveVaultKey, generateSalt } from '@crypto/vaultCrypto';
 
 /** Compare two Uint8Arrays byte-by-byte. */
 function arraysEqual(a: Uint8Array, b: Uint8Array): boolean {

@@ -73,9 +73,7 @@ describe('ReplayGuard', () => {
   });
 
   it('multiple distinct pairs all tracked', () => {
-    const nonces = Array.from({ length: 10 }, () =>
-      crypto.getRandomValues(new Uint8Array(24)),
-    );
+    const nonces = Array.from({ length: 10 }, () => crypto.getRandomValues(new Uint8Array(24)));
 
     for (let i = 0; i < 10; i++) {
       guard.add(`msg-${i}`, nonces[i]!);

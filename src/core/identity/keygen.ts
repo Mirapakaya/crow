@@ -46,9 +46,10 @@ export function generatePrekeyPair(): NobleKeyPair {
  * @param identityPrivKey  32-byte identity private key.
  * @returns The prekey pair and a 64-byte DER-encoded signature.
  */
-export function generateSignedPrekey(
-  identityPrivKey: Uint8Array,
-): { keyPair: NobleKeyPair; signature: Uint8Array } {
+export function generateSignedPrekey(identityPrivKey: Uint8Array): {
+  keyPair: NobleKeyPair;
+  signature: Uint8Array;
+} {
   const keyPair = generatePrekeyPair();
   // Sign the prekey public key (hash first for domain separation)
   const msg = sha512(keyPair.publicKey);

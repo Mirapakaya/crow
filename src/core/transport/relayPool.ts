@@ -65,7 +65,7 @@ export class RelayPool {
       promises.push(
         socket.connect().catch(() => {
           // Individual relay failure is tolerated; the pool keeps running.
-        })
+        }),
       );
     }
     await Promise.allSettled(promises);

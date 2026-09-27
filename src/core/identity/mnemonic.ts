@@ -62,7 +62,9 @@ const WORDLIST: string[] = (
   'vital vivid vocal voice void volcano volume vote voyage wage wagon wait walk wall walnut want warfare warm warrior wash wasp waste water wave way wealth weapon wear weasel weather web wedding weekend weird welcome west wet whale what wheat ' +
   'wheel when where whip whisper wide width wife wild will win window wine wing wink winner winter wire wisdom wise wish witness wolf woman wonder wood wool word work world worry worth wrap wreck wrestle wrist write wrong yard year ' +
   'yellow you young youth zebra zero zone zoo '
-).split(' ').filter(w => w.length > 0);
+)
+  .split(' ')
+  .filter((w) => w.length > 0);
 
 // Build reverse lookup: word → index
 const WORD_MAP = new Map<string, number>();
@@ -157,10 +159,7 @@ export function generateMnemonic(wordCount: 12 | 24 = 12): string {
  * @param passphrase  Optional passphrase (appended to salt as per BIP-39).
  * @returns 64-byte seed.
  */
-export function mnemonicToSeed(
-  mnemonic: string,
-  passphrase?: string,
-): Uint8Array {
+export function mnemonicToSeed(mnemonic: string, passphrase?: string): Uint8Array {
   const encoder = new TextEncoder();
   const normalized = mnemonic.normalize('NFKD');
   const salt = ('mnemonic' + (passphrase ?? '')).normalize('NFKD');
@@ -184,7 +183,7 @@ export function seedToMnemonic(seed: Uint8Array): string {
   }
 
   const hash = sha256(seed);
-  const checksumBits = seed.length * 8 / 32;
+  const checksumBits = (seed.length * 8) / 32;
 
   const entropyBits = bytesToBits(seed);
   const hashBits = bytesToBits(hash);
@@ -228,7 +227,8 @@ export function validateMnemonic(mnemonic: string): boolean {
 
   // Reconstruct entropy + checksum bytes
   const bytes = indicesToBytes(indices);
-  const entropyByteCount = (words.length * 11 - words.length * 11 % 33) / 8;
+  const entropyBitCount = (words.length * 11 * 32) / 33; // 128 for 12-word, 256 for 24-word
+  const entropyByteCount = entropyBitCount / 8;
 
   const entropy = bytes.slice(0, entropyByteCount);
 

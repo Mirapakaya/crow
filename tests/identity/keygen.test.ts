@@ -37,11 +37,7 @@ describe('keygen', () => {
     expect(signature.length).toBeGreaterThanOrEqual(64);
     expect(signature.length).toBeLessThanOrEqual(72);
 
-    const isValid = verifySignedPrekey(
-      identity.publicKey,
-      keyPair.publicKey,
-      signature,
-    );
+    const isValid = verifySignedPrekey(identity.publicKey, keyPair.publicKey, signature);
     expect(isValid).toBe(true);
   });
 
@@ -53,11 +49,7 @@ describe('keygen', () => {
     const fakeSig = new Uint8Array(70);
     crypto.getRandomValues(fakeSig);
 
-    const isValid = verifySignedPrekey(
-      identity.publicKey,
-      keyPair.publicKey,
-      fakeSig,
-    );
+    const isValid = verifySignedPrekey(identity.publicKey, keyPair.publicKey, fakeSig);
     expect(isValid).toBe(false);
   });
 
@@ -67,11 +59,7 @@ describe('keygen', () => {
     const { keyPair, signature } = generateSignedPrekey(identity1.privateKey);
 
     // Signature was made by identity1; identity2's key should not verify it
-    const isValid = verifySignedPrekey(
-      identity2.publicKey,
-      keyPair.publicKey,
-      signature,
-    );
+    const isValid = verifySignedPrekey(identity2.publicKey, keyPair.publicKey, signature);
     expect(isValid).toBe(false);
   });
 

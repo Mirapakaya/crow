@@ -5,9 +5,9 @@
  * (via @noble/hashes/hkdf). No custom KDFs.
  */
 
-import { scrypt } from "@noble/hashes/scrypt";
-import { hkdf } from "@noble/hashes/hkdf";
-import { sha256 } from "@noble/hashes/sha256";
+import { scrypt } from '@noble/hashes/scrypt';
+import { hkdf } from '@noble/hashes/hkdf';
+import { sha256 } from '@noble/hashes/sha256';
 
 /** Parameters for scrypt key derivation. */
 export interface ScryptParams {
@@ -96,10 +96,7 @@ export function deriveSubKey(
  * @param salt - Random salt (≥16 bytes).
  * @returns 32-byte derived key.
  */
-export async function stretchPin(
-  pin: string,
-  salt: Uint8Array,
-): Promise<Uint8Array> {
+export async function stretchPin(pin: string, salt: Uint8Array): Promise<Uint8Array> {
   return deriveKey(pin, salt, PIN_SCRYPT_PARAMS);
 }
 

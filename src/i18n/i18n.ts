@@ -91,7 +91,7 @@ class I18n {
 
   getAvailableLocales(): LocaleEntry[] {
     return Array.from(this.metas.values()).sort((a, b) =>
-      a.englishName.localeCompare(b.englishName)
+      a.englishName.localeCompare(b.englishName),
     );
   }
 

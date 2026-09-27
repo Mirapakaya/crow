@@ -4,7 +4,11 @@
  */
 
 import { stripImageMetadata, generateThumbnail, isDangerousMimeType } from '@security/sanitization';
-import { isAllowedMimeType, isAllowedAttachmentSize, MAX_ATTACHMENT_SIZE } from '@security/validation';
+import {
+  isAllowedMimeType,
+  isAllowedAttachmentSize,
+  MAX_ATTACHMENT_SIZE,
+} from '@security/validation';
 
 export interface ProcessedImage {
   blob: Blob;

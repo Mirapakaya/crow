@@ -128,12 +128,9 @@ export class Vault {
       const slots = await KeySlotManager.listSlots(this._db);
       if (slots.length === 0) throw new Error('No keyslots found — vault not initialized');
 
-      const candidates = method
-        ? slots.filter((s) => s.method === method)
-        : slots;
+      const candidates = method ? slots.filter((s) => s.method === method) : slots;
 
-      if (candidates.length === 0)
-        throw new Error(`No keyslot with method "${method}"`);
+      if (candidates.length === 0) throw new Error(`No keyslot with method "${method}"`);
 
       let masterKey: Uint8Array | null = null;
       for (const slot of candidates) {

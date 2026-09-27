@@ -31,10 +31,7 @@ function base64urlEncode(data: Uint8Array): string {
   for (const byte of data) {
     binary += String.fromCharCode(byte);
   }
-  return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 /**
@@ -76,9 +73,7 @@ export function encodeInvite(payload: InvitePayload): string {
   const hasRelay = payload.relayHint != null;
   const flags = hasRelay ? 1 : 0;
 
-  const relayBytes = hasRelay
-    ? new TextEncoder().encode(payload.relayHint!)
-    : new Uint8Array(0);
+  const relayBytes = hasRelay ? new TextEncoder().encode(payload.relayHint!) : new Uint8Array(0);
 
   // Validate relay length fits in 1 byte
   if (relayBytes.length > 255) {
@@ -86,10 +81,10 @@ export function encodeInvite(payload: InvitePayload): string {
   }
 
   const buf = new Uint8Array(
-    1 +                           // flags
-    33 +                          // identityKey
-    (hasRelay ? 1 + relayBytes.length : 0) + // relay
-    8,                            // timestamp
+    1 + // flags
+      33 + // identityKey
+      (hasRelay ? 1 + relayBytes.length : 0) + // relay
+      8, // timestamp
   );
 
   let offset = 0;

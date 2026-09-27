@@ -26,14 +26,7 @@ const LEVEL_ORDER: Record<LogLevel, number> = {
 };
 
 /** Field names that are automatically redacted from log data. */
-const REDACT_KEYS = new Set([
-  'key',
-  'privateKey',
-  'secret',
-  'passphrase',
-  'token',
-  'mnemonic',
-]);
+const REDACT_KEYS = new Set(['key', 'privateKey', 'secret', 'passphrase', 'token', 'mnemonic']);
 
 /** Global log level shared by all Logger instances. */
 let globalLevel: LogLevel = 'info';

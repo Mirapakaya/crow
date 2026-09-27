@@ -6,7 +6,7 @@
  * time-based pruning to bound memory usage.
  */
 
-import { sha256 } from "@noble/hashes/sha256";
+import { sha256 } from '@noble/hashes/sha256';
 
 /** Maximum age (ms) for entries before they are eligible for pruning. */
 export const MAX_REPLAY_CACHE_AGE = 86_400_000; // 24 hours
@@ -92,9 +92,9 @@ export class ReplayGuard {
 
 /** Convert a Uint8Array to a lowercase hex string. */
 function bytesToHex(bytes: Uint8Array): string {
-  let hex = "";
+  let hex = '';
   for (let i = 0; i < bytes.length; i++) {
-    hex += bytes[i]!.toString(16).padStart(2, "0");
+    hex += bytes[i]!.toString(16).padStart(2, '0');
   }
   return hex;
 }

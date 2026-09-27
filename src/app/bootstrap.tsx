@@ -7,9 +7,12 @@ import '@styles/chat.css';
 
 // Initialize theme before first paint
 const theme = localStorage.getItem('crow-theme') || 'system';
-const resolved = theme === 'system'
-  ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-  : theme;
+const resolved =
+  theme === 'system'
+    ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light'
+    : theme;
 document.documentElement.setAttribute('data-theme', resolved);
 
 // Initialize RTL if needed
@@ -17,6 +20,15 @@ const locale = localStorage.getItem('crow-locale') || navigator.language.split('
 const rtlLocales = new Set(['ar', 'ur', 'fa', 'he']);
 if (rtlLocales.has(locale)) {
   document.documentElement.setAttribute('dir', 'rtl');
+}
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // SW registration failure is non-fatal
+    });
+  });
 }
 
 const root = createRoot(document.getElementById('root')!);

@@ -9,12 +9,7 @@ export {
   type NobleKeyPair,
 } from './keygen';
 
-export {
-  generateMnemonic,
-  mnemonicToSeed,
-  seedToMnemonic,
-  validateMnemonic,
-} from './mnemonic';
+export { generateMnemonic, mnemonicToSeed, seedToMnemonic, validateMnemonic } from './mnemonic';
 
 export {
   generateDeviceId,
@@ -24,9 +19,4 @@ export {
   type DeviceRecord,
 } from './device';
 
-export {
-  encodeInvite,
-  decodeInvite,
-  INVITE_EXPIRY,
-  type InvitePayload,
-} from './invite';
+export { encodeInvite, decodeInvite, INVITE_EXPIRY, type InvitePayload } from './invite';

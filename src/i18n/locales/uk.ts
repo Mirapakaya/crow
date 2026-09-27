@@ -155,7 +155,7 @@ export const uk: TranslationDict = {
     relays: 'Реле',
     addRelay: 'Додати реле',
     removeRelay: 'Видалити реле',
-    testConnection: 'Перевірити з\'єднання',
+    testConnection: "Перевірити з'єднання",
     connected: 'Підключено',
     disconnected: 'Відключено',
     latency: 'Затримка',

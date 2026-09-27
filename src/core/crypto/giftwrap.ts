@@ -10,11 +10,11 @@
  * secp256k1 from @noble/curves for ECDH.
  */
 
-import { secp256k1 } from "@noble/curves/secp256k1";
-import { xchacha20poly1305 } from "@noble/ciphers/chacha";
-import { sha256 } from "@noble/hashes/sha256";
-import type { SealedMessage } from "./types";
-import { randomBytes } from "./kdf";
+import { secp256k1 } from '@noble/curves/secp256k1';
+import { xchacha20poly1305 } from '@noble/ciphers/chacha';
+import { sha256 } from '@noble/hashes/sha256';
+import type { SealedMessage } from './types';
+import { randomBytes } from './kdf';
 
 /**
  * Encrypt and gift-wrap a message for a recipient.
@@ -82,7 +82,7 @@ export function unGiftWrap(
   recipientPrivKey: Uint8Array,
 ): { plaintext: Uint8Array; senderPubKey: Uint8Array } {
   if (!sealed.senderPubKey) {
-    throw new Error("giftwrap: missing ephemeral senderPubKey in sealed message");
+    throw new Error('giftwrap: missing ephemeral senderPubKey in sealed message');
   }
 
   // 1. ECDH shared secret

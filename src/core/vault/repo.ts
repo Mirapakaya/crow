@@ -39,11 +39,7 @@ function encrypt(
  * AES-256-GCM decrypt.
  * @throws On authentication failure (wrong key / corrupted data).
  */
-function decrypt(
-  ciphertext: Uint8Array,
-  nonce: Uint8Array,
-  tableKey: Uint8Array,
-): Uint8Array {
+function decrypt(ciphertext: Uint8Array, nonce: Uint8Array, tableKey: Uint8Array): Uint8Array {
   return gcm(tableKey, nonce).decrypt(ciphertext);
 }
 
@@ -90,10 +86,7 @@ export class VaultRepo<T> {
    * Get a record row by its blind index, scoped to this table.
    */
   private async getByIndex(idx: string): Promise<EncryptedRecord | undefined> {
-    return this.vault.db.records
-      .where('[table+id]')
-      .equals([this.table, idx])
-      .first();
+    return this.vault.db.records.where('[table+id]').equals([this.table, idx]).first();
   }
 
   // ── Public API ─────────────────────────────────────────────────────────
@@ -148,10 +141,7 @@ export class VaultRepo<T> {
   async delete(id: string): Promise<void> {
     const tableKey = this.getTableKey();
     const idx = blindIndex(id, tableKey);
-    await this.vault.db.records
-      .where('[table+id]')
-      .equals([this.table, idx])
-      .delete();
+    await this.vault.db.records.where('[table+id]').equals([this.table, idx]).delete();
   }
 
   /**
@@ -161,10 +151,7 @@ export class VaultRepo<T> {
    */
   async list(): Promise<T[]> {
     const tableKey = this.getTableKey();
-    const records = await this.vault.db.records
-      .where('table')
-      .equals(this.table)
-      .toArray();
+    const records = await this.vault.db.records.where('table').equals(this.table).toArray();
     return records.map((r) => {
       const plaintext = decrypt(r.ciphertext, r.nonce, tableKey);
       return this.deserialize(plaintext);
@@ -185,10 +172,7 @@ export class VaultRepo<T> {
    * Count the number of encrypted records in this table.
    */
   async count(): Promise<number> {
-    return this.vault.db.records
-      .where('table')
-      .equals(this.table)
-      .count();
+    return this.vault.db.records.where('table').equals(this.table).count();
   }
 
   /**

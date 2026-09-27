@@ -9,8 +9,8 @@
  * Each chunk gets a unique random nonce. The key must be 32 bytes.
  */
 
-import { xchacha20poly1305 } from "@noble/ciphers/chacha";
-import { randomBytes } from "./kdf";
+import { xchacha20poly1305 } from '@noble/ciphers/chacha';
+import { randomBytes } from './kdf';
 
 /** Size of each plaintext chunk before encryption (64 KB). */
 export const CHUNK_SIZE = 65536;

@@ -25,7 +25,8 @@ export class DirectConnectionManager {
   private readonly pendingCandidates = new Map<string, RTCIceCandidateInit[]>();
 
   /** Callback when a peer's connection state changes. */
-  public onConnectionStateChange: ((pubKey: string, state: RTCPeerConnectionState) => void) | null = null;
+  public onConnectionStateChange: ((pubKey: string, state: RTCPeerConnectionState) => void) | null =
+    null;
 
   constructor(config?: DirectManagerConfig) {
     this.iceServers = config?.iceServers ?? DEFAULT_ICE_SERVERS;
@@ -57,7 +58,10 @@ export class DirectConnectionManager {
    * Handle a WebRTC answer received from a peer.
    * Completes the offer/answer exchange.
    */
-  public async handleAnswer(targetPubKey: string, answer: RTCSessionDescriptionInit): Promise<void> {
+  public async handleAnswer(
+    targetPubKey: string,
+    answer: RTCSessionDescriptionInit,
+  ): Promise<void> {
     const pc = this.connections.get(targetPubKey);
     if (!pc) {
       throw new Error(`No pending connection for peer: ${targetPubKey.slice(0, 12)}…`);
@@ -77,7 +81,10 @@ export class DirectConnectionManager {
   /**
    * Handle an ICE candidate received from a peer via the signaling channel.
    */
-  public async handleIceCandidate(targetPubKey: string, candidate: RTCIceCandidateInit): Promise<void> {
+  public async handleIceCandidate(
+    targetPubKey: string,
+    candidate: RTCIceCandidateInit,
+  ): Promise<void> {
     const pc = this.connections.get(targetPubKey);
     if (!pc || !pc.remoteDescription) {
       // Buffer until the remote description is set

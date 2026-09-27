@@ -12,5 +12,5 @@ export interface GroupMember {
   pubKey: string;
   role: MemberRole;
   joinedAt: number;
-  devices: string[];         // device IDs
+  devices: string[]; // device IDs
 }

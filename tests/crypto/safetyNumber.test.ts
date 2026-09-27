@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  computeSafetyNumber,
-  computeSafetyNumberFingerprint,
-} from '@crypto/safetyNumber';
+import { computeSafetyNumber, computeSafetyNumberFingerprint } from '@crypto/safetyNumber';
 
 describe('safetyNumber', () => {
   const pubKeyA = crypto.getRandomValues(new Uint8Array(32));

@@ -5,19 +5,24 @@ const Onboarding = lazy(() => import('@ui/screens/Onboarding'));
 const LockScreen = lazy(() => import('@ui/screens/LockScreen'));
 const ChatList = lazy(() => import('@ui/screens/ChatList'));
 const ChatView = lazy(() => import('@ui/screens/ChatView'));
-// Lazy-loaded screens — wired up when routing is fully connected
-// @ts-expect-error Used when settings routes are wired in
 const Settings = lazy(() => import('@ui/screens/Settings'));
-// @ts-expect-error Used when settings routes are wired in
 const SecuritySettings = lazy(() => import('@ui/screens/SecuritySettings'));
-// @ts-expect-error Used when settings routes are wired in
 const RelaySettings = lazy(() => import('@ui/screens/RelaySettings'));
+const AddContact = lazy(() => import('@ui/screens/AddContact'));
+const Contacts = lazy(() => import('@ui/screens/Contacts'));
+const GroupCreate = lazy(() => import('@ui/screens/GroupCreate'));
+const BackupRestore = lazy(() => import('@ui/screens/BackupRestore'));
+const DeviceManagement = lazy(() => import('@ui/screens/DeviceManagement'));
+const CallScreen = lazy(() => import('@ui/screens/CallScreen'));
+const About = lazy(() => import('@ui/screens/About'));
 
 export function Router() {
   const vaultState = useAppStore((s) => s.vaultState);
   const hasIdentity = useAppStore((s) => s.hasIdentity);
-  const activeConversationId = useAppStore((s) => s.activeConversationId);
+  const route = useAppStore((s) => s.route);
+  const routeParams = useAppStore((s) => s.routeParams);
 
+  // Before identity exists → Onboarding
   if (!hasIdentity) {
     return (
       <Suspense fallback={<LoadingScreen />}>
@@ -26,6 +31,7 @@ export function Router() {
     );
   }
 
+  // Vault locked → LockScreen
   if (vaultState !== 'unlocked') {
     return (
       <Suspense fallback={<LoadingScreen />}>
@@ -34,18 +40,55 @@ export function Router() {
     );
   }
 
+  // Unlocked → route-based rendering
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <ChatRouter activeConversationId={activeConversationId} />
+      <RouteSwitch route={route} routeParams={routeParams} />
     </Suspense>
   );
 }
 
-function ChatRouter({ activeConversationId }: { activeConversationId: string | null }) {
-  if (!activeConversationId) {
-    return <ChatList />;
+function RouteSwitch({
+  route,
+  routeParams,
+}: {
+  route: string;
+  routeParams: Record<string, string>;
+}) {
+  switch (route) {
+    case '/settings':
+      return <Settings />;
+    case '/securitySettings':
+      return <SecuritySettings />;
+    case '/relaySettings':
+      return <RelaySettings />;
+    case '/addContact':
+      return <AddContact />;
+    case '/contacts':
+      return <Contacts />;
+    case '/groupCreate':
+      return <GroupCreate />;
+    case '/backupRestore':
+      return <BackupRestore />;
+    case '/deviceManagement':
+      return <DeviceManagement />;
+    case '/callScreen':
+      return (
+        <CallScreen
+          callState="ringing"
+          kind="incoming"
+          peerName={routeParams.peerName ?? ''}
+          onEnd={() => {}}
+        />
+      );
+    case '/about':
+      return <About />;
+    case '/chatView':
+      return <ChatView conversationId={routeParams.id ?? ''} />;
+    case '/':
+    default:
+      return <ChatList />;
   }
-  return <ChatView conversationId={activeConversationId} />;
 }
 
 function LoadingScreen() {

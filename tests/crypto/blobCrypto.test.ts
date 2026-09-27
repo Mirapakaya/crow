@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  encryptBlob,
-  decryptBlob,
-  generateBlobKey,
-  CHUNK_SIZE,
-} from '@crypto/blobCrypto';
+import { encryptBlob, decryptBlob, generateBlobKey, CHUNK_SIZE } from '@crypto/blobCrypto';
 
 /** Collect all chunks from an async generator into a single Uint8Array. */
 async function collect(gen: AsyncGenerator<Uint8Array>): Promise<Uint8Array> {

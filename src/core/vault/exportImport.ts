@@ -35,10 +35,7 @@ function backupHmacKey(masterKey: Uint8Array): Uint8Array {
  * Keys are sorted and binary fields have already been converted to number
  * arrays during export, so standard JSON.stringify is sufficient.
  */
-function computeBackupHmac(
-  data: Omit<BackupData, 'hmac'>,
-  key: Uint8Array,
-): string {
+function computeBackupHmac(data: Omit<BackupData, 'hmac'>, key: Uint8Array): string {
   const canonical = JSON.stringify({
     version: data.version,
     timestamp: data.timestamp,

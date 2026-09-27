@@ -1,11 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { secp256k1 } from '@noble/curves/secp256k1';
-import {
-  getSharedSecret,
-  getConversationKey,
-  encrypt,
-  decrypt,
-} from '@crypto/nip44';
+import { getSharedSecret, getConversationKey, encrypt, decrypt } from '@crypto/nip44';
 
 /** Generate a random secp256k1 key pair for tests. */
 function randomKeyPair() {

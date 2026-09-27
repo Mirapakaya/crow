@@ -6,9 +6,9 @@
  * derivation from passphrases using scrypt (via @noble/hashes).
  */
 
-import { xchacha20poly1305 } from "@noble/ciphers/chacha";
-import { scrypt } from "@noble/hashes/scrypt";
-import { randomBytes } from "./kdf";
+import { xchacha20poly1305 } from '@noble/ciphers/chacha';
+import { scrypt } from '@noble/hashes/scrypt';
+import { randomBytes } from './kdf';
 
 /** scrypt parameters used for vault key derivation. */
 const VAULT_SCRYPT_PARAMS = {
@@ -62,10 +62,7 @@ export function unsealRecord(
  * @param salt       - Random salt (use `generateSalt()` to create one).
  * @returns 32-byte derived key.
  */
-export async function deriveVaultKey(
-  passphrase: string,
-  salt: Uint8Array,
-): Promise<Uint8Array> {
+export async function deriveVaultKey(passphrase: string, salt: Uint8Array): Promise<Uint8Array> {
   // Yield to event loop because scrypt is CPU-heavy.
   return new Promise<Uint8Array>((resolve) => {
     setTimeout(() => {

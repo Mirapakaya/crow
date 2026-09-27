@@ -23,10 +23,18 @@ export interface GroupStore {
 /** In-memory fallback store (used when no persistence layer is provided). */
 class MemoryGroupStore implements GroupStore {
   private map = new Map<string, MLSGroupState>();
-  get(id: string) { return this.map.get(id); }
-  put(id: string, s: MLSGroupState) { this.map.set(id, s); }
-  delete(id: string) { this.map.delete(id); }
-  list() { return Array.from(this.map.values()); }
+  get(id: string) {
+    return this.map.get(id);
+  }
+  put(id: string, s: MLSGroupState) {
+    this.map.set(id, s);
+  }
+  delete(id: string) {
+    this.map.delete(id);
+  }
+  list() {
+    return Array.from(this.map.values());
+  }
 }
 
 /**
@@ -42,12 +50,7 @@ export class GroupManager {
   private ownPubKey: string;
   private ownDeviceId: string;
 
-  constructor(
-    ownPubKey: string,
-    ownDeviceId: string,
-    runtime?: MLSRuntime,
-    store?: GroupStore,
-  ) {
+  constructor(ownPubKey: string, ownDeviceId: string, runtime?: MLSRuntime, store?: GroupStore) {
     this.ownPubKey = ownPubKey;
     this.ownDeviceId = ownDeviceId;
     this.runtime = runtime ?? new MLSRuntime();

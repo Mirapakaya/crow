@@ -93,11 +93,7 @@ export class CallManager {
    *
    * The UI should then call {@link answerCall} or {@link rejectCall}.
    */
-  handleIncomingCall(
-    from: string,
-    offer: RTCSessionDescriptionInit,
-    kind: CallKind,
-  ): CallSession {
+  handleIncomingCall(from: string, offer: RTCSessionDescriptionInit, kind: CallKind): CallSession {
     if (this.active) {
       // Auto-reject if already on a call.
       this.signaller.sendHangup(from).catch(() => {});

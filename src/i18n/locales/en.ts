@@ -30,7 +30,7 @@ export const en: TranslationDict = {
     restoreFromBackup: 'Restore from backup',
     enterMnemonic: 'Enter your recovery phrase',
     generatingKeys: 'Generating your encryption keys…',
-    ready: 'You\'re all set!',
+    ready: "You're all set!",
   },
   lock: {
     enterPassphrase: 'Enter passphrase',

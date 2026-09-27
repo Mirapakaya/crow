@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  deriveKey,
-  deriveSubKey,
-  randomBytes,
-  DEFAULT_SCRYPT_PARAMS,
-} from '@crypto/kdf';
+import { deriveKey, deriveSubKey, randomBytes, DEFAULT_SCRYPT_PARAMS } from '@crypto/kdf';
 
 /** Byte-by-byte comparison. */
 function arraysEqual(a: Uint8Array, b: Uint8Array): boolean {

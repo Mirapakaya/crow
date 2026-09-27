@@ -7,7 +7,7 @@
  * byte group is encoded as 5-digit decimal groups.
  */
 
-import { sha256 } from "@noble/hashes/sha256";
+import { sha256 } from '@noble/hashes/sha256';
 
 /**
  * Compute the raw 32-byte safety number fingerprint.
@@ -25,9 +25,10 @@ export function computeSafetyNumberFingerprint(
   remotePubKey: Uint8Array,
 ): Uint8Array {
   // Sort keys so the fingerprint is the same regardless of who computes it.
-  const [first, second] = compareBytes(localPubKey, remotePubKey) <= 0
-    ? [localPubKey, remotePubKey]
-    : [remotePubKey, localPubKey];
+  const [first, second] =
+    compareBytes(localPubKey, remotePubKey) <= 0
+      ? [localPubKey, remotePubKey]
+      : [remotePubKey, localPubKey];
 
   const combined = new Uint8Array(first.length + second.length);
   combined.set(first, 0);
@@ -49,10 +50,7 @@ export function computeSafetyNumberFingerprint(
  * @param remotePubKey - Remote user's public key bytes.
  * @returns 60-digit safety number string (5-digit groups, space-separated).
  */
-export function computeSafetyNumber(
-  localPubKey: Uint8Array,
-  remotePubKey: Uint8Array,
-): string {
+export function computeSafetyNumber(localPubKey: Uint8Array, remotePubKey: Uint8Array): string {
   const fingerprint = computeSafetyNumberFingerprint(localPubKey, remotePubKey);
 
   // Use first 30 bytes; each byte → 3 digits → 90 digits total.
@@ -67,11 +65,11 @@ export function computeSafetyNumber(
     const hi = fingerprint[i] ?? 0;
     const lo = fingerprint[i + 1] ?? 0;
     const value = (hi << 8) | lo;
-    digits.push(value.toString().padStart(5, "0"));
+    digits.push(value.toString().padStart(5, '0'));
   }
 
   // Group as "XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX"
-  return digits.join(" ");
+  return digits.join(' ');
 }
 
 // ── Internal ────────────────────────────────────────────────────────

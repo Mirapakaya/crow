@@ -8,9 +8,9 @@
  * Uses secp256k1 Schnorr signatures from @noble/curves.
  */
 
-import { secp256k1, schnorr } from "@noble/curves/secp256k1";
-import { sha256 } from "@noble/hashes/sha256";
-import { randomBytes } from "./kdf";
+import { secp256k1, schnorr } from '@noble/curves/secp256k1';
+import { sha256 } from '@noble/hashes/sha256';
+import { randomBytes } from './kdf';
 
 /**
  * Rotate a signing key by generating a new key pair and signing
@@ -81,11 +81,8 @@ export function verifyKeyTransition(
 // ── Internal helpers ────────────────────────────────────────────────
 
 /** Build the domain-separated transition message hash. */
-function buildTransitionMessage(
-  oldPubKey: Uint8Array,
-  newPubKey: Uint8Array,
-): Uint8Array {
-  const prefix = new TextEncoder().encode("crow-key-rotation");
+function buildTransitionMessage(oldPubKey: Uint8Array, newPubKey: Uint8Array): Uint8Array {
+  const prefix = new TextEncoder().encode('crow-key-rotation');
   const data = new Uint8Array(prefix.length + oldPubKey.length + newPubKey.length);
   data.set(prefix, 0);
   data.set(oldPubKey, prefix.length);
@@ -105,9 +102,10 @@ function adjustPrivateKey(key: Uint8Array): Uint8Array {
   const n = secp256k1.CURVE.n;
   const view = new DataView(key.buffer, key.byteOffset, 32);
   // Reduce mod n if needed; ensure non-zero.
-  let k = view.getBigUint64(0, false) * (2n ** 192n) +
-    view.getBigUint64(8, false) * (2n ** 128n) +
-    view.getBigUint64(16, false) * (2n ** 64n) +
+  let k =
+    view.getBigUint64(0, false) * 2n ** 192n +
+    view.getBigUint64(8, false) * 2n ** 128n +
+    view.getBigUint64(16, false) * 2n ** 64n +
     view.getBigUint64(24, false);
   k = (k % n) + 1n; // ensure 1 ≤ k < n
   // Write back as 32-byte big-endian

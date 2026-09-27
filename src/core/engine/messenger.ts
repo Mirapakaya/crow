@@ -84,10 +84,7 @@ export class MessengerEngine {
     const signedSeal = await this.vault.signEvent(sealEvent);
 
     // Step 3: Gift-wrap — encrypt the seal for the recipient
-    const wrappedContent = await this.vault.encrypt(
-      JSON.stringify(signedSeal),
-      conversationId,
-    );
+    const wrappedContent = await this.vault.encrypt(JSON.stringify(signedSeal), conversationId);
 
     const giftWrap: Partial<RelayEvent> = {
       kind: KIND_GIFT_WRAP,
@@ -261,13 +258,16 @@ export class MessengerEngine {
     };
 
     // Fire-and-forget: sign and publish without awaiting
-    this.vault.signEvent(typingEvent).then((signed) => {
-      this.relayPool.publish(signed).catch(() => {
-        // Typing indicators are best-effort
+    this.vault
+      .signEvent(typingEvent)
+      .then((signed) => {
+        this.relayPool.publish(signed).catch(() => {
+          // Typing indicators are best-effort
+        });
+      })
+      .catch(() => {
+        // Best-effort; don't block on failure
       });
-    }).catch(() => {
-      // Best-effort; don't block on failure
-    });
   }
 
   // ── Private helpers ──────────────────────────────────────────────

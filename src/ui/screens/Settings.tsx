@@ -25,7 +25,9 @@ export default function Settings() {
           <div className="settings-item">
             <div>
               <div className="settings-item-label">Theme</div>
-              <div className="settings-item-description">Light, dark, or follow system preference</div>
+              <div className="settings-item-description">
+                Light, dark, or follow system preference
+              </div>
             </div>
             <select
               className="input"
@@ -75,28 +77,56 @@ export default function Settings() {
         {/* Privacy */}
         <div className="settings-section">
           <h2 className="settings-section-title">Privacy</h2>
-          <ToggleSetting label="Read Receipts" description="Let contacts know when you've read their messages" defaultChecked={true} />
-          <ToggleSetting label="Typing Indicators" description="Show when you're typing a message" defaultChecked={true} />
-          <ToggleSetting label="Link Previews" description="Generate previews for links in messages" defaultChecked={false} />
-          <ToggleSetting label="Media Auto-Download" description="Automatically download media in messages" defaultChecked={false} />
+          <ToggleSetting
+            label="Read Receipts"
+            description="Let contacts know when you've read their messages"
+            defaultChecked={true}
+          />
+          <ToggleSetting
+            label="Typing Indicators"
+            description="Show when you're typing a message"
+            defaultChecked={true}
+          />
+          <ToggleSetting
+            label="Link Previews"
+            description="Generate previews for links in messages"
+            defaultChecked={false}
+          />
+          <ToggleSetting
+            label="Media Auto-Download"
+            description="Automatically download media in messages"
+            defaultChecked={false}
+          />
         </div>
 
         {/* Security */}
         <div className="settings-section">
           <h2 className="settings-section-title">Security</h2>
-          <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start' }}>
+          <button
+            className="btn btn-secondary"
+            style={{ width: '100%', justifyContent: 'flex-start' }}
+          >
             🔐 Security & Verification
           </button>
           <div style={{ height: 'var(--space-2)' }} />
-          <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start' }}>
+          <button
+            className="btn btn-secondary"
+            style={{ width: '100%', justifyContent: 'flex-start' }}
+          >
             📱 Device Management
           </button>
           <div style={{ height: 'var(--space-2)' }} />
-          <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start' }}>
+          <button
+            className="btn btn-secondary"
+            style={{ width: '100%', justifyContent: 'flex-start' }}
+          >
             🗄️ Relay Configuration
           </button>
           <div style={{ height: 'var(--space-2)' }} />
-          <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start' }}>
+          <button
+            className="btn btn-secondary"
+            style={{ width: '100%', justifyContent: 'flex-start' }}
+          >
             💾 Encrypted Backup
           </button>
         </div>
@@ -104,7 +134,11 @@ export default function Settings() {
         {/* Account */}
         <div className="settings-section">
           <h2 className="settings-section-title">Account</h2>
-          <button className="btn btn-danger btn-ghost" onClick={handleLock} style={{ width: '100%', justifyContent: 'flex-start' }}>
+          <button
+            className="btn btn-danger btn-ghost"
+            onClick={handleLock}
+            style={{ width: '100%', justifyContent: 'flex-start' }}
+          >
             🔒 Lock Vault
           </button>
         </div>
@@ -112,10 +146,14 @@ export default function Settings() {
         {/* About */}
         <div className="settings-section">
           <h2 className="settings-section-title">About</h2>
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-            Crow v0.1.0
-          </p>
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', marginTop: 'var(--space-1)' }}>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>Crow v0.1.0</p>
+          <p
+            style={{
+              fontSize: 'var(--text-xs)',
+              color: 'var(--text-tertiary)',
+              marginTop: 'var(--space-1)',
+            }}
+          >
             Privacy-first, end-to-end encrypted web messenger
           </p>
         </div>
@@ -124,7 +162,15 @@ export default function Settings() {
   );
 }
 
-function ToggleSetting({ label, description, defaultChecked }: { label: string; description: string; defaultChecked: boolean }) {
+function ToggleSetting({
+  label,
+  description,
+  defaultChecked,
+}: {
+  label: string;
+  description: string;
+  defaultChecked: boolean;
+}) {
   const [checked, setChecked] = useState(defaultChecked);
   return (
     <div className="settings-item">
@@ -132,7 +178,15 @@ function ToggleSetting({ label, description, defaultChecked }: { label: string; 
         <div className="settings-item-label">{label}</div>
         <div className="settings-item-description">{description}</div>
       </div>
-      <div className={`toggle${checked ? ' active' : ''}`} onClick={() => setChecked(!checked)} role="switch" aria-checked={checked} aria-label={label} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setChecked(!checked)}>
+      <div
+        className={`toggle${checked ? ' active' : ''}`}
+        onClick={() => setChecked(!checked)}
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && setChecked(!checked)}
+      >
         <div className="toggle-thumb" />
       </div>
     </div>

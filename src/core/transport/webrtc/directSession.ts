@@ -93,11 +93,14 @@ export class DirectSession {
         this.onMessage?.(new Uint8Array(event.data as ArrayBuffer));
       } else if (event.data instanceof Blob) {
         // Some browsers deliver Blob; convert to Uint8Array
-        event.data.arrayBuffer().then((buf: ArrayBuffer) => {
-          this.onMessage?.(new Uint8Array(buf));
-        }).catch(() => {
-          // Conversion failed; drop message
-        });
+        event.data
+          .arrayBuffer()
+          .then((buf: ArrayBuffer) => {
+            this.onMessage?.(new Uint8Array(buf));
+          })
+          .catch(() => {
+            // Conversion failed; drop message
+          });
       }
     };
   }

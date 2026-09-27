@@ -44,11 +44,7 @@ export class BlobTransfer {
    * @param relayPool - Pool to publish chunk events to.
    * @returns The root event ID that references all chunks.
    */
-  public async upload(
-    data: Uint8Array,
-    key: Uint8Array,
-    relayPool: RelayPool,
-  ): Promise<string> {
+  public async upload(data: Uint8Array, key: Uint8Array, relayPool: RelayPool): Promise<string> {
     const uploadId = `upload_${++this.uploadCounter}`;
     const totalBytes = data.byteLength;
 
@@ -203,8 +199,14 @@ export class BlobTransfer {
     key: Uint8Array,
   ): Promise<{ ciphertext: Uint8Array; nonce: Uint8Array }> {
     const nonce = crypto.getRandomValues(new Uint8Array(NONCE_LENGTH));
-    const algorithm: AesGcmParams = { name: 'AES-GCM', iv: toArrayBuffer(nonce), tagLength: TAG_LENGTH * 8 };
-    const cryptoKey = await crypto.subtle.importKey('raw', toArrayBuffer(key), algorithm, false, ['encrypt']);
+    const algorithm: AesGcmParams = {
+      name: 'AES-GCM',
+      iv: toArrayBuffer(nonce),
+      tagLength: TAG_LENGTH * 8,
+    };
+    const cryptoKey = await crypto.subtle.importKey('raw', toArrayBuffer(key), algorithm, false, [
+      'encrypt',
+    ]);
     const encrypted = await crypto.subtle.encrypt(algorithm, cryptoKey, toArrayBuffer(plaintext));
     return { ciphertext: new Uint8Array(encrypted), nonce };
   }
@@ -214,8 +216,14 @@ export class BlobTransfer {
     key: Uint8Array,
     nonce: Uint8Array,
   ): Promise<Uint8Array> {
-    const algorithm: AesGcmParams = { name: 'AES-GCM', iv: toArrayBuffer(nonce), tagLength: TAG_LENGTH * 8 };
-    const cryptoKey = await crypto.subtle.importKey('raw', toArrayBuffer(key), algorithm, false, ['decrypt']);
+    const algorithm: AesGcmParams = {
+      name: 'AES-GCM',
+      iv: toArrayBuffer(nonce),
+      tagLength: TAG_LENGTH * 8,
+    };
+    const cryptoKey = await crypto.subtle.importKey('raw', toArrayBuffer(key), algorithm, false, [
+      'decrypt',
+    ]);
     const decrypted = await crypto.subtle.decrypt(algorithm, cryptoKey, toArrayBuffer(ciphertext));
     return new Uint8Array(decrypted);
   }
@@ -248,10 +256,7 @@ export class BlobTransfer {
   }
 
   /** Stub: fetch a single chunk event and decode its content. */
-  private async fetchChunk(
-    _chunkId: string,
-    _relayPool: RelayPool,
-  ): Promise<Uint8Array | null> {
+  private async fetchChunk(_chunkId: string, _relayPool: RelayPool): Promise<Uint8Array | null> {
     // Placeholder — in production this subscribes and returns the chunk data
     return null;
   }
