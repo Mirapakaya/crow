@@ -32,6 +32,8 @@ import { EntryLayout } from '../ui/components/EntryLayout'
 import { ConnectionBar } from '../ui/components/ConnectionStatus'
 import { UpdatePrompt } from './UpdatePrompt'
 import { DialogHost } from '../ui/components/dialog'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export function App() {
   const phase = useApp((s) => s.phase)
@@ -78,7 +80,7 @@ function Shell({ phase }: { phase: ReturnType<typeof useApp.getState>['phase'] }
 
   if (phase === 'boot') {
     return (
-      <div className="app-shell" style={{ display: 'grid', placeItems: 'center' }}>
+      <div className="flex min-h-screen flex-col items-center justify-center">
         <Spinner label={t('common.loading')} />
       </div>
     )
@@ -88,12 +90,12 @@ function Shell({ phase }: { phase: ReturnType<typeof useApp.getState>['phase'] }
   // difference between a dead end and a message the reader can understand.
   if (phase === 'unsupported') {
     return (
-      <div className="app-shell">
+      <div className="flex min-h-screen flex-col">
         <EntryLayout>
           <Banner tone="danger">{t('errors.unsupported')}</Banner>
-          <p className="muted">{t('errors.storageBlocked')}</p>
+          <p className="text-sm text-muted-foreground">{t('errors.storageBlocked')}</p>
           {bootError ? (
-            <p className="hint mono" dir="ltr">
+            <p className="font-mono text-sm text-muted-foreground" dir="ltr">
               {bootError}
             </p>
           ) : null}
@@ -104,7 +106,7 @@ function Shell({ phase }: { phase: ReturnType<typeof useApp.getState>['phase'] }
 
   if (phase === 'onboarding') {
     return (
-      <div className="app-shell">
+      <div className="flex min-h-screen flex-col">
         <Suspense
           fallback={
             <EntryLayout>
@@ -120,14 +122,14 @@ function Shell({ phase }: { phase: ReturnType<typeof useApp.getState>['phase'] }
 
   if (phase === 'locked') {
     return (
-      <div className="app-shell">
+      <div className="flex min-h-screen flex-col">
         <LockScreen />
       </div>
     )
   }
 
   return (
-    <div className="app-shell">
+    <div className="flex min-h-screen flex-col">
       <CallLayer />
       <ConnectionBar />
       <BackupGate />
@@ -160,9 +162,9 @@ function Panes({ route, wide }: { route: Route; wide: boolean }) {
   if (section !== kept) keep(section)
   const level = levelOf(route)
   return (
-    <div className={wide ? 'panes split' : 'panes'}>
+    <div className={cn('flex flex-1 min-h-0 flex-col', wide && 'flex-row')}>
       {wide ? (
-        <div className="sidebar">
+        <div className="flex w-[clamp(18rem,32%,26rem)] shrink-0 flex-col border-r border-border">
           <Suspense fallback={<RouteLoading />}>
             {section === 'chats' ? (
               <ChatList />
@@ -175,9 +177,11 @@ function Panes({ route, wide }: { route: Route; wide: boolean }) {
           <TabBar section={section} />
         </div>
       ) : null}
-      <div className="detail" data-level={wide ? level : undefined}>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col" data-level={wide ? level : undefined}>
         {wide && level === 0 ? (
-          <p className="detail-empty">{t(PICK[section])}</p>
+          <p className="m-auto rounded-full bg-muted px-4 py-1.5 text-sm text-muted-foreground">
+            {t(PICK[section])}
+          </p>
         ) : (
           // One boundary for every route: a lazy screen shows the fallback
           // while its chunk arrives, and the tabs stay put.
@@ -220,7 +224,7 @@ function BackupGate() {
   if (!identity || identity.mnemonicBackedUp || !identity.mnemonic) return null
   if (deferred) return null
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'var(--bg)', zIndex: 50, overflow: 'auto' }}>
+    <div className="fixed inset-0 z-50 overflow-auto bg-background">
       <Suspense fallback={<RouteLoading />}>
         <BackupCeremony mnemonic={identity.mnemonic} />
       </Suspense>
@@ -236,7 +240,7 @@ function BackupGate() {
 function RouteLoading() {
   const t = useTranslate()
   return (
-    <div className="route-loading">
+    <div className="flex flex-1 items-center justify-center">
       <Spinner label={t('common.loading')} />
     </div>
   )
@@ -310,19 +314,26 @@ function TabBar({ section }: { section: Section | null }) {
   ]
 
   return (
-    <nav className="tabbar" aria-label={t('nav.chats')}>
+    <nav
+      className="flex shrink-0 items-center border-t border-border bg-card px-2 py-1.5"
+      aria-label={t('nav.chats')}
+    >
       {tabs.map((tab) => (
-        <button
+        <Button
           key={tab.route.name}
+          variant="ghost"
+          className="relative flex h-auto flex-1 flex-col items-center gap-0.5 rounded-sm py-1.5 text-xs"
           aria-current={tab.route.name === section ? 'page' : undefined}
           onClick={() => navigate(tab.route)}
         >
           {tab.icon}
           <span>{tab.label}</span>
           {tab.badge && tab.badge > 0 ? (
-            <span className="tab-badge">{tab.badge > 99 ? '99+' : tab.badge}</span>
+            <span className="absolute right-2 top-1 flex min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 py-0.5 text-[10px] font-semibold text-primary-foreground tabular-nums">
+              {tab.badge > 99 ? '99+' : tab.badge}
+            </span>
           ) : null}
-        </button>
+        </Button>
       ))}
     </nav>
   )
@@ -333,13 +344,23 @@ function ToastRegion() {
   const dismiss = useApp((s) => s.dismissToast)
   if (toasts.length === 0) return null
   return (
-    <div className="toast-region" role="status" aria-live="polite">
+    <div
+      className="pointer-events-none fixed bottom-4 left-0 right-0 z-[60] flex flex-col items-center gap-2 px-4"
+      role="status"
+      aria-live="polite"
+    >
       {toasts.map((toast) => (
-        <div key={toast.id} className={`toast ${toast.tone === 'danger' ? 'toast-danger' : ''}`}>
-          <span className="grow">{toast.message}</span>
-          <button className="btn btn-ghost small" onClick={() => dismiss(toast.id)}>
+        <div
+          key={toast.id}
+          className={cn(
+            'pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-md border border-border bg-card p-3 text-sm shadow-lg',
+            toast.tone === 'danger' && 'border-destructive/40',
+          )}
+        >
+          <span className="min-w-0 flex-1">{toast.message}</span>
+          <Button variant="ghost" size="sm" onClick={() => dismiss(toast.id)}>
             ×
-          </button>
+          </Button>
         </div>
       ))}
     </div>

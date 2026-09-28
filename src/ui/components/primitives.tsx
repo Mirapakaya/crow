@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { CloseIcon, ContactsIcon } from './Icons'
 import { useT } from '../../i18n'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 /** Deterministic avatar colour from a public key — stable across devices. */
 export function avatarColor(seed: string): string {
@@ -19,6 +22,12 @@ export function initials(name: string): string {
   return (first + second).toUpperCase()
 }
 
+const avatarSizeClasses = {
+  sm: 'w-[1.875rem] h-[1.875rem] text-[0.68rem]',
+  md: 'w-10 h-10 text-[0.9rem]',
+  lg: 'w-16 h-16 text-lg',
+}
+
 /**
  * A group's avatar: a group has no picture of its own, and initials of a name
  * several people chose would read as a person. The people glyph says "group"
@@ -26,9 +35,15 @@ export function initials(name: string): string {
  * one is recognisable.
  */
 export function GroupAvatar({ seed, size = 'md' }: { seed: string; size?: 'sm' | 'md' | 'lg' }) {
-  const className = `avatar avatar-group${size === 'sm' ? ' avatar-sm' : size === 'lg' ? ' avatar-lg' : ''}`
   return (
-    <div className={className} style={{ background: avatarColor(seed) }} aria-hidden="true">
+    <div
+      className={cn(
+        'flex shrink-0 items-center justify-center rounded-full font-semibold text-white',
+        avatarSizeClasses[size],
+      )}
+      style={{ background: avatarColor(seed) }}
+      aria-hidden="true"
+    >
       <ContactsIcon size={size === 'lg' ? 30 : size === 'sm' ? 15 : 19} />
     </div>
   )
@@ -45,16 +60,22 @@ export function Avatar({
   src?: string
   size?: 'sm' | 'md' | 'lg'
 }) {
-  const className = `avatar${size === 'sm' ? ' avatar-sm' : size === 'lg' ? ' avatar-lg' : ''}`
   if (src) {
     return (
-      <div className={className}>
-        <img src={src} alt="" />
+      <div className={cn('shrink-0 overflow-hidden rounded-full', avatarSizeClasses[size])}>
+        <img src={src} alt="" className="h-full w-full object-cover" />
       </div>
     )
   }
   return (
-    <div className={className} style={{ background: avatarColor(seed) }} aria-hidden="true">
+    <div
+      className={cn(
+        'flex shrink-0 items-center justify-center rounded-full font-semibold text-white',
+        avatarSizeClasses[size],
+      )}
+      style={{ background: avatarColor(seed) }}
+      aria-hidden="true"
+    >
       {initials(name)}
     </div>
   )
@@ -62,11 +83,18 @@ export function Avatar({
 
 export function Spinner({ label }: { label?: string }) {
   return (
-    <span className="row" style={{ gap: '0.5rem' }}>
-      <span className="spinner" />
-      {label ? <span className="muted small">{label}</span> : null}
+    <span className="flex items-center gap-2">
+      <span className="h-4 w-4 animate-spin rounded-full border-2 border-foreground/20 border-t-foreground" />
+      {label ? <span className="text-xs text-muted-foreground">{label}</span> : null}
     </span>
   )
+}
+
+const bannerToneClasses: Record<string, string> = {
+  info: 'bg-card border-border text-foreground',
+  warning: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500',
+  danger: 'bg-destructive/10 border-destructive/40 text-destructive',
+  accent: 'bg-primary/10 border-primary/30 text-primary',
 }
 
 export function Banner({
@@ -76,16 +104,18 @@ export function Banner({
   tone?: 'info' | 'warning' | 'danger' | 'accent'
   children: ReactNode
 }) {
-  const cls = tone === 'info' ? 'banner' : `banner banner-${tone}`
   return (
-    <div className={cls} role={tone === 'danger' ? 'alert' : undefined}>
+    <div
+      className={cn('flex items-start gap-3 rounded-md border p-3 text-sm', bannerToneClasses[tone])}
+      role={tone === 'danger' ? 'alert' : undefined}
+    >
       {children}
     </div>
   )
 }
 
 export function Field({
-  label,
+  label: labelText,
   hint,
   error,
   children,
@@ -96,15 +126,15 @@ export function Field({
   children: ReactNode
 }) {
   return (
-    <div className="field">
-      {label ? <span className="label">{label}</span> : null}
+    <div className="flex flex-col gap-1">
+      {labelText ? <span className="text-sm font-medium text-muted-foreground">{labelText}</span> : null}
       {children}
       {error ? (
-        <span className="error-text" role="alert">
+        <span className="text-sm text-destructive" role="alert">
           {error}
         </span>
       ) : hint ? (
-        <span className="hint">{hint}</span>
+        <span className="text-sm text-muted-foreground">{hint}</span>
       ) : null}
     </div>
   )
@@ -176,20 +206,26 @@ export function Modal({
 
   return (
     <div
-      className="modal-backdrop"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
     >
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={labelledBy} ref={ref}>
-        <div className="row-between" style={{ marginBottom: 'var(--space-4)' }}>
-          <h2 id={labelledBy} style={{ fontSize: 'var(--step-1)' }}>
+      <div
+        className="w-full max-w-lg rounded-lg border border-border bg-card p-6 shadow-lg"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={labelledBy}
+        ref={ref}
+      >
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 id={labelledBy} className="text-base font-semibold">
             {title}
           </h2>
           {closable ? (
-            <button type="button" className="btn btn-icon" onClick={onClose} aria-label={t('common.close')}>
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.close')}>
               <CloseIcon />
-            </button>
+            </Button>
           ) : null}
         </div>
         {children}
@@ -213,19 +249,17 @@ export function Toggle({
 }) {
   return (
     <label
-      className="row-between"
-      style={{ padding: 'var(--space-3) var(--space-4)', cursor: disabled ? 'not-allowed' : 'pointer' }}
+      className="flex items-center justify-between gap-3 px-4 py-3"
+      style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
     >
-      <span className="grow">
-        <span style={{ display: 'block', fontWeight: 'var(--weight-medium)' }}>{label}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium">{label}</span>
         {description ? (
-          <span className="hint" style={{ display: 'block', marginTop: 'var(--space-0-5)' }}>
-            {description}
-          </span>
+          <span className="mt-0.5 block text-sm text-muted-foreground">{description}</span>
         ) : null}
       </span>
       <input
-        className="checkbox"
+        className="h-4 w-4 shrink-0 accent-primary"
         type="checkbox"
         checked={checked}
         disabled={disabled}
@@ -235,14 +269,20 @@ export function Toggle({
   )
 }
 
-export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
+export function EmptyState({
+  title,
+  body,
+  action,
+}: {
+  title: string
+  body?: string
+  action?: ReactNode
+}) {
   return (
-    <div className="empty">
-      <h3>{title}</h3>
+    <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+      <h3 className="text-base font-semibold">{title}</h3>
       {body ? (
-        <p className="muted" style={{ maxWidth: '28rem' }}>
-          {body}
-        </p>
+        <p className="max-w-[28rem] text-sm text-muted-foreground">{body}</p>
       ) : null}
       {action}
     </div>
@@ -253,7 +293,7 @@ export function EmptyState({ title, body, action }: { title: string; body?: stri
 export function CopyButton({
   value,
   label,
-  className = 'btn btn-outline',
+  className,
 }: {
   value: string
   label?: string
@@ -262,8 +302,8 @@ export function CopyButton({
   const t = useT()
   const [copied, setCopied] = useCopyState()
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
       className={className}
       onClick={async () => {
         try {
@@ -276,7 +316,7 @@ export function CopyButton({
       }}
     >
       {copied ? t('common.copied') : (label ?? t('common.copy'))}
-    </button>
+    </Button>
   )
 }
 
