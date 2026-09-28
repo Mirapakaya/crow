@@ -142,7 +142,7 @@ export function Popover({ anchor, onClose, children, label, className }: Popover
     <div
       ref={panelRef}
       className={cn(
-        'fixed z-50 flex min-w-[12rem] max-w-[min(18rem,calc(100vw-2rem))] flex-col rounded-md border border-border bg-popover p-1 text-start shadow-lg',
+        'popover fixed z-50 flex min-w-[12rem] max-w-[min(18rem,calc(100vw-2rem))] flex-col rounded-md border border-border bg-popover p-1 text-start shadow-lg',
         className,
       )}
       role="menu"
