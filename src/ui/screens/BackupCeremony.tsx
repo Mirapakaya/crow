@@ -1,12 +1,18 @@
 import { useMemo, useState } from 'react'
 import { getRepo, useApp } from '../../app/store'
 import { useT } from '../../i18n'
+import { Banner, Field } from '../components/primitives'
 import { randomInt } from '../../core/util/bytes'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { ArrowLeft, Eye, AlertTriangle } from 'lucide-react'
 
+/**
+ * The recovery-phrase ceremony.
+ *
+ * Driven by persisted identity state (`mnemonicBackedUp`) rather than local
+ * component state, so it survives a reload, a crash, or a closed tab. Someone
+ * who abandons it halfway is asked again next time rather than silently ending
+ * up with an unrecoverable identity — which is what happens when this step is
+ * treated as one screen in a wizard.
+ */
 export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
   const t = useT()
   const deferBackup = useApp((s) => s.deferBackup)
@@ -21,54 +27,54 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
 
   const complete = async () => {
     await getRepo().updateIdentity({ mnemonicBackedUp: true })
+    // Re-read through the store so the shell drops this screen.
     await setIdentity({ mnemonicBackedUp: true })
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
-      <div className="mx-auto w-full max-w-[32rem] flex flex-col gap-4 p-4 py-6">
+    <div className="screen-scroll">
+      <div className="container stack" style={{ maxWidth: '32rem', paddingBlock: 'var(--space-6)' }}>
         {!verifying ? (
           <>
-            <div className="flex flex-col gap-1">
-              <h1 className="text-xl font-bold tracking-tight text-[var(--text)]">{t('onboarding.backupTitle')}</h1>
-              <p className="text-sm text-[var(--text-muted)]">{t('onboarding.backupBody')}</p>
+            <div className="stack-sm">
+              <h1>{t('onboarding.backupTitle')}</h1>
+              <p className="muted">{t('onboarding.backupBody')}</p>
             </div>
 
-            <div className={`grid grid-cols-3 gap-2 ${!revealed ? 'blur-[7px] select-none pointer-events-none' : ''}`} aria-hidden={!revealed}>
+            <div className={revealed ? 'mnemonic-grid' : 'mnemonic-grid blurred'} aria-hidden={!revealed}>
               {words.map((word, position) => (
-                <div key={position} className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-sm font-mono">
-                  <span className="text-[0.6875rem] text-[var(--text-faint)] tabular-nums">{position + 1}</span>
-                  <span className="text-[var(--text)]">{word}</span>
+                <div key={position} className="mnemonic-word">
+                  <span>{position + 1}</span>
+                  {word}
                 </div>
               ))}
             </div>
 
             {!revealed ? (
-              <Button variant="outline" className="w-full gap-2" onClick={() => setRevealed(true)}>
-                <Eye size={16} />
+              <button className="btn btn-outline btn-block" onClick={() => setRevealed(true)}>
                 {t('onboarding.backupReveal')}
-              </Button>
+              </button>
             ) : (
-              <Button className="w-full" onClick={() => setVerifying(true)}>
+              <button className="btn btn-primary btn-block" onClick={() => setVerifying(true)}>
                 {t('onboarding.backupConfirm')}
-              </Button>
+              </button>
             )}
 
-            <Button variant="ghost" className="w-full" onClick={() => deferBackup()}>
+            <button className="btn btn-ghost btn-block" onClick={() => deferBackup()}>
               {t('onboarding.skipBackup')}
-            </Button>
-            <p className="text-center text-xs text-[var(--text-muted)]">{t('onboarding.skipBackupWarning')}</p>
+            </button>
+            <p className="hint center">{t('onboarding.skipBackupWarning')}</p>
           </>
         ) : (
           <>
-            <div className="flex flex-col gap-1">
-              <h1 className="text-xl font-bold tracking-tight text-[var(--text)]">{t('onboarding.verifyTitle')}</h1>
-              <p className="text-sm text-[var(--text-muted)]">{t('onboarding.verifyBody', { n: index + 1 })}</p>
+            <div className="stack-sm">
+              <h1>{t('onboarding.verifyTitle')}</h1>
+              <p className="muted">{t('onboarding.verifyBody', { n: index + 1 })}</p>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label>{t('onboarding.verifyBody', { n: index + 1 })}</Label>
-              <Input
+            <Field error={error ?? undefined}>
+              <input
+                className="input mono"
                 dir="ltr"
                 autoFocus
                 autoCapitalize="none"
@@ -84,15 +90,11 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
                   if (answer.trim().toLowerCase() === words[index]) void complete()
                   else setError(t('onboarding.verifyWrong'))
                 }}
-                className="font-mono"
               />
-              {error ? (
-                <p className="text-sm text-[var(--danger)]" role="alert">{error}</p>
-              ) : null}
-            </div>
+            </Field>
 
-            <Button
-              className="w-full"
+            <button
+              className="btn btn-primary btn-block"
               disabled={!answer.trim()}
               onClick={() => {
                 if (answer.trim().toLowerCase() === words[index]) void complete()
@@ -100,18 +102,16 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
               }}
             >
               {t('common.confirm')}
-            </Button>
-            <Button variant="ghost" className="w-full gap-2" onClick={() => setVerifying(false)}>
-              <ArrowLeft size={16} />
+            </button>
+            <button className="btn btn-ghost btn-block" onClick={() => setVerifying(false)}>
               {t('common.back')}
-            </Button>
+            </button>
           </>
         )}
 
-        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-xs text-[var(--warning)]">
-          <AlertTriangle size={14} />
-          {t('lock.forgotBodyRecovery')}
-        </div>
+        <Banner tone="warning">
+          <span className="small">{t('lock.forgotBodyRecovery')}</span>
+        </Banner>
       </div>
     </div>
   )

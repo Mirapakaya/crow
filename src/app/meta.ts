@@ -12,7 +12,7 @@ export const BUILD_TIME: string = __BUILD_TIME__
  *
  * Overridable at build time with `VITE_SOURCE_URL` so a fork needs no patch.
  */
-export const SOURCE_URL: string = import.meta.env.VITE_SOURCE_URL || 'https://github.com/crow-ir/crow'
+export const SOURCE_URL: string = import.meta.env.VITE_SOURCE_URL || 'https://github.com/Mirapakaya/crow'
 
 /** Host and path only, for prose where a bare URL reads better than a link. */
 export const SOURCE_LABEL: string = SOURCE_URL.replace(/^https?:\/\//, '')

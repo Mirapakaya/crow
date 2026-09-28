@@ -4,7 +4,6 @@ import { useI18n } from '../../i18n'
 import { LAZY_CHUNKS } from '../lazyViews'
 import type { Sticker, StickerPack } from '../../core/models/types'
 import { EMOJI_GROUPS } from './emojiSet'
-import { Button } from '@/components/ui/button'
 import './picker.css'
 
 /**
@@ -151,15 +150,15 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
   return (
     <div className="picker-stickers">
       {packs.length === 0 ? (
-        <p className="text-sm text-text-muted picker-empty">{t('emoji.noPacks')}</p>
+        <p className="muted small picker-empty">{t('emoji.noPacks')}</p>
       ) : (
         packs.map((pack) => (
           <section key={pack.id} className="picker-group">
             <h3 className="picker-heading">
               <span dir="auto">{pack.name}</span>
-              <Button variant="ghost" size="sm" onClick={() => void deletePack(pack.id)}>
+              <button type="button" className="btn btn-ghost small" onClick={() => void deletePack(pack.id)}>
                 {t('emoji.removePack')}
-              </Button>
+              </button>
             </h3>
             <div className="picker-grid stickers">
               {pack.stickers.map((sticker) => (
@@ -170,19 +169,17 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
         ))
       )}
 
-      <label className="picker-import cursor-pointer">
-        <span className="inline-flex items-center gap-2 h-8 rounded-sm px-3 text-xs font-medium text-text-muted hover:bg-surface-hover transition-colors">
-          {busy ? t('emoji.importing') : t('emoji.addPack')}
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            multiple
-            hidden
-            disabled={busy}
-            onChange={(event) => void onFiles(event.target.files)}
-          />
-        </span>
+      <label className="btn btn-ghost small picker-import">
+        {busy ? t('emoji.importing') : t('emoji.addPack')}
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          disabled={busy}
+          onChange={(event) => void onFiles(event.target.files)}
+        />
       </label>
     </div>
   )

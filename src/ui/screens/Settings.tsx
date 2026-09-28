@@ -1,21 +1,18 @@
 import { useApp } from '../../app/store'
 import { useI18n, LOCALE_NAMES } from '../../i18n'
 import { useNavigate, useRoute, type Route } from '../../app/router'
-import { Avatar } from '../components/primitives'
+import { Avatar, Banner, Field, Toggle } from '../components/primitives'
 import {
-  ChevronRight,
-  Globe,
-  Lock,
-  Monitor,
-  Moon,
-  Shield,
-  Sun,
-  Download,
-  Phone,
-} from 'lucide-react'
-import { Button } from '../../components/ui/button'
-import { Label } from '../../components/ui/label'
-import { Switch } from '../../components/ui/switch'
+  ChevronIcon,
+  GlobeIcon,
+  LockIcon,
+  MonitorIcon,
+  MoonIcon,
+  ShieldIcon,
+  SunIcon,
+  DownloadIcon,
+  PhoneIcon,
+} from '../components/Icons'
 import { SegmentedControl } from '../components/SegmentedControl'
 import { SettingsPage } from './SettingsPage'
 import type { LocaleCode, ThemePreference } from '../../core/models/types'
@@ -47,28 +44,34 @@ export function SettingsHome() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="flex items-center gap-2 px-4 py-3 bg-[var(--surface)] border-b border-[var(--border)]">
-        <h1 className="flex-1 text-base font-semibold tracking-tight text-[var(--text)]">{t('settings.title')}</h1>
+    <div className="screen">
+      <header className="app-header">
+        <h1 className="grow">{t('settings.title')}</h1>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
-        <div className="mx-auto w-full max-w-[34rem] flex flex-col gap-4 p-4">
-          <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">{t('settings.profile')}</span>
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-4">
-            <div className="flex items-center gap-3">
+      <div className="screen-scroll">
+        <div className="container stack" style={{ maxWidth: '34rem' }}>
+          <span className="section-title">{t('settings.profile')}</span>
+          <div className="card stack">
+            <div className="row">
               <Avatar name={identity.name} seed={identity.pubkey} src={identity.avatar} size="lg" />
-              <div className="flex-1 flex flex-col gap-2">
+              <div className="grow stack-sm">
                 <span style={{ fontWeight: 600 }}>{identity.name}</span>
-                <code className="mono text-xs text-[var(--text-faint)]" style={{ wordBreak: 'break-all' }}>
+                <code className="mono faint" style={{ wordBreak: 'break-all' }}>
                   {identity.npub}
                 </code>
               </div>
             </div>
-            <p className="text-xs text-[var(--text-muted)]">{t('settings.profileBody')}</p>
+            <p className="hint">{t('settings.profileBody')}</p>
 
-            <div className="flex flex-col gap-1.5">
-              <Label>{t('settings.displayName')}</Label>
+            {/*
+              Uncontrolled and keyed by the stored value: the vault is the
+              source of truth, edits commit on blur, and a profile update from
+              anywhere else re-seeds the field by remounting it. Mirroring the
+              identity into component state instead would mean a setState in an
+              effect and a render cascade on every keystroke elsewhere.
+            */}
+            <Field label={t('settings.displayName')}>
               <input
                 key={`name:${identity.name}`}
                 className="input"
@@ -79,10 +82,9 @@ export function SettingsHome() {
                   if (next && next !== identity.name) void updateProfile({ name: next })
                 }}
               />
-            </div>
+            </Field>
 
-            <div className="flex flex-col gap-1.5">
-              <Label>{t('settings.about')}</Label>
+            <Field label={t('settings.about')}>
               <input
                 key={`about:${identity.about}`}
                 className="input"
@@ -92,10 +94,10 @@ export function SettingsHome() {
                   if (event.target.value !== identity.about) void updateProfile({ about: event.target.value })
                 }}
               />
-            </div>
+            </Field>
 
-            <div className="flex gap-2">
-              <label className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium border border-[var(--border)] bg-[var(--surface)] shadow-xs hover:bg-[var(--surface-hover)] active:bg-[var(--surface-active)] text-[var(--text)] h-9 px-4 py-2 cursor-pointer flex-1 transition-[color,background-color,border-color,box-shadow]">
+            <div className="row">
+              <label className="btn btn-outline grow">
                 {t('settings.avatarChoose')}
                 <input
                   type="file"
@@ -108,18 +110,17 @@ export function SettingsHome() {
                 />
               </label>
               {identity.avatar ? (
-                <Button variant="ghost" onClick={() => void updateProfile({ avatar: undefined })}>
+                <button className="btn btn-ghost" onClick={() => void updateProfile({ avatar: undefined })}>
                   {t('settings.avatarRemove')}
-                </Button>
+                </button>
               ) : null}
             </div>
           </div>
 
-          <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">{t('settings.appearance')}</span>
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-            <div className="p-3 px-4">
-              <div className="flex flex-col gap-1.5">
-                <Label>{t('settings.language')}</Label>
+          <span className="section-title">{t('settings.appearance')}</span>
+          <div className="card-section">
+            <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
+              <Field label={t('settings.language')}>
                 <select
                   className="input select"
                   value={settings.locale}
@@ -131,81 +132,76 @@ export function SettingsHome() {
                     </option>
                   ))}
                 </select>
-              </div>
+              </Field>
             </div>
-            <div className="p-3 px-4 border-t border-[var(--border)]">
+            <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
               {/* The same control as on the entry screens, so the theme switch
                   looks and behaves identically wherever it is met. */}
-              <div className="flex flex-col gap-1.5">
-                <Label>{t('settings.theme')}</Label>
+              <Field label={t('settings.theme')}>
                 <SegmentedControl
                   label={t('settings.theme')}
                   value={settings.theme}
                   options={[
-                    { value: 'system', label: t('settings.themeSystem'), icon: <Monitor size={15} /> },
-                    { value: 'light', label: t('settings.themeLight'), icon: <Sun size={15} /> },
-                    { value: 'dark', label: t('settings.themeDark'), icon: <Moon size={15} /> },
+                    { value: 'system', label: t('settings.themeSystem'), icon: <MonitorIcon size={15} /> },
+                    { value: 'light', label: t('settings.themeLight'), icon: <SunIcon size={15} /> },
+                    { value: 'dark', label: t('settings.themeDark'), icon: <MoonIcon size={15} /> },
                   ]}
                   onChange={(theme: ThemePreference) => void saveSettings({ theme })}
                 />
-              </div>
+              </Field>
             </div>
-            <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
-              <span>
-                <span style={{ display: 'block', fontWeight: 'var(--weight-medium)' }}>{t('settings.enterToSend')}</span>
-              </span>
-              <Switch
-                checked={settings.enterToSend}
-                onCheckedChange={(enterToSend) => void saveSettings({ enterToSend })}
-              />
-            </div>
+            <Toggle
+              label={t('settings.enterToSend')}
+              checked={settings.enterToSend}
+              onChange={(enterToSend) => void saveSettings({ enterToSend })}
+            />
           </div>
 
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+          <div className="card-section">
             <NavRow
-              icon={<Globe size={18} />}
+              icon={<GlobeIcon size={18} />}
               label={t('settings.relays')}
               to={{ name: 'settings-relays' }}
             />
             <NavRow
-              icon={<Shield size={18} />}
+              icon={<ShieldIcon size={18} />}
               label={t('settings.privacy')}
               to={{ name: 'settings-privacy' }}
             />
             <NavRow
-              icon={<Phone size={18} />}
+              icon={<PhoneIcon size={18} />}
               label={t('settings.calls')}
               to={{ name: 'settings-calls' }}
             />
             <NavRow
-              icon={<Lock size={18} />}
+              icon={<LockIcon size={18} />}
               label={t('settings.security')}
               to={{ name: 'settings-security' }}
             />
             <NavRow
-              icon={<Download size={18} />}
+              icon={<DownloadIcon size={18} />}
               label={t('settings.data')}
               to={{ name: 'settings-data' }}
             />
           </div>
 
-          <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">{t('settings.aboutSection')}</span>
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+          <span className="section-title">{t('settings.aboutSection')}</span>
+          <div className="card-section">
             <NavRow label={t('settings.whatLeaves')} to={{ name: 'about' }} />
-            <a className="flex w-full items-center gap-3 px-4 py-3 hover:bg-[var(--surface-hover)] border-t border-[var(--border)]" href={SOURCE_URL} target="_blank" rel="noreferrer noopener">
-              <span className="flex-1">{t('settings.sourceCode')}</span>
-              <ChevronRight size={16} style={{ color: 'var(--text-faint)' }} />
+            <a className="list-row" href={SOURCE_URL} target="_blank" rel="noreferrer noopener">
+              <span className="grow">{t('settings.sourceCode')}</span>
+              <ChevronIcon size={16} />
             </a>
-            <div className="flex w-full items-center gap-3 px-4 py-3 border-t border-[var(--border)]" style={{ cursor: 'default' }}>
-              <span className="flex-1 text-sm text-[var(--text-muted)]">{t('settings.version')}</span>
+            <div className="list-row" style={{ cursor: 'default' }}>
+              <span className="grow muted">{t('settings.version')}</span>
               <code className="mono small">{APP_VERSION}</code>
             </div>
           </div>
 
-          <Button variant="outline" className="w-full" onClick={() => lock()}>
-            <Lock size={16} />
+          <button className="btn btn-outline btn-block" onClick={() => lock()}>
+            <LockIcon size={16} />
             {t('settings.lockNow')}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
@@ -217,14 +213,10 @@ export function NavRow({ icon, label, to }: { icon?: React.ReactNode; label: str
   const navigate = useNavigate()
   const current = useRoute().name === to.name
   return (
-    <button
-      className={`flex w-full items-center gap-3 px-4 py-3 hover:bg-[var(--surface-hover)]${current ? ' bg-[var(--surface-hover)]' : ''}`}
-      aria-current={current || undefined}
-      onClick={() => navigate(to)}
-    >
+    <button className="list-row" aria-current={current || undefined} onClick={() => navigate(to)}>
       {icon ? <span style={{ color: 'var(--text-muted)' }}>{icon}</span> : null}
-      <span className="flex-1 text-left">{label}</span>
-      <ChevronRight size={16} style={{ color: 'var(--text-faint)' }} />
+      <span className="grow">{label}</span>
+      <ChevronIcon size={16} style={{ color: 'var(--text-faint)' }} />
     </button>
   )
 }
@@ -260,67 +252,46 @@ export function PrivacySettings() {
 
   return (
     <SettingsPage title={t('settings.privacy')}>
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-        <div className="flex items-center justify-between p-3 px-4">
-          <span className="flex-1">
-            <span style={{ display: 'block', fontWeight: 'var(--weight-medium)' }}>{t('settings.notifications')}</span>
-            <span className="text-xs text-[var(--text-muted)]" style={{ display: 'block', marginTop: 'var(--space-0-5)' }}>{t('settings.notificationsBody')}</span>
-          </span>
-          <Switch
-            checked={settings.notificationsEnabled && !notificationsBlocked}
-            disabled={notificationsBlocked}
-            onCheckedChange={(enabled) => void setNotifications(enabled)}
-          />
-        </div>
-        <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
-          <span style={{ fontWeight: 'var(--weight-medium)' }}>{t('settings.readReceipts')}</span>
-          <Switch
-            checked={settings.sendReadReceipts}
-            onCheckedChange={(sendReadReceipts) => void saveSettings({ sendReadReceipts })}
-          />
-        </div>
-        <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
-          <span style={{ fontWeight: 'var(--weight-medium)' }}>{t('settings.typingIndicators')}</span>
-          <Switch
-            checked={settings.sendTypingIndicators}
-            onCheckedChange={(sendTypingIndicators) => void saveSettings({ sendTypingIndicators })}
-          />
-        </div>
-        <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
-          <span className="flex-1">
-            <span style={{ display: 'block', fontWeight: 'var(--weight-medium)' }}>{t('settings.directConnection')}</span>
-            <span className="text-xs text-[var(--text-muted)]" style={{ display: 'block', marginTop: 'var(--space-0-5)' }}>{t('settings.directConnectionBody')}</span>
-          </span>
-          <Switch
-            checked={settings.enableDirectConnection}
-            onCheckedChange={(enableDirectConnection) => void saveSettings({ enableDirectConnection })}
-          />
-        </div>
-        <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
-          <span className="flex-1">
-            <span style={{ display: 'block', fontWeight: 'var(--weight-medium)' }}>{t('settings.publicProfile')}</span>
-            <span className="text-xs text-[var(--text-muted)]" style={{ display: 'block', marginTop: 'var(--space-0-5)' }}>{t('settings.publicProfileBody')}</span>
-          </span>
-          <Switch
-            checked={settings.publishPublicProfile}
-            onCheckedChange={(publishPublicProfile) => void saveSettings({ publishPublicProfile })}
-          />
-        </div>
-        <div className="flex items-center justify-between p-3 px-4 border-t border-[var(--border)]">
-          <span className="flex-1">
-            <span style={{ display: 'block', fontWeight: 'var(--weight-medium)' }}>{t('settings.mlsInvites')}</span>
-            <span className="text-xs text-[var(--text-muted)]" style={{ display: 'block', marginTop: 'var(--space-0-5)' }}>{t('settings.mlsInvitesBody')}</span>
-          </span>
-          <Switch
-            checked={settings.mlsInvites}
-            onCheckedChange={(mlsInvites) => void saveSettings({ mlsInvites })}
-          />
-        </div>
+      <div className="card-section">
+        <Toggle
+          label={t('settings.notifications')}
+          description={t('settings.notificationsBody')}
+          checked={settings.notificationsEnabled && !notificationsBlocked}
+          disabled={notificationsBlocked}
+          onChange={(enabled) => void setNotifications(enabled)}
+        />
+        <Toggle
+          label={t('settings.readReceipts')}
+          checked={settings.sendReadReceipts}
+          onChange={(sendReadReceipts) => void saveSettings({ sendReadReceipts })}
+        />
+        <Toggle
+          label={t('settings.typingIndicators')}
+          checked={settings.sendTypingIndicators}
+          onChange={(sendTypingIndicators) => void saveSettings({ sendTypingIndicators })}
+        />
+        <Toggle
+          label={t('settings.directConnection')}
+          description={t('settings.directConnectionBody')}
+          checked={settings.enableDirectConnection}
+          onChange={(enableDirectConnection) => void saveSettings({ enableDirectConnection })}
+        />
+        <Toggle
+          label={t('settings.publicProfile')}
+          description={t('settings.publicProfileBody')}
+          checked={settings.publishPublicProfile}
+          onChange={(publishPublicProfile) => void saveSettings({ publishPublicProfile })}
+        />
+        <Toggle
+          label={t('settings.mlsInvites')}
+          description={t('settings.mlsInvitesBody')}
+          checked={settings.mlsInvites}
+          onChange={(mlsInvites) => void saveSettings({ mlsInvites })}
+        />
       </div>
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
-        <div className="flex flex-col gap-1.5">
-          <Label>{t('settings.retention')}</Label>
+      <div className="card stack-sm">
+        <Field label={t('settings.retention')}>
           <select
             className="input select"
             value={settings.retention}
@@ -333,12 +304,11 @@ export function PrivacySettings() {
             <option value="30d">{t('settings.retentionDays', { n: 30 })}</option>
             <option value="7d">{t('settings.retentionDays', { n: 7 })}</option>
           </select>
-        </div>
+        </Field>
       </div>
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
-        <div className="flex flex-col gap-1.5">
-          <Label>{t('settings.messageExpiry')}</Label>
+      <div className="card stack-sm">
+        <Field label={t('settings.messageExpiry')} hint={t('settings.messageExpiryBody')}>
           <select
             className="input select"
             value={String(settings.messageExpirationDays)}
@@ -350,13 +320,12 @@ export function PrivacySettings() {
               </option>
             ))}
           </select>
-        </div>
-        <span className="text-xs text-[var(--text-muted)]">{t('settings.messageExpiryBody')}</span>
+        </Field>
       </div>
 
-      <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--accent-border)] bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--accent-text)]">
+      <Banner tone="accent">
         <span className="small">{about('limitsForwardSecrecy')}</span>
-      </div>
+      </Banner>
     </SettingsPage>
   )
 }

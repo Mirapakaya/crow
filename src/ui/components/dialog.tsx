@@ -1,7 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import { useT } from '../../i18n'
 import { Modal } from './primitives'
-import { Button } from '@/components/ui/button'
 
 /**
  * Questions asked in the app's own dialog, never the browser's.
@@ -76,22 +75,21 @@ export function DialogHost() {
   if (!question) return null
   return (
     <Modal title={question.title} onClose={dismiss} closable={false} labelledBy="dialog-title">
-      {question.body ? <p className="text-sm text-text-muted mb-4 whitespace-pre-line">{question.body}</p> : null}
-      <div className="flex flex-col gap-2">
+      {question.body ? <p className="muted dialog-body">{question.body}</p> : null}
+      <div className="dialog-actions">
         {question.choices.map((choice) => (
-          <Button
+          <button
             key={choice.value}
             type="button"
-            variant={choice.danger ? 'destructive' : 'default'}
-            className="w-full"
+            className={choice.danger ? 'btn btn-danger' : 'btn btn-primary'}
             onClick={() => question.answer(choice.value)}
           >
             {choice.label}
-          </Button>
+          </button>
         ))}
-        <Button type="button" variant="ghost" className="w-full" data-autofocus onClick={dismiss}>
+        <button type="button" className="btn btn-ghost" data-autofocus onClick={dismiss}>
           {t('common.cancel')}
-        </Button>
+        </button>
       </div>
     </Modal>
   )

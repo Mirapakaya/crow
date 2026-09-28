@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { getRepo, getVault, useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
-import { Spinner } from '../components/primitives'
+import { Banner, Field, Modal, Spinner, Toggle } from '../components/primitives'
 import { PatternPad } from '../components/PatternPad'
 import { SettingsPage } from './SettingsPage'
 import { type KeyslotSummary, type SlotSecret } from '../../core/vault/vault'
@@ -23,15 +23,6 @@ import {
   useBiometricEnrolment,
   useBiometricSupport,
 } from '../access/protection'
-import { cn } from '../../lib/utils'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Textarea } from '../../components/ui/textarea'
-import { Label } from '../../components/ui/label'
-import { Switch } from '../../components/ui/switch'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog'
-import { Progress } from '../../components/ui/progress'
-import { AlertTriangle, Shield, Eye, EyeOff } from 'lucide-react'
 
 const AUTO_LOCK_CHOICES = [0, 1, 5, 15, 30, 60]
 
@@ -134,94 +125,92 @@ export function SecuritySettings() {
 
   return (
     <SettingsPage title={t('settings.security')}>
-      <div className={cn(
-        'flex flex-col gap-1 rounded-[var(--radius-md)] border px-3 py-2.5 text-sm',
-        level.tone === 'warning' ? 'bg-[var(--warning-soft)] border-[color-mix(in_srgb,var(--warning)_28%,transparent)] text-[var(--warning)]' :
-          level.tone === 'accent' ? 'bg-[var(--accent-soft)] border-[var(--accent-border)] text-[var(--accent-text)]' :
-            'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text)]',
-      )}>
-        <strong>{text('levelTitle')}</strong>
-        <span className="text-xs">{level.line}</span>
-      </div>
+      <Banner tone={level.tone}>
+        <span className="stack-sm">
+          <strong>{text('levelTitle')}</strong>
+          <span className="small">{level.line}</span>
+        </span>
+      </Banner>
 
-      <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold text-[var(--text)]">{text('waysTitle')}</h3>
-        <p className="text-xs text-[var(--text-muted)]">{text('waysBody')}</p>
+      <div className="stack-sm">
+        <h3 style={{ fontSize: 'var(--step-0)' }}>{text('waysTitle')}</h3>
+        <p className="muted small">{text('waysBody')}</p>
       </div>
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+      <div className="card-section">
         {slots.map((slot) => {
+          // The last everyday way can go only where the recovery phrase still opens the device.
           const onlyWay = slot.type !== 'recovery' && everyday.length === 1 && !has('recovery')
           return (
-            <div key={slot.id} className="flex items-center gap-3 px-4 py-3 border-t border-[var(--border-subtle)] first:border-t-0 cursor-default">
-              <span className="flex flex-1 flex-col gap-0.5 min-w-0">
-                <strong className="text-sm text-[var(--text)]">{name(slot)}</strong>
-                <span className="text-xs text-[var(--text-muted)]">{describe(slot)}</span>
+            <div key={slot.id} className="list-row" style={{ cursor: 'default' }}>
+              <span className="grow stack-sm" style={{ minWidth: 0 }}>
+                <strong>{name(slot)}</strong>
+                <span className="small muted">{describe(slot)}</span>
                 {slot.failures ? (
-                  <span className="text-xs text-[var(--text-muted)]">{text('wrongTries', { n: slot.failures })}</span>
+                  <span className="hint">{text('wrongTries', { n: slot.failures })}</span>
                 ) : null}
                 {slot.createdAt > 0 ? (
-                  <span className="text-xs text-[var(--text-muted)]">{text('added', { date: formatDate(slot.createdAt, locale) })}</span>
+                  <span className="hint">{text('added', { date: formatDate(slot.createdAt, locale) })}</span>
                 ) : null}
-                {onlyWay ? <span className="text-xs text-[var(--text-muted)]">{text('onlyWay')}</span> : null}
+                {onlyWay ? <span className="hint">{text('onlyWay')}</span> : null}
               </span>
               {slot.type !== 'recovery' && !onlyWay ? (
-                <Button variant="ghost" size="sm" onClick={() => start({ kind: 'remove', slot })}>
+                <button className="btn btn-ghost small" onClick={() => start({ kind: 'remove', slot })}>
                   {t('common.remove')}
-                </Button>
+                </button>
               ) : null}
             </div>
           )
         })}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold text-[var(--text)]">{text('addTitle')}</h3>
+      <div className="stack-sm">
+        <h3 style={{ fontSize: 'var(--step-0)' }}>{text('addTitle')}</h3>
         {gate ? null : support?.platform === 'yes' ? (
-          <Button variant="outline" className="w-full" onClick={() => start({ kind: 'biometric' })}>
+          <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'biometric' })}>
             {text('addBiometric', { method: platform })}
-          </Button>
+          </button>
         ) : blocked ? (
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="hint">
             <strong>{text('addBiometric', { method: platform })}</strong> — {blocked}
           </p>
         ) : null}
         {!gate && support?.securityKey ? (
-          <Button variant="outline" className="w-full" onClick={() => start({ kind: 'security-key' })}>
+          <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'security-key' })}>
             {text('addKey')}
-          </Button>
+          </button>
         ) : null}
         {pinAllowed ? (
           <>
-            <Button variant="outline" className="w-full" onClick={() => start({ kind: 'pin' })}>
+            <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'pin' })}>
               {pin && !pattern ? text('changePin') : text('addPin')}
-            </Button>
-            <Button variant="outline" className="w-full" onClick={() => start({ kind: 'pattern' })}>
+            </button>
+            <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'pattern' })}>
               {pattern ? text('changePattern') : text('addPattern')}
-            </Button>
-            {pin ? <p className="text-xs text-[var(--text-muted)]">{text('onePin')}</p> : null}
+            </button>
+            {pin ? <p className="hint">{text('onePin')}</p> : null}
           </>
         ) : null}
-        <Button variant="outline" className="w-full" onClick={() => start({ kind: 'passphrase' })}>
+        <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'passphrase' })}>
           {has('passphrase') ? text('changePassphrase') : text('addPassphrase')}
-        </Button>
+        </button>
+        {/* Only while nothing else guards the device (ADR-059). */}
         {!canOpenInstantly() || has('device') ? null : guarded ? (
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="hint">
             <strong>{text('choiceInstant')}</strong> — {text('instantExclusive')}
           </p>
         ) : (
-          <Button variant="outline" className="w-full" onClick={() => start({ kind: 'instant' })}>
+          <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'instant' })}>
             {text('choiceInstant')}
-          </Button>
+          </button>
         )}
-        <p className="text-xs text-[var(--text-muted)]">{text('notRetroactive')}</p>
+        <p className="hint">{text('notRetroactive')}</p>
       </div>
 
-      <h3 className="text-sm font-semibold text-[var(--text)]">{text('sessionTitle')}</h3>
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-3">
-        <div className="flex flex-col gap-1.5">
-          <Label>{text('autoLock')}</Label>
+      <h3 style={{ fontSize: 'var(--step-0)' }}>{text('sessionTitle')}</h3>
+      <div className="card stack-sm">
+        <Field label={text('autoLock')}>
           <select
-            className="flex h-9 w-full rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--text)] transition-colors focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+            className="input select"
             value={String(settings.autoLockMinutes)}
             onChange={(event) => void saveSettings({ autoLockMinutes: Number(event.target.value) })}
           >
@@ -231,47 +220,45 @@ export function SecuritySettings() {
               </option>
             ))}
           </select>
-        </div>
-        {has('device') ? <p className="text-xs text-[var(--text-muted)]">{text('instantSession')}</p> : null}
+        </Field>
+        {has('device') ? <p className="hint">{text('instantSession')}</p> : null}
       </div>
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-        <div className="flex items-center justify-between gap-3 px-4 py-3">
-          <span className="text-sm font-medium text-[var(--text)]">{text('lockOnHide')}</span>
-          <Switch checked={settings.lockOnHide} onCheckedChange={(lockOnHide) => void saveSettings({ lockOnHide })} />
-        </div>
+      <div className="card-section">
+        <Toggle
+          label={text('lockOnHide')}
+          checked={settings.lockOnHide}
+          onChange={(lockOnHide) => void saveSettings({ lockOnHide })}
+        />
       </div>
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-3">
-        <h3 className="text-sm font-semibold text-[var(--text)]">{t('settings.recoveryPhrase')}</h3>
-        <p className="text-xs text-[var(--text-muted)]">{text('recoveryPhraseBody')}</p>
+      <div className="card stack-sm">
+        <h3 style={{ fontSize: 'var(--step-0)' }}>{t('settings.recoveryPhrase')}</h3>
+        <p className="muted small">{text('recoveryPhraseBody')}</p>
         {phrase ? (
           <>
-            <div className="grid grid-cols-3 gap-2">
-              {phrase.map((word, i) => (
-                <div key={i} className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-sm font-mono">
-                  <span className="text-[0.6875rem] text-[var(--text-faint)] tabular-nums">{i + 1}</span>
-                  <span className="text-[var(--text)]">{word}</span>
+            <div className="mnemonic-grid">
+              {phrase.map((word, index) => (
+                <div key={index} className="mnemonic-word">
+                  <span>{index + 1}</span>
+                  {word}
                 </div>
               ))}
             </div>
-            <Button variant="ghost" className="w-full" onClick={() => setPhrase(null)}>
-              <EyeOff size={16} />
+            <button className="btn btn-ghost btn-block" onClick={() => setPhrase(null)}>
               {t('common.hide')}
-            </Button>
+            </button>
           </>
         ) : (
-          <Button variant="outline" className="w-full gap-2" onClick={() => start({ kind: 'reveal' })}>
-            <Eye size={16} />
+          <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'reveal' })}>
             {t('common.show')}
-          </Button>
+          </button>
         )}
       </div>
 
-      <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] border border-[var(--accent-border)] px-3 py-2.5 text-xs text-[var(--accent-text)]">
-        <Shield size={14} />
-        {t('privacy.deviceBody')}
-      </div>
+      <Banner tone="accent">
+        <span className="small">{t('privacy.deviceBody')}</span>
+      </Banner>
 
       {flow ? (
         <MethodFlow
@@ -322,6 +309,8 @@ function MethodFlow({
 
   const pin = keyslots.find((slot) => slot.type === 'pin')
   const changing = (type: KeyslotSummary['type']) => keyslots.some((slot) => slot.type === type)
+  // Anything that asks for something turns opening instantly off (ADR-059):
+  // said before it is set up, and again once it is.
   const endsInstant = changing('device') && kind !== 'instant' && kind !== 'remove' && kind !== 'reveal'
   const added = endsInstant ? text('instantOff') : text('addedToast')
   const lastWay = flow.kind === 'remove' && keyslots.filter((slot) => slot.type !== 'recovery').length === 1
@@ -348,17 +337,12 @@ function MethodFlow({
 
   if (!confirmed || kind === 'reveal') {
     return (
-      <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{text('confirmTitle')}</DialogTitle>
-          </DialogHeader>
-          <ConfirmIdentity
-            keyslots={keyslots}
-            onConfirmed={() => (kind === 'reveal' ? void onDone('') : setConfirmed(true))}
-          />
-        </DialogContent>
-      </Dialog>
+      <Modal title={text('confirmTitle')} onClose={onClose}>
+        <ConfirmIdentity
+          keyslots={keyslots}
+          onConfirmed={() => (kind === 'reveal' ? void onDone('') : setConfirmed(true))}
+        />
+      </Modal>
     )
   }
 
@@ -373,168 +357,161 @@ function MethodFlow({
   }
 
   const errorLine = error ? (
-    <p className="text-sm text-[var(--danger)]" role="alert">
+    <p className="error-text" role="alert">
       {error}
     </p>
   ) : null
   const progressBar = busy ? (
-    <Progress value={Math.round(progress * 100)} />
+    <div className="progress">
+      <div style={{ width: `${Math.round(progress * 100)}%` }} />
+    </div>
   ) : null
 
   return (
-    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{titles[kind]}</DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col gap-4">
-          {endsInstant ? <p className="text-xs text-[var(--text-muted)]">{text('instantWillStop')}</p> : null}
+    <Modal title={titles[kind]} onClose={onClose}>
+      <div className="stack">
+        {endsInstant ? <p className="hint">{text('instantWillStop')}</p> : null}
 
-          {kind === 'biometric' || kind === 'security-key' ? (
-            <>
-              <p className="text-sm text-[var(--text-muted)]">{capitalize(text('twoPrompts', { method }))}</p>
-              {errorLine}
-              <Button
-                className="w-full"
-                disabled={busy}
-                onClick={() =>
-                  void run(async () => {
-                    await getVault().addSlot(await enrolBiometricSlot(gate))
-                    await onDone(added)
-                  })
-                }
-              >
-                {busy ? <Spinner label={t('common.working')} /> : titles[kind]}
-              </Button>
-            </>
-          ) : null}
+        {kind === 'biometric' || kind === 'security-key' ? (
+          <>
+            <p className="muted small">{capitalize(text('twoPrompts', { method }))}</p>
+            {errorLine}
+            <button
+              className="btn btn-primary btn-block"
+              disabled={busy}
+              onClick={() =>
+                void run(async () => {
+                  await getVault().addSlot(await enrolBiometricSlot(gate))
+                  await onDone(added)
+                })
+              }
+            >
+              {busy ? <Spinner label={t('common.working')} /> : titles[kind]}
+            </button>
+          </>
+        ) : null}
 
-          {flow.kind === 'remove' ? (
-            <>
-              <div className="flex items-start gap-2.5 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)]">
-                <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-                <span className="text-xs">{lastWay ? text('removeLast') : text('removeConfirm')}</span>
-              </div>
-              {errorLine}
-              <Button
-                variant="outline"
-                className="w-full border-[var(--danger)] text-[var(--danger)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
-                disabled={busy}
-                onClick={() =>
-                  void run(async () => {
-                    await getVault().removeSlot(flow.slot.id)
-                    if (flow.slot.credentialId) forgetBiometric(flow.slot.credentialId)
-                    await onDone(text('removed'))
-                  })
-                }
-              >
-                {busy ? <Spinner label={t('common.working')} /> : t('common.remove')}
-              </Button>
-            </>
-          ) : null}
+        {flow.kind === 'remove' ? (
+          <>
+            <Banner tone="warning">
+              <span className="small">{lastWay ? text('removeLast') : text('removeConfirm')}</span>
+            </Banner>
+            {errorLine}
+            <button
+              className="btn btn-danger-soft btn-block"
+              disabled={busy}
+              onClick={() =>
+                void run(async () => {
+                  await getVault().removeSlot(flow.slot.id)
+                  if (flow.slot.credentialId) forgetBiometric(flow.slot.credentialId)
+                  await onDone(text('removed'))
+                })
+              }
+            >
+              {busy ? <Spinner label={t('common.working')} /> : t('common.remove')}
+            </button>
+          </>
+        ) : null}
 
-          {kind === 'pin' ? (
-            <>
-              <PinFields
-                value={value}
-                confirm={repeat}
-                error={error}
-                onChange={setValue}
-                onConfirmChange={setRepeat}
-                onSubmit={() => undefined}
-              />
-              {progressBar}
-              <Button
-                className="w-full"
-                disabled={busy || !value}
-                onClick={() => {
-                  const problem = pinProblem(value, repeat, text)
-                  if (problem) return setError(problem)
-                  void run(async () => {
-                    await getVault().addSlot({
-                      type: 'pin',
-                      style: 'digits',
-                      code: value,
-                      onProgress: setProgress,
-                    })
-                    await onDone(pin?.style === 'digits' ? text('pinChanged') : added)
+        {kind === 'pin' ? (
+          <>
+            <PinFields
+              value={value}
+              confirm={repeat}
+              error={error}
+              onChange={setValue}
+              onConfirmChange={setRepeat}
+              onSubmit={() => undefined}
+            />
+            {progressBar}
+            <button
+              className="btn btn-primary btn-block"
+              disabled={busy || !value}
+              onClick={() => {
+                const problem = pinProblem(value, repeat, text)
+                if (problem) return setError(problem)
+                void run(async () => {
+                  await getVault().addSlot({
+                    type: 'pin',
+                    style: 'digits',
+                    code: value,
+                    onProgress: setProgress,
                   })
-                }}
-              >
-                {busy ? <Spinner label={t('common.working')} /> : t('common.save')}
-              </Button>
-            </>
-          ) : null}
+                  await onDone(pin?.style === 'digits' ? text('pinChanged') : added)
+                })
+              }}
+            >
+              {busy ? <Spinner label={t('common.working')} /> : t('common.save')}
+            </button>
+          </>
+        ) : null}
 
-          {kind === 'pattern' ? (
-            <>
-              <PatternSetup
-                disabled={busy}
-                onComplete={(code) =>
-                  void run(async () => {
-                    await getVault().addSlot({ type: 'pin', style: 'pattern', code, onProgress: setProgress })
-                    await onDone(pin?.style === 'pattern' ? text('patternChanged') : added)
-                  })
-                }
-              />
-              {progressBar}
-              {errorLine}
-            </>
-          ) : null}
+        {kind === 'pattern' ? (
+          <>
+            <PatternSetup
+              disabled={busy}
+              onComplete={(code) =>
+                void run(async () => {
+                  await getVault().addSlot({ type: 'pin', style: 'pattern', code, onProgress: setProgress })
+                  await onDone(pin?.style === 'pattern' ? text('patternChanged') : added)
+                })
+              }
+            />
+            {progressBar}
+            {errorLine}
+          </>
+        ) : null}
 
-          {kind === 'passphrase' ? (
-            <>
-              <PassphraseFields
-                value={value}
-                confirm={repeat}
-                error={error}
-                onChange={setValue}
-                onConfirmChange={setRepeat}
-                onSubmit={() => undefined}
-              />
-              {progressBar}
-              <Button
-                className="w-full"
-                disabled={busy || !value}
-                onClick={() => {
-                  const problem = passphraseProblem(value, repeat, text)
-                  if (problem) return setError(problem)
-                  void run(async () => {
-                    await getVault().addSlot({ type: 'passphrase', passphrase: value, onProgress: setProgress })
-                    await onDone(changing('passphrase') ? text('passphraseChanged') : added)
-                  })
-                }}
-              >
-                {busy ? <Spinner label={t('common.working')} /> : t('common.save')}
-              </Button>
-            </>
-          ) : null}
+        {kind === 'passphrase' ? (
+          <>
+            <PassphraseFields
+              value={value}
+              confirm={repeat}
+              error={error}
+              onChange={setValue}
+              onConfirmChange={setRepeat}
+              onSubmit={() => undefined}
+            />
+            {progressBar}
+            <button
+              className="btn btn-primary btn-block"
+              disabled={busy || !value}
+              onClick={() => {
+                const problem = passphraseProblem(value, repeat, text)
+                if (problem) return setError(problem)
+                void run(async () => {
+                  await getVault().addSlot({ type: 'passphrase', passphrase: value, onProgress: setProgress })
+                  await onDone(changing('passphrase') ? text('passphraseChanged') : added)
+                })
+              }}
+            >
+              {busy ? <Spinner label={t('common.working')} /> : t('common.save')}
+            </button>
+          </>
+        ) : null}
 
-          {kind === 'instant' ? (
-            <>
-              <div className="flex items-start gap-2.5 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)]">
-                <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-                <span className="text-xs">{text('instantConfirm')}</span>
-              </div>
-              {errorLine}
-              <Button
-                variant="outline"
-                className="w-full border-[var(--danger)] text-[var(--danger)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
-                disabled={busy}
-                onClick={() =>
-                  void run(async () => {
-                    await getVault().addSlot({ type: 'device' })
-                    await onDone(text('addedToast'))
-                  })
-                }
-              >
-                {busy ? <Spinner label={t('common.working')} /> : text('choiceInstant')}
-              </Button>
-            </>
-          ) : null}
-        </div>
-      </DialogContent>
-    </Dialog>
+        {kind === 'instant' ? (
+          <>
+            <Banner tone="warning">
+              <span className="small">{text('instantConfirm')}</span>
+            </Banner>
+            {errorLine}
+            <button
+              className="btn btn-danger-soft btn-block"
+              disabled={busy}
+              onClick={() =>
+                void run(async () => {
+                  await getVault().addSlot({ type: 'device' })
+                  await onDone(text('addedToast'))
+                })
+              }
+            >
+              {busy ? <Spinner label={t('common.working')} /> : text('choiceInstant')}
+            </button>
+          </>
+        ) : null}
+      </div>
+    </Modal>
   )
 }
 
@@ -559,6 +536,7 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
   )
 
   const [chosen, setWay] = useState<Way>(offered[0] as Way)
+  // A PIN erased by a wrong try here gives way to the next.
   const way = offered.includes(chosen) ? chosen : (offered[0] as Way)
   const [secret, setSecret] = useState('')
   const [busy, setBusy] = useState(false)
@@ -574,6 +552,7 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
     } catch (err) {
       setError(unlockError(err, t, { style, method }))
       setSecret('')
+      // Too many wrong tries erase the PIN; the list behind this dialog says so.
       if (way === 'pin') await refreshKeyslots()
     } finally {
       setBusy(false)
@@ -587,27 +566,20 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
     recovery: t('lock.useRecovery'),
   }
 
-  const fieldLabel =
-    way === 'recovery'
-      ? t('lock.recoveryPhrase')
-      : way === 'pin'
-        ? t('lock.pin')
-        : t('lock.passphrase')
-
   const errorLine = error ? (
-    <p className="text-sm text-[var(--danger)]" role="alert">
+    <p className="error-text" role="alert">
       {error}
     </p>
   ) : null
 
   return (
-    <div className="flex flex-col gap-4">
-      <DialogDescription>{text('confirmBody')}</DialogDescription>
+    <div className="stack">
+      <p className="muted small">{text('confirmBody')}</p>
 
       {way === 'biometric' && biometric?.credentialId ? (
         <>
-          <Button
-            className="w-full"
+          <button
+            className="btn btn-primary btn-block"
             disabled={busy}
             onClick={() =>
               void check(async () => ({
@@ -621,7 +593,7 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
             }
           >
             {busy ? <Spinner label={t('common.working')} /> : other.biometric}
-          </Button>
+          </button>
           {errorLine}
         </>
       ) : way === 'pin' && style === 'pattern' ? (
@@ -635,13 +607,21 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
         </>
       ) : (
         <>
-          <div className="flex flex-col gap-1.5">
-            <Label>{fieldLabel}</Label>
+          <Field
+            label={
+              way === 'recovery'
+                ? t('lock.recoveryPhrase')
+                : way === 'pin'
+                  ? t('lock.pin')
+                  : t('lock.passphrase')
+            }
+            error={error ?? undefined}
+          >
             {way === 'recovery' ? (
-              <Textarea
+              <textarea
+                className="textarea mono"
                 dir="ltr"
                 autoFocus
-                className="font-mono"
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
@@ -652,7 +632,8 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
                 }}
               />
             ) : (
-              <Input
+              <input
+                className={way === 'pin' ? 'input pin-input' : 'input'}
                 type="password"
                 dir={way === 'pin' ? 'ltr' : undefined}
                 inputMode={way === 'pin' ? 'numeric' : undefined}
@@ -665,10 +646,9 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
                 }}
               />
             )}
-            {errorLine}
-          </div>
-          <Button
-            className="w-full"
+          </Field>
+          <button
+            className="btn btn-primary btn-block"
             disabled={busy || (way === 'pin' ? !isValidPin('digits', secret) : !secret.trim())}
             onClick={() =>
               void check(async () =>
@@ -681,17 +661,16 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
             }
           >
             {busy ? <Spinner label={t('common.working')} /> : t('common.confirm')}
-          </Button>
+          </button>
         </>
       )}
 
       {offered
         .filter((candidate) => candidate !== way)
         .map((candidate) => (
-          <Button
+          <button
             key={candidate}
-            variant="ghost"
-            size="sm"
+            className="btn btn-ghost small"
             onClick={() => {
               setWay(candidate)
               setSecret('')
@@ -699,7 +678,7 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
             }}
           >
             {other[candidate]}
-          </Button>
+          </button>
         ))}
     </div>
   )

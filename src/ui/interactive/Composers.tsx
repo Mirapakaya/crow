@@ -5,9 +5,6 @@ import { CloseIcon, PlusIcon } from '../components/Icons'
 import { makeChecklist, makePoll, MAX_QUESTION_CHARS } from '../../core/models/interactive'
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS, MAX_POLL_OPTIONS } from '../../core/models/protocol'
 import { useInteractiveText } from './interactiveText'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 /**
  * Write a poll or a checklist and send it to the open conversation.
@@ -37,36 +34,36 @@ function Lines({
 }) {
   const text = useInteractiveText()
   return (
-    <fieldset className="flex flex-col gap-2 border-0 m-0 p-0 min-w-0">
-      <Label>{label}</Label>
+    <fieldset className="stack-sm composer-lines">
+      <legend className="label">{label}</legend>
       {values.map((value, index) => (
-        <div key={index} className="flex items-center gap-3">
-          <Input
+        <div key={index} className="row">
+          <input
+            className="input grow"
             dir="auto"
             value={value}
             maxLength={MAX_ITEM_CHARS}
             placeholder={placeholder(index + 1)}
             aria-label={placeholder(index + 1)}
-            className="grow"
             onChange={(event) => onChange(values.map((v, i) => (i === index ? event.target.value : v)))}
           />
           {values.length > min ? (
-            <Button
+            <button
               type="button"
-              size="icon"
+              className="btn btn-icon"
               aria-label={text('removeRow')}
               onClick={() => onChange(values.filter((_, i) => i !== index))}
             >
               <CloseIcon size={16} />
-            </Button>
+            </button>
           ) : null}
         </div>
       ))}
       {values.length < max ? (
-        <Button type="button" variant="ghost" size="sm" onClick={() => onChange([...values, ''])}>
+        <button type="button" className="btn btn-ghost small" onClick={() => onChange([...values, ''])}>
           <PlusIcon size={15} />
           {addLabel}
-        </Button>
+        </button>
       ) : null}
     </fieldset>
   )
@@ -102,14 +99,15 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={text('newPoll')} onClose={onClose} labelledBy="poll-composer-title">
       <form
-        className="flex flex-col gap-4"
+        className="stack"
         onSubmit={(event) => {
           event.preventDefault()
           void send()
         }}
       >
         <Field label={text('question')} error={error ?? undefined}>
-          <Input
+          <input
+            className="input"
             dir="auto"
             value={question}
             maxLength={MAX_QUESTION_CHARS}
@@ -133,9 +131,9 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
           addLabel={text('addOption')}
         />
         <Toggle label={text('multi')} checked={multi} onChange={setMulti} />
-        <Button type="submit" className="w-full" disabled={busy}>
+        <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
           {text('send')}
-        </Button>
+        </button>
       </form>
     </Modal>
   )
@@ -168,14 +166,15 @@ export function ChecklistComposer({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={text('newChecklist')} onClose={onClose} labelledBy="checklist-composer-title">
       <form
-        className="flex flex-col gap-4"
+        className="stack"
         onSubmit={(event) => {
           event.preventDefault()
           void send()
         }}
       >
         <Field label={text('title')} error={error ?? undefined}>
-          <Input
+          <input
+            className="input"
             dir="auto"
             value={title}
             maxLength={MAX_QUESTION_CHARS}
@@ -198,9 +197,9 @@ export function ChecklistComposer({ onClose }: { onClose: () => void }) {
           placeholder={(n) => text('item', { n })}
           addLabel={text('addItem')}
         />
-        <Button type="submit" className="w-full" disabled={busy}>
+        <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
           {text('send')}
-        </Button>
+        </button>
       </form>
     </Modal>
   )

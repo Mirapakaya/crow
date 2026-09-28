@@ -1,19 +1,15 @@
 import { useState } from 'react'
 import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
-import { useCallSettingsText, type CallSettingsTextKey } from './callSettingsText'
+import { useCallSettingsText, type CallSettingsTextFn, type CallSettingsTextKey } from './callSettingsText'
+import { Banner, Field, Toggle } from '../components/primitives'
+import { GlobeIcon, PlusIcon, RefreshIcon, TrashIcon } from '../components/Icons'
 import { SettingsPage } from './SettingsPage'
 import { hasTurnServer } from '../../core/models/call'
 import { alreadyListed, parseIceServer, serverUrls } from '../../core/calls/iceServers'
 import { probeIce, type IceProbeResult, type IceVerdict } from '../../core/calls/iceProbe'
 import { DEFAULT_ICE_SERVERS } from '../../core/transport/defaultRelays'
 import { supportsWebRtc } from '../../core/transport/webrtc/directManager'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { Badge } from '../../components/ui/badge'
-import { Switch } from '../../components/ui/switch'
-import { Globe, Plus, RefreshCw, Trash2, AlertTriangle } from 'lucide-react'
 
 const VERDICT: Record<IceVerdict, CallSettingsTextKey> = {
   good: 'iceVerdictGood',
@@ -23,6 +19,15 @@ const VERDICT: Record<IceVerdict, CallSettingsTextKey> = {
   'turn-failed': 'iceVerdictTurnFailed',
 }
 
+/**
+ * Calls: the servers a call may use, and whether it must be relayed.
+ *
+ * Crow runs no TURN server (ADR-008), so the one a user adds here is the
+ * only thing that gets a call through symmetric NAT or a strict firewall —
+ * and the only thing that can keep their IP address from the person they
+ * call. Both are said plainly, and the test shows which of them this network
+ * actually needs.
+ */
 export function CallSettings() {
   const { t } = useI18n()
   const st = useCallSettingsText()
@@ -59,6 +64,8 @@ export function CallSettings() {
 
   const remove = async (index: number) => {
     const next = servers.filter((_, i) => i !== index)
+    // "Always relay" with nothing to relay through would fail every call; it
+    // goes off with the last TURN server rather than lingering as a trap.
     await saveSettings({
       iceServers: next,
       ...(hasTurnServer(next) ? {} : { callRelayOnly: false }),
@@ -77,85 +84,71 @@ export function CallSettings() {
 
   return (
     <SettingsPage title={t('settings.calls')}>
-      <p className="text-sm text-[var(--text-muted)]">{st('callsBody')}</p>
-      {!canCall ? (
-        <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)]">
-          <AlertTriangle size={16} />
-          {st('iceUnsupported')}
-        </div>
-      ) : null}
+      <p className="muted">{st('callsBody')}</p>
+      {!canCall ? <Banner tone="warning">{st('iceUnsupported')}</Banner> : null}
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-        <div className="flex items-center justify-between gap-3 px-4 py-3">
-          <div className="flex-1 min-w-0">
-            <span className="text-sm font-medium text-[var(--text)]">{st('relayCalls')}</span>
-            <span className="block mt-0.5 text-xs text-[var(--text-muted)]">
-              {turnConfigured ? st('relayCallsBody') : st('relayCallsNeedsTurn')}
-            </span>
-          </div>
-          <Switch
-            checked={settings.callRelayOnly && turnConfigured}
-            disabled={!turnConfigured}
-            onCheckedChange={(callRelayOnly) => void saveSettings({ callRelayOnly })}
-          />
-        </div>
+      <div className="card-section">
+        <Toggle
+          label={st('relayCalls')}
+          description={turnConfigured ? st('relayCallsBody') : st('relayCallsNeedsTurn')}
+          checked={settings.callRelayOnly && turnConfigured}
+          disabled={!turnConfigured}
+          onChange={(callRelayOnly) => void saveSettings({ callRelayOnly })}
+        />
       </div>
 
-      <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--text-faint)] px-1 [dir=rtl]_[:root]&:normal-case [dir=rtl]_[:root]&:tracking-normal">
-        {st('iceServers')}
-      </span>
-      <p className="text-xs text-[var(--text-muted)]">{st('iceServersBody')}</p>
+      <span className="section-title">{st('iceServers')}</span>
+      <p className="hint">{st('iceServersBody')}</p>
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3 cursor-default">
-          <Globe size={16} className="text-[var(--text-muted)]" />
-          <span className="flex-1 text-xs text-[var(--text-muted)]">{st('iceBuiltIn')}</span>
+      <div className="card-section">
+        <div className="list-row" style={{ cursor: 'default' }}>
+          <GlobeIcon size={16} style={{ color: 'var(--text-muted)' }} />
+          <span className="grow small muted">{st('iceBuiltIn')}</span>
         </div>
         {servers.length === 0 ? (
-          <div className="flex items-center px-4 py-3 border-t border-[var(--border-subtle)] cursor-default">
-            <span className="flex-1 text-[0.75rem] text-[var(--text-faint)]">{st('iceNone')}</span>
+          <div className="list-row" style={{ cursor: 'default' }}>
+            <span className="grow small faint">{st('iceNone')}</span>
           </div>
         ) : (
           servers.map((server, index) => (
-            <div key={serverUrls(server).join(' ')} className="flex items-center gap-3 px-4 py-3 border-t border-[var(--border-subtle)] cursor-default">
-              <span className="flex flex-1 flex-col gap-1 min-w-0">
-                <code className="font-mono text-xs truncate text-[var(--text)]" dir="ltr" lang="en">
+            <div key={serverUrls(server).join(' ')} className="list-row" style={{ cursor: 'default' }}>
+              <span className="grow stack-sm" style={{ minWidth: 0 }}>
+                <code className="mono small truncate" dir="ltr" lang="en">
                   {serverUrls(server).join(' ')}
                 </code>
                 {server.username ? (
-                  <span className="text-[0.75rem] text-[var(--text-faint)] truncate" dir="ltr" lang="en">
+                  <span className="faint small truncate" dir="ltr" lang="en">
                     {server.username}
                   </span>
                 ) : null}
               </span>
-              <Button
-                variant="ghost"
-                size="icon-sm"
+              <button
+                className="btn btn-icon"
                 aria-label={st('iceRemove')}
                 title={st('iceRemove')}
                 onClick={() => void remove(index)}
               >
-                <Trash2 size={16} />
-              </Button>
+                <TrashIcon size={16} />
+              </button>
             </div>
           ))
         )}
       </div>
 
       <form
-        className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2"
+        className="card stack-sm"
         onSubmit={(event) => {
           event.preventDefault()
           void add()
         }}
       >
-        <div className="flex flex-col gap-1.5">
-          <Label>{st('iceUrl')}</Label>
-          <Input
+        <Field label={st('iceUrl')} error={error ?? undefined}>
+          <input
+            className="input"
             dir="ltr"
             lang="en"
             inputMode="url"
-            autoCapitalize="none"
+            autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
             placeholder={st('iceUrlPlaceholder')}
@@ -165,69 +158,66 @@ export function CallSettings() {
               setError(null)
             }}
           />
-          {error ? (
-            <p className="text-sm text-[var(--danger)]" role="alert">{error}</p>
-          ) : null}
-        </div>
-        <div className="flex gap-4 flex-wrap">
-          <div className="flex flex-1 flex-col gap-1.5 min-w-[10rem]">
-            <Label>{st('iceUsername')}</Label>
-            <Input
-              dir="ltr"
-              lang="en"
-              autoCapitalize="none"
-              autoComplete="off"
-              spellCheck={false}
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-            />
+        </Field>
+        <div className="row" style={{ flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          <div className="grow" style={{ minWidth: '10rem' }}>
+            <Field label={st('iceUsername')}>
+              <input
+                className="input"
+                dir="ltr"
+                lang="en"
+                autoCapitalize="off"
+                autoComplete="off"
+                spellCheck={false}
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+              />
+            </Field>
           </div>
-          <div className="flex flex-1 flex-col gap-1.5 min-w-[10rem]">
-            <Label>{st('icePassword')}</Label>
-            <Input
-              dir="ltr"
-              lang="en"
-              type="password"
-              autoComplete="new-password"
-              value={credential}
-              onChange={(event) => setCredential(event.target.value)}
-            />
+          <div className="grow" style={{ minWidth: '10rem' }}>
+            <Field label={st('icePassword')}>
+              <input
+                className="input"
+                dir="ltr"
+                lang="en"
+                type="password"
+                autoComplete="new-password"
+                value={credential}
+                onChange={(event) => setCredential(event.target.value)}
+              />
+            </Field>
           </div>
         </div>
-        <Button type="submit" disabled={!url.trim()} className="gap-2">
-          <Plus size={16} />
+        <button className="btn btn-primary" type="submit" disabled={!url.trim()}>
+          <PlusIcon size={16} />
           {st('iceAdd')}
-        </Button>
+        </button>
       </form>
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
-        <Button
-          variant="outline"
+      <div className="card stack-sm">
+        <button
+          className="btn btn-outline"
           disabled={!canCall || probe === 'running'}
           onClick={() => void test()}
           aria-busy={probe === 'running'}
-          className="gap-2"
         >
-          <RefreshCw size={16} />
+          <RefreshIcon size={16} />
           {probe === 'running' ? st('iceTesting') : st('iceTest')}
-        </Button>
+        </button>
         {typeof probe === 'object' ? (
-          <div className="flex flex-col gap-2" aria-live="polite">
-            <ProbeRow label={st('iceStun')} ok={probe.stun} />
+          <div className="stack-sm" aria-live="polite">
+            <ProbeRow label={st('iceStun')} ok={probe.stun} st={st} />
             {probe.symmetric ? (
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[var(--text-muted)]">{st('iceSymmetric')}</span>
+              <div className="row-between small">
+                <span className="muted">{st('iceSymmetric')}</span>
               </div>
             ) : null}
-            <ProbeRow label={st('iceTurn')} ok={probe.turn} />
-            <div className={cn(
-              'flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5 text-xs',
-              probe.verdict === 'good' ? 'bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)]' :
-                probe.verdict === 'stun' ? 'bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-text)]' :
-                  'bg-[var(--warning-soft)] border border-[color-mix(in_srgb,var(--warning)_28%,transparent)] text-[var(--warning)]',
-            )}>
-              {st(VERDICT[probe.verdict])}
-            </div>
+            <ProbeRow label={st('iceTurn')} ok={probe.turn} st={st} />
+            <Banner
+              tone={probe.verdict === 'good' ? 'info' : probe.verdict === 'stun' ? 'accent' : 'warning'}
+            >
+              <span className="small">{st(VERDICT[probe.verdict])}</span>
+            </Banner>
           </div>
         ) : null}
       </div>
@@ -235,18 +225,13 @@ export function CallSettings() {
   )
 }
 
-function cn(...classes: (string | boolean | undefined | null)[]): string {
-  return classes.filter(Boolean).join(' ')
-}
-
-function ProbeRow({ label, ok }: { label: string; ok: boolean | null }) {
-  const badgeVariant = ok === null ? 'secondary' : ok ? 'success' : 'destructive'
+function ProbeRow({ label, ok, st }: { label: string; ok: boolean | null; st: CallSettingsTextFn }) {
+  const badge = ok === null ? 'badge' : ok ? 'badge badge-success' : 'badge badge-danger'
+  const text = st(ok === null ? 'iceNotSet' : ok ? 'iceWorking' : 'iceNotReachable')
   return (
-    <div className="flex items-center justify-between text-xs">
-      <span className="text-[var(--text)]">{label}</span>
-      <Badge variant={badgeVariant}>
-        {ok === null ? '—' : ok ? '✓' : '✗'}
-      </Badge>
+    <div className="row-between small">
+      <span>{label}</span>
+      <span className={badge}>{text}</span>
     </div>
   )
 }

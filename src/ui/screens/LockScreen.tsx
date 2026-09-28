@@ -4,16 +4,11 @@ import { useT } from '../../i18n'
 import { type KeyslotType, type SlotSecret } from '../../core/vault/vault'
 import { isGuarded, isValidPin } from '../../core/vault/keyslots'
 import { confirmBiometric, GateCancelledError } from '../../core/crypto/biometricGate'
-import { Spinner } from '../components/primitives'
+import { Banner, Field, Spinner } from '../components/primitives'
 import { confirmDanger } from '../components/dialog'
 import { EntryLayout } from '../components/EntryLayout'
 import { LockIcon } from '../components/Icons'
 import { PatternPad } from '../components/PatternPad'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { Textarea } from '../../components/ui/textarea'
-import { Progress } from '../../components/ui/progress'
 import { gateName, unlockError } from '../biometric'
 
 /** The ways in, most convenient first: the first one the vault has is offered first. */
@@ -157,34 +152,30 @@ export function LockScreen() {
 
   return (
     <EntryLayout>
-      <div className="flex flex-col gap-2 items-center text-center">
+      <div className="stack-sm center">
         <span className="lock-mark" aria-hidden="true">
           <LockIcon size={20} />
         </span>
         <h1 className="lock-title">{t('lock.title')}</h1>
-        <p className="text-sm text-[var(--text-muted)]">{way === 'device' ? t('lock.openBody') : t('lock.body')}</p>
+        <p className="muted">{way === 'device' ? t('lock.openBody') : t('lock.body')}</p>
       </div>
 
-      {autoLocked ? (
-        <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--accent-border)] bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--accent-text)]">
-          {t('lock.autoLocked')}
-        </div>
-      ) : null}
-      {passkeyRetired ? (
-        <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]">
-          {t('lock.passkeyRetired')}
-        </div>
-      ) : null}
+      {autoLocked ? <Banner tone="accent">{t('lock.autoLocked')}</Banner> : null}
+      {passkeyRetired ? <Banner tone="warning">{t('lock.passkeyRetired')}</Banner> : null}
 
       {way === 'device' || way === 'biometric' ? (
         <>
-          <Button className="w-full" disabled={busy} onClick={
-            way === 'device' ? () => void attempt(async () => ({ type: 'device' })) : () => withBiometric()
-          }>
+          <button
+            className="btn btn-primary btn-block"
+            disabled={busy}
+            onClick={
+              way === 'device' ? () => void attempt(async () => ({ type: 'device' })) : () => withBiometric()
+            }
+          >
             {busy ? <Spinner label={t('lock.unlocking')} /> : labels[way]}
-          </Button>
+          </button>
           {error ? (
-            <p className="error-text text-center" role="alert">
+            <p className="error-text center" role="alert">
               {error}
             </p>
           ) : null}
@@ -192,36 +183,37 @@ export function LockScreen() {
       ) : null}
 
       {way === 'pin' && style === 'pattern' ? (
-        <div className="flex flex-col gap-2">
+        <div className="stack-sm">
           <PatternPad label={t('lock.drawPattern')} disabled={busy} onDone={withPin} />
           {busy ? (
-            <Progress value={Math.round(progress * 100)} />
+            <div className="progress">
+              <div style={{ width: `${Math.round(progress * 100)}%` }} />
+            </div>
           ) : null}
           {error ? (
-            <p className="error-text text-center" role="alert">
+            <p className="error-text center" role="alert">
               {error}
             </p>
           ) : (
-            <p className="text-xs text-[var(--text-muted)] text-center">{t('lock.drawPattern')}</p>
+            <p className="hint center">{t('lock.drawPattern')}</p>
           )}
         </div>
       ) : null}
 
       {typed ? (
         <form
-          className="flex flex-col gap-4"
+          className="stack"
           onSubmit={(event) => {
             event.preventDefault()
             submit()
           }}
         >
-          <div className="flex flex-col gap-1.5">
-            {way === 'recovery' ? <Label>{t('lock.recoveryPhrase')}</Label> : null}
+          <Field label={way === 'recovery' ? t('lock.recoveryPhrase') : undefined} error={error ?? undefined}>
             {way === 'recovery' ? (
-              <Textarea
+              <textarea
+                className="textarea mono"
                 dir="ltr"
                 autoFocus
-                className="mono"
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
@@ -234,7 +226,8 @@ export function LockScreen() {
                 }}
               />
             ) : (
-              <Input
+              <input
+                className={way === 'pin' ? 'input pin-input' : 'input'}
                 type="password"
                 dir={way === 'pin' ? 'ltr' : undefined}
                 inputMode={way === 'pin' ? 'numeric' : undefined}
@@ -245,7 +238,6 @@ export function LockScreen() {
                 aria-invalid={error ? true : undefined}
                 value={secret}
                 disabled={busy}
-                className={way === 'pin' ? 'pin-input' : undefined}
                 onChange={(event) => {
                   const value = event.target.value
                   setSecret(way === 'pin' ? value.replace(NOT_A_DIGIT, '') : value)
@@ -253,47 +245,44 @@ export function LockScreen() {
                 }}
               />
             )}
-            {error ? (
-              <span className="text-xs text-[var(--danger)]" role="alert">{error}</span>
-            ) : null}
-          </div>
+          </Field>
           {/* A passphrase or a PIN runs scrypt, which takes a second or more on a
               phone. Without a progress bar that reads as the app having frozen. */}
           {busy && way !== 'recovery' ? (
-            <Progress value={Math.round(progress * 100)} />
+            <div className="progress">
+              <div style={{ width: `${Math.round(progress * 100)}%` }} />
+            </div>
           ) : null}
-          <Button className="w-full" type="submit" disabled={!ready || busy}>
+          <button className="btn btn-primary btn-block" type="submit" disabled={!ready || busy}>
             {busy ? <Spinner label={t('lock.unlocking')} /> : t('lock.unlock')}
-          </Button>
+          </button>
         </form>
       ) : null}
 
-      <div className="flex flex-col gap-2 items-center text-center">
+      <div className="stack-sm center">
         {available
           .filter((other) => other !== way)
           .map((other) => (
-            <Button key={other} variant="ghost" size="sm" onClick={() => choose(other)}>
+            <button key={other} className="btn btn-ghost small" onClick={() => choose(other)}>
               {labels[other]}
-            </Button>
+            </button>
           ))}
-        <Button
-          variant="ghost"
-          size="sm"
+        <button
+          className="btn btn-ghost small"
           aria-expanded={showForgot}
           onClick={() => setShowForgot((value) => !value)}
         >
           {t('lock.forgot')}
-        </Button>
+        </button>
       </div>
 
       {showForgot ? (
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]">
+        <div className="stack">
+          <Banner tone="warning">
             {available.includes('recovery') ? t('lock.forgotBodyRecovery') : t('lock.forgotBody')}
-          </div>
-          <Button
-            variant="destructive"
-            className="w-full"
+          </Banner>
+          <button
+            className="btn btn-danger-soft btn-block"
             onClick={async () => {
               if (await confirmDanger(t('lock.startOver'), t('lock.startOver'), t('lock.startOverConfirm'))) {
                 void wipeDevice()
@@ -301,7 +290,7 @@ export function LockScreen() {
             }}
           >
             {t('lock.startOver')}
-          </Button>
+          </button>
         </div>
       ) : null}
     </EntryLayout>

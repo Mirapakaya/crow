@@ -2,9 +2,8 @@ import { Suspense, useMemo } from 'react'
 import { useApp } from '../../app/store'
 import { useT } from '../../i18n'
 import { goBack } from '../../app/router'
-import { CopyButton, EmptyState } from '../components/primitives'
-import { ArrowLeft, ShieldCheck } from 'lucide-react'
-import { Button } from '../../components/ui/button'
+import { Banner, CopyButton, EmptyState } from '../components/primitives'
+import { BackIcon, ShieldCheckIcon } from '../components/Icons'
 // Through the lazy table rather than directly: a static import here would make
 // the QR module reachable from two chunks, and the bundler would hoist it into
 // a shared chunk that is not named lazy — and so back into the precache.
@@ -41,19 +40,19 @@ export function VerifyScreen({ peer }: { peer: string }) {
   const verified = contact?.verification === 'verified'
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="flex items-center gap-2 px-4 py-3 bg-[var(--surface)] border-b border-[var(--border)]">
-        <Button variant="ghost" size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
-          <ArrowLeft size={18} strokeWidth={1.75} />
-        </Button>
-        <h1 className="flex-1 text-base font-semibold tracking-tight text-[var(--text)]">{text('title')}</h1>
+    <div className="screen">
+      <header className="app-header">
+        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+          <BackIcon />
+        </button>
+        <h1 className="grow">{text('title')}</h1>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
-        <div className="mx-auto w-full max-w-[30rem] flex flex-col gap-4 p-4">
-          <p className="text-sm text-[var(--text-muted)]">{text('body', { name })}</p>
+      <div className="screen-scroll">
+        <div className="container stack" style={{ maxWidth: '30rem' }}>
+          <p className="muted">{text('body', { name })}</p>
 
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-4">
+          <div className="card stack">
             <div className="safety-emoji" aria-hidden="true">
               {number.emoji.map((glyph, index) => (
                 <span key={index}>{glyph}</span>
@@ -73,27 +72,33 @@ export function VerifyScreen({ peer }: { peer: string }) {
 
           {verified ? (
             <>
-              <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--accent-border)] bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--accent-text)]">
-                <ShieldCheck size={16} />
+              <Banner tone="accent">
+                <ShieldCheckIcon size={16} />
                 <span>{text('verifiedAt')}</span>
-              </div>
-              <Button variant="outline" className="w-full" onClick={() => void updateContact(peer, { verification: 'unverified' })}>
+              </Banner>
+              <button
+                className="btn btn-outline btn-block"
+                onClick={() => void updateContact(peer, { verification: 'unverified' })}
+              >
                 {text('markUnverified')}
-              </Button>
+              </button>
             </>
           ) : (
-            <Button className="w-full" onClick={() => {
-              void updateContact(peer, { verification: 'verified' })
-              toast(t('contacts.verified'))
-            }}>
-              <ShieldCheck size={16} />
+            <button
+              className="btn btn-primary btn-block"
+              onClick={() => {
+                void updateContact(peer, { verification: 'verified' })
+                toast(t('contacts.verified'))
+              }}
+            >
+              <ShieldCheckIcon size={16} />
               {text('markVerified')}
-            </Button>
+            </button>
           )}
 
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
+          <div className="card stack-sm">
             <h3 style={{ fontSize: 'var(--step-0)' }}>{text('mismatchTitle')}</h3>
-            <p className="text-sm text-[var(--text-muted)]">{text('mismatchBody')}</p>
+            <p className="muted small">{text('mismatchBody')}</p>
           </div>
         </div>
       </div>

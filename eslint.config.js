@@ -20,7 +20,7 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
       'no-restricted-globals': [
         'error',
-        { name: 'fetch', message: 'Crow never talks to HTTP origins it does not control. Use the relay pool.' },
+        { name: 'fetch', message: 'Textor never talks to HTTP origins it does not control. Use the relay pool.' },
       ],
       eqeqeq: ['error', 'always', { null: 'ignore' }],
       'no-console': ['warn', { allow: ['warn', 'error'] }],

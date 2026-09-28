@@ -89,8 +89,10 @@ function TransferBar({ attachment }: { attachment: Attachment }) {
   if (!progress) return null
   const fraction = progress.total === 0 ? 0 : progress.received / progress.total
   return (
-    <div className="h-1 w-full overflow-hidden rounded-full bg-[var(--surface-3)]" role="progressbar" aria-label={t('attachment.transferring')}>
-      <div className="h-full rounded-full bg-[var(--accent)] transition-all" style={{ width: `${Math.round(fraction * 100)}%` }} />
+    <div className="attachment-progress" role="progressbar" aria-label={t('attachment.transferring')}>
+      <div className="progress">
+        <div style={{ width: `${Math.round(fraction * 100)}%` }} />
+      </div>
     </div>
   )
 }
@@ -334,14 +336,14 @@ function FileAttachment({ attachment }: { attachment: Attachment }) {
         {/* The name is peer-supplied: isolate it so its own directionality
             cannot reorder the size that follows. */}
         <bdi className="attachment-file-name truncate">{name}</bdi>
-        <span className="text-xs text-[var(--text-muted)]">{formatBytes(attachment.size, locale)}</span>
+        <span className="faint">{formatBytes(attachment.size, locale)}</span>
       </span>
       {url ? (
-        <a className="inline-flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs font-medium text-[var(--text)] hover:bg-[var(--surface-hover)] transition-colors" href={url} download={name}>
+        <a className="btn btn-outline small" href={url} download={name}>
           {t('attachment.save')}
         </a>
       ) : (
-        <span className="text-[0.6875rem] text-[var(--text-muted)]">{t('attachment.transferring')}</span>
+        <span className="faint small">{t('attachment.transferring')}</span>
       )}
       <TransferBar attachment={attachment} />
     </div>

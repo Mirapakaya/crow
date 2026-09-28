@@ -3,8 +3,6 @@ import { foldChecklist, type ChecklistSpec, type InteractiveUpdate } from '../..
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS } from '../../core/models/protocol'
 import { PlusIcon } from '../components/Icons'
 import { useInteractiveText } from './interactiveText'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 export interface ChecklistCardProps {
   checklist: ChecklistSpec
@@ -40,11 +38,11 @@ export function ChecklistCard({
 
   return (
     <div className="checklist" role="group" aria-labelledby={headingId}>
-      <div className="flex items-center justify-between">
+      <div className="row-between">
         <span className="poll-question" id={headingId} dir="auto">
           {checklist.title}
         </span>
-        <span className="text-xs text-text-muted tabular">{text('progress', { done, total: entries.length })}</span>
+        <span className="hint tabular">{text('progress', { done, total: entries.length })}</span>
       </div>
       <ul className="checklist-items">
         {entries.map((entry) => (
@@ -77,23 +75,23 @@ export function ChecklistCard({
             setDraft('')
           }}
         >
-          <Input
+          <input
+            className="input"
             dir="auto"
             value={draft}
             maxLength={MAX_ITEM_CHARS}
             placeholder={text('newItemPlaceholder')}
             aria-label={text('addItem')}
             onChange={(event) => setDraft(event.target.value)}
-            className="h-8 text-xs"
           />
-          <Button
+          <button
             type="submit"
-            size="icon"
+            className="btn btn-icon"
             aria-label={text('addItem')}
             disabled={!draft.trim()}
           >
             <PlusIcon size={16} />
-          </Button>
+          </button>
         </form>
       ) : null}
     </div>

@@ -4,7 +4,6 @@ import { useI18n } from '../../i18n'
 import { Avatar, GroupAvatar, Modal } from '../components/primitives'
 import { conversationTitle, isRequest } from '../screens/ChatList'
 import type { ChatAddress, Conversation } from '../../core/models/types'
-import { Input } from '@/components/ui/input'
 
 /** Where a conversation is reached: a group by its id, a person by their key. */
 const addressOf = (conversation: Conversation): ChatAddress =>
@@ -44,8 +43,9 @@ export function ForwardSheet({
 
   return (
     <Modal title={t('chat.forwardTitle')} onClose={onClose}>
-      <div className="flex flex-col gap-2">
-        <Input
+      <div className="stack-sm">
+        <input
+          className="input"
           type="search"
           placeholder={t('chats.searchPlaceholder')}
           aria-label={t('chats.searchPlaceholder')}
@@ -57,7 +57,7 @@ export function ForwardSheet({
             <button
               key={conversation.id}
               type="button"
-              className="flex w-full items-center gap-3 px-4 py-3 hover:bg-surface-hover bg-transparent border-none text-start cursor-pointer"
+              className="list-row"
               onClick={() => onPick(addressOf(conversation))}
             >
               {conversation.kind === 'group' ? (

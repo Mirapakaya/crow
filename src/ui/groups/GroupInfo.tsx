@@ -7,7 +7,6 @@ import { confirmDanger } from '../components/dialog'
 import { BackIcon, ShieldCheckIcon, TrashIcon } from '../components/Icons'
 import { conversationTitle, displayName } from '../screens/ChatList'
 import { SecureGroupPanel } from './SecureGroupPanel'
-import { Button } from '@/components/ui/button'
 
 /**
  * Who is in a group, and what can be done to it here.
@@ -36,9 +35,9 @@ export function GroupInfo({ id }: { id: string }) {
     return (
       <div className="screen">
         <header className="app-header">
-          <Button variant="ghost" size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
+          <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
             <BackIcon />
-          </Button>
+          </button>
         </header>
         {conversationsLoaded ? (
           <EmptyState title={t('groups.notFound')} body={t('groups.notFoundBody')} />
@@ -56,18 +55,18 @@ export function GroupInfo({ id }: { id: string }) {
   return (
     <div className="screen">
       <header className="app-header">
-        <Button variant="ghost" size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
+        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </Button>
+        </button>
         <h1 className="grow">{t('groups.info')}</h1>
       </header>
 
       <div className="screen-scroll">
         <div className="container stack" style={{ maxWidth: '34rem' }}>
-          <div className="flex flex-col gap-2 text-center">
+          <div className="stack-sm center group-hero">
             <GroupAvatar seed={group.id} size="lg" />
             <h2 dir="auto">{conversationTitle(group, contacts, locale)}</h2>
-            <span className="text-sm text-text-muted">{t('groups.members', { n: group.members.length + 1 })}</span>
+            <span className="muted small">{t('groups.members', { n: group.members.length + 1 })}</span>
           </div>
 
           {group.mls ? (
@@ -76,12 +75,12 @@ export function GroupInfo({ id }: { id: string }) {
             <>
               <div className="card-section">
                 {identity ? (
-                  <div className="flex w-full items-center gap-3 px-4 py-3 hover:bg-surface-hover">
+                  <div className="list-row">
                     <Avatar name={identity.name} seed={identity.pubkey} src={identity.avatar} size="sm" />
                     <span className="grow truncate">
                       <bdi>{identity.name}</bdi>
                     </span>
-                    <span className="text-xs text-text-muted">{t('groups.you')}</span>
+                    <span className="hint">{t('groups.you')}</span>
                   </div>
                 ) : null}
                 {[...group.members]
@@ -96,11 +95,11 @@ export function GroupInfo({ id }: { id: string }) {
                     const body = (
                       <>
                         <Avatar name={name} seed={pubkey} src={contact?.avatar} size="sm" />
-                        <span className="grow flex flex-col gap-2" style={{ minWidth: 0 }}>
+                        <span className="grow stack-sm" style={{ minWidth: 0 }}>
                           <span className="truncate">
                             <bdi>{name}</bdi>
                           </span>
-                          {known ? null : <span className="text-xs text-text-muted">{t('groups.notInContacts')}</span>}
+                          {known ? null : <span className="hint">{t('groups.notInContacts')}</span>}
                         </span>
                         {contact?.verification === 'verified' ? (
                           <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
@@ -113,25 +112,25 @@ export function GroupInfo({ id }: { id: string }) {
                       <button
                         key={pubkey}
                         type="button"
-                        className="flex w-full items-center gap-3 px-4 py-3 hover:bg-surface-hover text-start bg-transparent border-none cursor-pointer"
+                        className="list-row"
                         onClick={() => navigate({ name: 'contact', peer: pubkey })}
                       >
                         {body}
                       </button>
                     ) : (
-                      <div key={pubkey} className="flex w-full items-center gap-3 px-4 py-3">
+                      <div key={pubkey} className="list-row">
                         {body}
                       </div>
                     )
                   })}
               </div>
 
-              <p className="text-xs text-text-muted">{t('groups.fixedMembers')}</p>
+              <p className="hint">{t('groups.fixedMembers')}</p>
 
-              <Button variant="destructive" className="w-full" onClick={() => void remove()}>
+              <button type="button" className="btn btn-danger-soft btn-block" onClick={() => void remove()}>
                 <TrashIcon size={16} />
                 {t('groups.delete')}
-              </Button>
+              </button>
             </>
           )}
         </div>
