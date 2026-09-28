@@ -81,7 +81,7 @@ function StatusIcon({ status, label, className }: { status: Message['status']; l
     case 'delivered':
       return <CheckIcon {...shared} />
     case 'read':
-      return <DoubleCheckIcon {...shared} className="inline-flex items-center text-sky-300" />
+      return <DoubleCheckIcon {...shared} className={cn("inline-flex items-center text-sky-300", className)} />
     case 'failed':
       return <AlertIcon {...shared} />
   }
