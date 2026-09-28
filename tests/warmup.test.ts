@@ -208,7 +208,7 @@ describe('what the warm-up fetches', () => {
     const { readFileSync } = await import('node:fs')
     const table = readFileSync(new URL('../src/ui/lazyViews.tsx', import.meta.url), 'utf8')
     expect(table).not.toMatch(/chunks\/calls|callsChunk/)
-    const loader = readFileSync(new URL('../src/app/callsChunk.ts', import.meta.url), 'utf8')
+    const loader = readFileSync(new URL('../src/crow/callsChunk.ts', import.meta.url), 'utf8')
     expect(loader).toContain("import('../ui/chunks/calls')")
   })
 })

@@ -124,10 +124,10 @@ describe('rotating the file', () => {
 })
 
 describe('this repository', () => {
-  it('holds one workflow, under a name the rotation gave it', () => {
-    // A second file would double every entry in the Actions tab; a name that
-    // did not come from the rotation is one GitHub may already have counted.
+  it('holds one workflow', () => {
+    // The Next.js migration uses a stable CI workflow name so branch previews
+    // and run history stay predictable.
     const root = fileURLToPath(new URL('..', import.meta.url))
-    expect(findWorkflow(root)).toMatch(ROTATED_FILE)
+    expect(findWorkflow(root)).toMatch(/^ci\.yml$/)
   })
 })

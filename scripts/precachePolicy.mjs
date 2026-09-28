@@ -28,7 +28,7 @@ export const PRECACHE_BUDGET_BYTES = 800 * 1024
 export const LAZY_PREFIX = 'lazy-'
 
 /** The runtime cache that serves lazy chunks once they have been fetched once. */
-export const LAZY_CACHE_NAME = 'textor-lazy'
+export const LAZY_CACHE_NAME = 'crow-lazy'
 
 /** Strip a deployment base path so manifest URLs compare against dist paths. */
 export function normalizeUrl(url, base = '/') {
