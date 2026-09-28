@@ -36,8 +36,8 @@ export default withPWA({
     scope: '/',
     categories: ['social', 'communication', 'productivity'],
     icons: [
-      { src: '/crow.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
-      { src: '/icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+      { src: '/crow.svg', sizes: 'any', type: 'image/svg+xml' },
+      { src: '/icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
     ],
   },
 })(nextConfig)
