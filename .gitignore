@@ -1,5 +1,6 @@
 node_modules
 dist
+.next
 dev-dist
 coverage
 .DS_Store
@@ -10,3 +11,14 @@ coverage
 # Local editor/agent tooling
 .claude
 .vercel
+
+# Generated PWA assets
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
+public/worker-*.js
+public/worker-*.js.map
+public/swe-worker-*.js
+public/swe-worker-*.js.map
+public/manifest.json
