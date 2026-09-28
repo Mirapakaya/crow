@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Users, X, Copy, Check } from 'lucide-react'
+import { Users, Copy, Check } from 'lucide-react'
 import { useT } from '../../i18n'
 import { Button } from './ui/button'
 import { Switch } from './ui/switch'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog'
+import { Avatar as ShadcnAvatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { Label } from './ui/label'
+import { Skeleton } from './ui/skeleton'
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card'
 import { cn } from '@/lib/utils'
 
 /** Deterministic avatar colour from a public key — stable across devices. */
@@ -28,9 +38,16 @@ export function initials(name: string): string {
  * one is recognisable.
  */
 export function GroupAvatar({ seed, size = 'md' }: { seed: string; size?: 'sm' | 'md' | 'lg' }) {
-  const className = `avatar avatar-group${size === 'sm' ? ' avatar-sm' : size === 'lg' ? ' avatar-lg' : ''}`
+  const sizeClass = size === 'sm' ? 'h-8 w-8' : size === 'lg' ? 'h-12 w-12' : 'h-10 w-10'
   return (
-    <div className={className} style={{ background: avatarColor(seed) }} aria-hidden="true">
+    <div
+      className={cn(
+        'flex items-center justify-center rounded-full text-[var(--accent-fg)]',
+        sizeClass,
+      )}
+      style={{ background: avatarColor(seed) }}
+      aria-hidden="true"
+    >
       <Users size={size === 'lg' ? 30 : size === 'sm' ? 15 : 19} />
     </div>
   )
@@ -47,18 +64,14 @@ export function Avatar({
   src?: string
   size?: 'sm' | 'md' | 'lg'
 }) {
-  const className = `avatar${size === 'sm' ? ' avatar-sm' : size === 'lg' ? ' avatar-lg' : ''}`
-  if (src) {
-    return (
-      <div className={className}>
-        <img src={src} alt="" />
-      </div>
-    )
-  }
+  const sizeClass = size === 'sm' ? 'h-8 w-8 text-xs' : size === 'lg' ? 'h-12 w-12 text-base' : 'h-10 w-10 text-sm'
   return (
-    <div className={className} style={{ background: avatarColor(seed) }} aria-hidden="true">
-      {initials(name)}
-    </div>
+    <ShadcnAvatar className={sizeClass}>
+      {src ? <AvatarImage src={src} alt="" /> : null}
+      <AvatarFallback style={{ background: avatarColor(seed), color: 'var(--accent-fg)' }}>
+        {initials(name)}
+      </AvatarFallback>
+    </ShadcnAvatar>
   )
 }
 
@@ -111,8 +124,8 @@ export function Field({
   children: ReactNode
 }) {
   return (
-    <div className="field">
-      {label ? <span className="label">{label}</span> : null}
+    <div className="field space-y-2">
+      {label ? <Label>{label}</Label> : null}
       {children}
       {error ? (
         <span className="error-text" role="alert">
@@ -125,19 +138,12 @@ export function Field({
   )
 }
 
-/**
- * Accessible modal: focus moves in on open and returns on close, Escape
- * dismisses, and a click on the backdrop dismisses. Focus is trapped so
- * keyboard users cannot tab into the inert page behind it. Focus lands on the
- * element marked `data-autofocus` when there is one — a question whose answers
- * destroy something starts on the one that does not.
- */
 export function Modal({
   title,
   onClose,
   children,
-  labelledBy = 'modal-title',
-  closable = true,
+  labelledBy,
+  closable,
 }: {
   title: string
   onClose: () => void
@@ -145,70 +151,17 @@ export function Modal({
   labelledBy?: string
   closable?: boolean
 }) {
-  const t = useT()
-  const ref = useRef<HTMLDivElement>(null)
-  const restoreTo = useRef<HTMLElement | null>(null)
-
-  useEffect(() => {
-    restoreTo.current = document.activeElement as HTMLElement | null
-    const node = ref.current
-    const focusable = node?.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    )
-    ;(node?.querySelector<HTMLElement>('[data-autofocus]') ?? focusable?.[0])?.focus()
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.stopPropagation()
-        onClose()
-        return
-      }
-      if (event.key !== 'Tab' || !node) return
-      const items = [
-        ...node.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
-        ),
-      ]
-      if (items.length === 0) return
-      const first = items[0] as HTMLElement
-      const last = items[items.length - 1] as HTMLElement
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-
-    document.addEventListener('keydown', onKeyDown, true)
-    return () => {
-      document.removeEventListener('keydown', onKeyDown, true)
-      restoreTo.current?.focus?.()
-    }
-  }, [onClose])
-
+  void labelledBy
+  void closable
   return (
-    <div
-      className="modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
-    >
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={labelledBy} ref={ref}>
-        <div className="row-between" style={{ marginBottom: 'var(--space-4)' }}>
-          <h2 id={labelledBy} style={{ fontSize: 'var(--step-1)' }}>
-            {title}
-          </h2>
-          {closable ? (
-            <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.close')}>
-              <X size={20} />
-            </Button>
-          ) : null}
-        </div>
+    <Dialog open onOpenChange={(next) => !next && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
         {children}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -243,17 +196,23 @@ export function Toggle({
   )
 }
 
-export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
+export function EmptyState({
+  title,
+  body,
+  action,
+}: {
+  title: string
+  body?: string
+  action?: ReactNode
+}) {
   return (
-    <div className="empty">
-      <h3>{title}</h3>
-      {body ? (
-        <p className="muted" style={{ maxWidth: '28rem' }}>
-          {body}
-        </p>
-      ) : null}
-      {action}
-    </div>
+    <Card className="empty">
+      <CardHeader>
+        <CardTitle className="text-lg">{title}</CardTitle>
+        {body ? <CardDescription>{body}</CardDescription> : null}
+      </CardHeader>
+      {action ? <CardFooter>{action}</CardFooter> : null}
+    </Card>
   )
 }
 
@@ -310,3 +269,5 @@ function useCopyState(): [boolean, () => void] {
 
   return [copied, flash]
 }
+
+export { Skeleton }
