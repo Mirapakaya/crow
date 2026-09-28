@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Vazirmatn } from 'next/font/google'
 import { cn } from '@/lib/utils'
 import './globals.css'
-import '../styles/app.css'
 
 const geistSans = Geist({
   subsets: ['latin'],
