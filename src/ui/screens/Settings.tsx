@@ -18,6 +18,11 @@ import { SettingsPage } from './SettingsPage'
 import type { LocaleCode, ThemePreference } from '../../core/models/types'
 import { APP_VERSION, SOURCE_URL } from '../../crow/meta'
 import { useAboutText } from './aboutText'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 export function SettingsHome() {
   const { t } = useI18n()
@@ -44,25 +49,27 @@ export function SettingsHome() {
   }
 
   return (
-    <div className="screen">
-      <header className="app-header">
-        <h1 className="grow">{t('settings.title')}</h1>
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <header className="flex items-center gap-2 min-h-[3.25rem] px-3 py-2 bg-card border-b border-border">
+        <h1 className="flex-1 min-w-0 text-base font-semibold">{t('settings.title')}</h1>
       </header>
 
-      <div className="screen-scroll">
-        <div className="container stack" style={{ maxWidth: '34rem' }}>
-          <span className="section-title">{t('settings.profile')}</span>
-          <div className="card stack">
-            <div className="row">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <div className={cn('w-full max-w-2xl mx-auto p-4 flex flex-col gap-4')} style={{ maxWidth: '34rem' }}>
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+            {t('settings.profile')}
+          </span>
+          <Card className="p-4 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
               <Avatar name={identity.name} seed={identity.pubkey} src={identity.avatar} size="lg" />
-              <div className="grow stack-sm">
-                <span style={{ fontWeight: 600 }}>{identity.name}</span>
-                <code className="mono faint" style={{ wordBreak: 'break-all' }}>
+              <div className="flex-1 min-w-0 flex flex-col gap-2">
+                <span className="font-semibold" dir="auto">{identity.name}</span>
+                <code className="font-mono text-sm text-muted-foreground/70 break-all" dir="ltr">
                   {identity.npub}
                 </code>
               </div>
             </div>
-            <p className="hint">{t('settings.profileBody')}</p>
+            <p className="text-sm text-muted-foreground">{t('settings.profileBody')}</p>
 
             {/*
               Uncontrolled and keyed by the stored value: the vault is the
@@ -72,9 +79,8 @@ export function SettingsHome() {
               effect and a render cascade on every keystroke elsewhere.
             */}
             <Field label={t('settings.displayName')}>
-              <input
+              <Input
                 key={`name:${identity.name}`}
-                className="input"
                 defaultValue={identity.name}
                 maxLength={64}
                 onBlur={(event) => {
@@ -85,9 +91,8 @@ export function SettingsHome() {
             </Field>
 
             <Field label={t('settings.about')}>
-              <input
+              <Input
                 key={`about:${identity.about}`}
-                className="input"
                 defaultValue={identity.about}
                 maxLength={200}
                 onBlur={(event) => {
@@ -96,13 +101,13 @@ export function SettingsHome() {
               />
             </Field>
 
-            <div className="row">
-              <label className="btn btn-outline grow">
+            <div className="flex items-center gap-3">
+              <label className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
                 {t('settings.avatarChoose')}
                 <input
                   type="file"
                   accept="image/*"
-                  className="visually-hidden"
+                  className="sr-only"
                   onChange={(event) => {
                     const file = event.target.files?.[0]
                     if (file) void pickAvatar(file)
@@ -110,19 +115,20 @@ export function SettingsHome() {
                 />
               </label>
               {identity.avatar ? (
-                <button className="btn btn-ghost" onClick={() => void updateProfile({ avatar: undefined })}>
+                <Button variant="ghost" onClick={() => void updateProfile({ avatar: undefined })}>
                   {t('settings.avatarRemove')}
-                </button>
+                </Button>
               ) : null}
             </div>
-          </div>
+          </Card>
 
-          <span className="section-title">{t('settings.appearance')}</span>
-          <div className="card-section">
-            <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+            {t('settings.appearance')}
+          </span>
+          <Card className="p-0 overflow-hidden divide-y divide-border">
+            <div className="py-3 px-4">
               <Field label={t('settings.language')}>
-                <select
-                  className="input select"
+                <Select
                   value={settings.locale}
                   onChange={(event) => void saveSettings({ locale: event.target.value as LocaleCode })}
                 >
@@ -131,10 +137,10 @@ export function SettingsHome() {
                       {LOCALE_NAMES[code]}
                     </option>
                   ))}
-                </select>
+                </Select>
               </Field>
             </div>
-            <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
+            <div className="py-3 px-4">
               {/* The same control as on the entry screens, so the theme switch
                   looks and behaves identically wherever it is met. */}
               <Field label={t('settings.theme')}>
@@ -155,9 +161,9 @@ export function SettingsHome() {
               checked={settings.enterToSend}
               onChange={(enterToSend) => void saveSettings({ enterToSend })}
             />
-          </div>
+          </Card>
 
-          <div className="card-section">
+          <Card className="p-0 overflow-hidden divide-y divide-border">
             <NavRow
               icon={<GlobeIcon size={18} />}
               label={t('settings.relays')}
@@ -183,25 +189,27 @@ export function SettingsHome() {
               label={t('settings.data')}
               to={{ name: 'settings-data' }}
             />
-          </div>
+          </Card>
 
-          <span className="section-title">{t('settings.aboutSection')}</span>
-          <div className="card-section">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+            {t('settings.aboutSection')}
+          </span>
+          <Card className="p-0 overflow-hidden divide-y divide-border">
             <NavRow label={t('settings.whatLeaves')} to={{ name: 'about' }} />
-            <a className="list-row" href={SOURCE_URL} target="_blank" rel="noreferrer noopener">
-              <span className="grow">{t('settings.sourceCode')}</span>
-              <ChevronIcon size={16} />
+            <a className="flex items-center gap-3 w-full px-4 py-3 text-start hover:bg-accent/50" href={SOURCE_URL} target="_blank" rel="noreferrer noopener">
+              <span className="flex-1 min-w-0">{t('settings.sourceCode')}</span>
+              <ChevronIcon size={16} className="text-muted-foreground/70" />
             </a>
-            <div className="list-row" style={{ cursor: 'default' }}>
-              <span className="grow muted">{t('settings.version')}</span>
-              <code className="mono small">{APP_VERSION}</code>
+            <div className="flex items-center gap-3 w-full px-4 py-3 text-start" style={{ cursor: 'default' }}>
+              <span className="flex-1 min-w-0 text-muted-foreground">{t('settings.version')}</span>
+              <code className="font-mono text-xs">{APP_VERSION}</code>
             </div>
-          </div>
+          </Card>
 
-          <button className="btn btn-outline btn-block" onClick={() => lock()}>
+          <Button variant="outline" className="w-full" onClick={() => lock()}>
             <LockIcon size={16} />
             {t('settings.lockNow')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -213,10 +221,10 @@ export function NavRow({ icon, label, to }: { icon?: React.ReactNode; label: str
   const navigate = useNavigate()
   const current = useRoute().name === to.name
   return (
-    <button className="list-row" aria-current={current || undefined} onClick={() => navigate(to)}>
-      {icon ? <span style={{ color: 'var(--text-muted)' }}>{icon}</span> : null}
-      <span className="grow">{label}</span>
-      <ChevronIcon size={16} style={{ color: 'var(--text-faint)' }} />
+    <button className="flex items-center gap-3 w-full px-4 py-3 text-start hover:bg-accent/50" aria-current={current || undefined} onClick={() => navigate(to)}>
+      {icon ? <span className="text-muted-foreground">{icon}</span> : null}
+      <span className="flex-1 min-w-0" dir="auto">{label}</span>
+      <ChevronIcon size={16} className="text-muted-foreground/70" />
     </button>
   )
 }
@@ -252,7 +260,7 @@ export function PrivacySettings() {
 
   return (
     <SettingsPage title={t('settings.privacy')}>
-      <div className="card-section">
+      <Card className="p-0 overflow-hidden divide-y divide-border">
         <Toggle
           label={t('settings.notifications')}
           description={t('settings.notificationsBody')}
@@ -288,12 +296,11 @@ export function PrivacySettings() {
           checked={settings.mlsInvites}
           onChange={(mlsInvites) => void saveSettings({ mlsInvites })}
         />
-      </div>
+      </Card>
 
-      <div className="card stack-sm">
+      <Card className="p-4 flex flex-col gap-2">
         <Field label={t('settings.retention')}>
-          <select
-            className="input select"
+          <Select
             value={settings.retention}
             onChange={(event) =>
               void saveSettings({ retention: event.target.value as typeof settings.retention })
@@ -303,14 +310,13 @@ export function PrivacySettings() {
             <option value="90d">{t('settings.retentionDays', { n: 90 })}</option>
             <option value="30d">{t('settings.retentionDays', { n: 30 })}</option>
             <option value="7d">{t('settings.retentionDays', { n: 7 })}</option>
-          </select>
+          </Select>
         </Field>
-      </div>
+      </Card>
 
-      <div className="card stack-sm">
+      <Card className="p-4 flex flex-col gap-2">
         <Field label={t('settings.messageExpiry')} hint={t('settings.messageExpiryBody')}>
-          <select
-            className="input select"
+          <Select
             value={String(settings.messageExpirationDays)}
             onChange={(event) => void saveSettings({ messageExpirationDays: Number(event.target.value) })}
           >
@@ -319,12 +325,12 @@ export function PrivacySettings() {
                 {t('settings.retentionDays', { n: days })}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
-      </div>
+      </Card>
 
       <Banner tone="accent">
-        <span className="small">{about('limitsForwardSecrecy')}</span>
+        <span className="text-xs">{about('limitsForwardSecrecy')}</span>
       </Banner>
     </SettingsPage>
   )

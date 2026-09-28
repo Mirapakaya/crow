@@ -11,6 +11,8 @@ import { Popover } from './Popover'
 import { LazyPicker } from './LazyPicker'
 import { QUICK_REACTIONS } from './quickReactions'
 import { usePress } from './hold'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 /**
  * Delivery state, rendered the way Telegram's readers already read it
@@ -70,7 +72,7 @@ function statusLabel(message: Message, t: TranslateFn): string {
 }
 
 function StatusIcon({ status, label }: { status: Message['status']; label: string }) {
-  const shared = { size: 13, className: 'tick', role: 'img' as const, 'aria-label': label }
+  const shared = { size: 13, className: 'inline-flex items-center', role: 'img' as const, 'aria-label': label }
   switch (status) {
     case 'queued':
     case 'sending':
@@ -79,7 +81,7 @@ function StatusIcon({ status, label }: { status: Message['status']; label: strin
     case 'delivered':
       return <CheckIcon {...shared} />
     case 'read':
-      return <DoubleCheckIcon {...shared} className="tick tick-read" />
+      return <DoubleCheckIcon {...shared} className="inline-flex items-center text-sky-300" />
     case 'failed':
       return <AlertIcon {...shared} />
   }
@@ -153,7 +155,7 @@ export const MessageBubble = memo(function MessageBubble({
   // The body of a poll or checklist is its plain-text rendering for other
   // clients. It is shown while the card's chunk loads, and never beside it.
   const body = message.body ? (
-    <span className="bubble-body" dir="auto">
+    <span className="block whitespace-pre-wrap break-words" dir="auto">
       {message.body}
     </span>
   ) : null
@@ -195,13 +197,16 @@ export const MessageBubble = memo(function MessageBubble({
     onReact(message, emoji)
   }
   const quick = (
-    <div className="quick-reactions">
+    <div className="flex flex-wrap gap-1">
       {QUICK_REACTIONS.map((emoji) => (
         <button
           key={emoji}
           type="button"
           role="menuitem"
-          className={grouped.some((e) => e.mine && e.emoji === emoji) ? 'quick-emoji on' : 'quick-emoji'}
+          className={cn(
+            'rounded p-1 text-xl transition-colors hover:bg-muted',
+            grouped.some((e) => e.mine && e.emoji === emoji) && 'bg-primary/20',
+          )}
           onClick={() => react(emoji)}
         >
           <span>{emoji}</span>
@@ -231,23 +236,31 @@ export const MessageBubble = memo(function MessageBubble({
       afterHold={press.afterHold}
       failed={message.status === 'failed'}
     >
-      <div className="bubble" {...press.handlers}>
+      <div
+        className={cn(
+          'relative max-w-[min(80%,34rem)] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 shadow-sm',
+          outgoing
+            ? 'self-end bg-primary text-primary-foreground'
+            : 'self-start bg-muted text-foreground',
+        )}
+        {...press.handlers}
+      >
         {/*
           Bubbles are visually attributed by side and colour, which conveys
           nothing to a screen reader. Announcing the sender once per run matches
           how the list reads visually without repeating a name on every line.
         */}
         {groupStart && authorLabel ? (
-          <span className="bubble-author" dir="auto">
+          <span className="mb-1 block text-xs text-muted-foreground" dir="auto">
             {authorLabel}
           </span>
         ) : groupStart ? (
-          <span className="visually-hidden">{senderLabel}</span>
+          <span className="sr-only">{senderLabel}</span>
         ) : null}
 
         {quoted ? (
           <a
-            className="bubble-quote"
+            className="mb-1 block overflow-hidden rounded-sm border-s-2 border-current/30 bg-white/10 px-2 py-1 text-sm opacity-85"
             dir="auto"
             href={`#msg-${quoted.id}`}
             onClick={(event) => {
@@ -273,25 +286,28 @@ export const MessageBubble = memo(function MessageBubble({
             blank line above the timestamp. */}
         {content}
 
-        <div className="bubble-meta">
+        <div className="mt-0.5 flex select-none items-center justify-end gap-1 text-xs opacity-75">
           {message.via === 'direct' ? (
             <BoltIcon size={11} role="img" aria-label={t('status.direct')} />
           ) : null}
           <time dateTime={new Date(message.ts).toISOString()}>{formatTime(message.ts, locale)}</time>
           {outgoing ? (
-            <span className="tick-wrap" title={status}>
+            <span className="inline-flex items-center" title={status}>
               <StatusIcon status={message.status} label={status} />
             </span>
           ) : null}
         </div>
 
         {grouped.length > 0 ? (
-          <div className="reaction-bar" role="group" aria-label={t('emoji.reactions')}>
+          <div className="mt-1 flex flex-wrap gap-1" role="group" aria-label={t('emoji.reactions')}>
             {grouped.map((entry) => (
               <button
                 key={entry.emoji}
                 type="button"
-                className={entry.mine ? 'reaction reaction-mine' : 'reaction'}
+                className={cn(
+                  'flex items-center gap-1 rounded-full px-2 py-0.5 text-xs transition-colors',
+                  entry.mine ? 'bg-primary/20' : 'bg-black/10',
+                )}
                 aria-pressed={entry.mine}
                 // Tapping our own reaction takes it back, which is what
                 // `react` with the same emoji does.
@@ -302,29 +318,29 @@ export const MessageBubble = memo(function MessageBubble({
                     emoji's own Unicode name — better than anything invented
                     here. Hiding it left the button nameless. */}
                 <span>{entry.emoji}</span>
-                {entry.count > 1 ? <span className="reaction-count">{entry.count}</span> : null}
+                {entry.count > 1 ? <span className="tabular-nums">{entry.count}</span> : null}
               </button>
             ))}
           </div>
         ) : null}
 
-        <div className="bubble-actions">
+        <div className="absolute top-1/2 end-full me-3 hidden -translate-y-1/2 gap-0.5 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 sm:flex">
           <button
             type="button"
-            className="bubble-action"
+            className="flex h-6 w-6 items-center justify-center rounded-sm text-foreground/75 hover:bg-foreground/20 hover:text-foreground"
             aria-haspopup="menu"
             aria-expanded={reactAt !== null}
             aria-label={t('emoji.react')}
             title={t('emoji.react')}
             onClick={(event) => setReactAt(reactAt ? null : event.currentTarget)}
           >
-            <span aria-hidden="true" className="bubble-action-emoji">
+            <span aria-hidden="true" className="text-lg">
               ☺
             </span>
           </button>
           <button
             type="button"
-            className="bubble-action"
+            className="flex h-6 w-6 items-center justify-center rounded-sm text-foreground/75 hover:bg-foreground/20 hover:text-foreground"
             aria-label={t('chat.reply')}
             title={t('chat.reply')}
             onClick={() => onReply(message)}
@@ -333,7 +349,7 @@ export const MessageBubble = memo(function MessageBubble({
           </button>
           <button
             type="button"
-            className="bubble-action"
+            className="flex h-6 w-6 items-center justify-center rounded-sm text-foreground/75 hover:bg-foreground/20 hover:text-foreground"
             aria-haspopup="menu"
             aria-expanded={menuAt !== null}
             aria-label={t('chat.messageActions')}
@@ -350,6 +366,7 @@ export const MessageBubble = memo(function MessageBubble({
             <button
               type="button"
               role="menuitem"
+              className="w-full rounded-sm px-3 py-2 text-start text-sm transition-colors hover:bg-muted"
               onClick={() => {
                 setReactAt(null)
                 setPickerAt(reactAt)
@@ -393,11 +410,11 @@ export const MessageBubble = memo(function MessageBubble({
       </div>
 
       {message.status === 'failed' ? (
-        <div className="bubble-failed">
-          <span className="danger-text small">{t('chat.failed')}</span>
-          <button type="button" className="btn btn-ghost small" onClick={() => onRetry(message)}>
+        <div className="mt-0.5 flex items-center gap-2">
+          <span className="text-xs text-destructive">{t('chat.failed')}</span>
+          <Button variant="ghost" size="sm" onClick={() => onRetry(message)}>
             {t('chat.retrySend')}
-          </button>
+          </Button>
         </div>
       ) : null}
     </EntryRow>

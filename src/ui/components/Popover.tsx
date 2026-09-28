@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useI18n } from '../../i18n'
@@ -140,7 +141,10 @@ export function Popover({ anchor, onClose, children, label, className }: Popover
   return createPortal(
     <div
       ref={panelRef}
-      className={className ? `popover ${className}` : 'popover'}
+      className={cn(
+        'fixed z-50 flex min-w-[12rem] max-w-[min(18rem,calc(100vw-2rem))] flex-col rounded-md border border-border bg-popover p-1 text-start shadow-lg',
+        className,
+      )}
       role="menu"
       aria-label={label}
       data-above={placement?.above ? 'true' : 'false'}

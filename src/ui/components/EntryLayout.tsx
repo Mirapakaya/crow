@@ -13,12 +13,12 @@ import { LockIcon } from './Icons'
  */
 export function EntryLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="entry">
-      <div className="entry-bar">
+    <div className="flex flex-col flex-1 min-h-0 overflow-y-auto overscroll-contain">
+      <div className="flex items-center justify-between gap-3 w-full max-w-[25rem] mx-auto px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <Brand />
         <DisplayControls />
       </div>
-      <div className="entry-body stack">{children}</div>
+      <div className="flex flex-col flex-1 justify-center w-full max-w-[25rem] mx-auto px-4 pb-12 gap-4">{children}</div>
     </div>
   )
 }
@@ -29,8 +29,8 @@ export function EntryLayout({ children }: { children: ReactNode }) {
  */
 export function Brand() {
   return (
-    <span className="brand" dir="ltr">
-      <span className="brand-mark" aria-hidden="true">
+    <span className="inline-flex items-center gap-2 text-base font-bold tracking-tight text-foreground select-none" dir="ltr">
+      <span className="grid place-items-center w-6 h-6 rounded-sm bg-primary text-primary-foreground shrink-0" aria-hidden="true">
         <LockIcon size={13} />
       </span>
       Crow

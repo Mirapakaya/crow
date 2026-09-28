@@ -10,6 +10,10 @@ import { alreadyListed, parseIceServer, serverUrls } from '../../core/calls/iceS
 import { probeIce, type IceProbeResult, type IceVerdict } from '../../core/calls/iceProbe'
 import { DEFAULT_ICE_SERVERS } from '../../core/transport/defaultRelays'
 import { supportsWebRtc } from '../../core/transport/webrtc/directManager'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 const VERDICT: Record<IceVerdict, CallSettingsTextKey> = {
   good: 'iceVerdictGood',
@@ -84,10 +88,10 @@ export function CallSettings() {
 
   return (
     <SettingsPage title={t('settings.calls')}>
-      <p className="muted">{st('callsBody')}</p>
+      <p className="text-muted-foreground">{st('callsBody')}</p>
       {!canCall ? <Banner tone="warning">{st('iceUnsupported')}</Banner> : null}
 
-      <div className="card-section">
+      <Card className="p-0 overflow-hidden divide-y divide-border">
         <Toggle
           label={st('relayCalls')}
           description={turnConfigured ? st('relayCallsBody') : st('relayCallsNeedsTurn')}
@@ -95,143 +99,145 @@ export function CallSettings() {
           disabled={!turnConfigured}
           onChange={(callRelayOnly) => void saveSettings({ callRelayOnly })}
         />
-      </div>
+      </Card>
 
-      <span className="section-title">{st('iceServers')}</span>
-      <p className="hint">{st('iceServersBody')}</p>
+      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+        {st('iceServers')}
+      </span>
+      <p className="text-sm text-muted-foreground">{st('iceServersBody')}</p>
 
-      <div className="card-section">
-        <div className="list-row" style={{ cursor: 'default' }}>
-          <GlobeIcon size={16} style={{ color: 'var(--text-muted)' }} />
-          <span className="grow small muted">{st('iceBuiltIn')}</span>
+      <Card className="p-0 overflow-hidden divide-y divide-border">
+        <div className="flex items-center gap-3 w-full px-4 py-3 text-start">
+          <GlobeIcon size={16} className="text-muted-foreground" />
+          <span className="flex-1 min-w-0 text-xs text-muted-foreground">{st('iceBuiltIn')}</span>
         </div>
         {servers.length === 0 ? (
-          <div className="list-row" style={{ cursor: 'default' }}>
-            <span className="grow small faint">{st('iceNone')}</span>
+          <div className="flex items-center gap-3 w-full px-4 py-3 text-start">
+            <span className="flex-1 min-w-0 text-xs text-muted-foreground/70">{st('iceNone')}</span>
           </div>
         ) : (
           servers.map((server, index) => (
-            <div key={serverUrls(server).join(' ')} className="list-row" style={{ cursor: 'default' }}>
-              <span className="grow stack-sm" style={{ minWidth: 0 }}>
-                <code className="mono small truncate" dir="ltr" lang="en">
+            <div key={serverUrls(server).join(' ')} className="flex items-center gap-3 w-full px-4 py-3 text-start">
+              <span className="flex-1 min-w-0 flex flex-col gap-2">
+                <code className="font-mono text-xs truncate" dir="ltr" lang="en">
                   {serverUrls(server).join(' ')}
                 </code>
                 {server.username ? (
-                  <span className="faint small truncate" dir="ltr" lang="en">
+                  <span className="text-xs text-muted-foreground/70 truncate" dir="ltr" lang="en">
                     {server.username}
                   </span>
                 ) : null}
               </span>
-              <button
-                className="btn btn-icon"
+              <Button
+                variant="ghost"
+                size="icon"
                 aria-label={st('iceRemove')}
                 title={st('iceRemove')}
                 onClick={() => void remove(index)}
               >
                 <TrashIcon size={16} />
-              </button>
+              </Button>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+      </Card>
 
-      <form
-        className="card stack-sm"
-        onSubmit={(event) => {
-          event.preventDefault()
-          void add()
-        }}
-      >
-        <Field label={st('iceUrl')} error={error ?? undefined}>
-          <input
-            className="input"
-            dir="ltr"
-            lang="en"
-            inputMode="url"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            placeholder={st('iceUrlPlaceholder')}
-            value={url}
-            onChange={(event) => {
-              setUrl(event.target.value)
-              setError(null)
-            }}
-          />
-        </Field>
-        <div className="row" style={{ flexWrap: 'wrap', alignItems: 'flex-start' }}>
-          <div className="grow" style={{ minWidth: '10rem' }}>
-            <Field label={st('iceUsername')}>
-              <input
-                className="input"
+      <Card className="p-4 flex flex-col gap-2">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            void add()
+          }}
+        >
+          <div className="flex flex-col gap-2">
+            <Field label={st('iceUrl')} error={error ?? undefined}>
+              <Input
                 dir="ltr"
                 lang="en"
+                inputMode="url"
                 autoCapitalize="off"
-                autoComplete="off"
+                autoCorrect="off"
                 spellCheck={false}
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
+                placeholder={st('iceUrlPlaceholder')}
+                value={url}
+                onChange={(event) => {
+                  setUrl(event.target.value)
+                  setError(null)
+                }}
               />
             </Field>
+            <div className="flex items-center gap-3 flex-wrap items-start">
+              <div className="flex-1 min-w-[10rem]">
+                <Field label={st('iceUsername')}>
+                  <Input
+                    dir="ltr"
+                    lang="en"
+                    autoCapitalize="off"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                  />
+                </Field>
+              </div>
+              <div className="flex-1 min-w-[10rem]">
+                <Field label={st('icePassword')}>
+                  <Input
+                    dir="ltr"
+                    lang="en"
+                    type="password"
+                    autoComplete="new-password"
+                    value={credential}
+                    onChange={(event) => setCredential(event.target.value)}
+                  />
+                </Field>
+              </div>
+            </div>
+            <Button type="submit" disabled={!url.trim()}>
+              <PlusIcon size={16} />
+              {st('iceAdd')}
+            </Button>
           </div>
-          <div className="grow" style={{ minWidth: '10rem' }}>
-            <Field label={st('icePassword')}>
-              <input
-                className="input"
-                dir="ltr"
-                lang="en"
-                type="password"
-                autoComplete="new-password"
-                value={credential}
-                onChange={(event) => setCredential(event.target.value)}
-              />
-            </Field>
-          </div>
-        </div>
-        <button className="btn btn-primary" type="submit" disabled={!url.trim()}>
-          <PlusIcon size={16} />
-          {st('iceAdd')}
-        </button>
-      </form>
+        </form>
+      </Card>
 
-      <div className="card stack-sm">
-        <button
-          className="btn btn-outline"
+      <Card className="p-4 flex flex-col gap-2">
+        <Button
+          variant="outline"
           disabled={!canCall || probe === 'running'}
           onClick={() => void test()}
           aria-busy={probe === 'running'}
         >
           <RefreshIcon size={16} />
           {probe === 'running' ? st('iceTesting') : st('iceTest')}
-        </button>
+        </Button>
         {typeof probe === 'object' ? (
-          <div className="stack-sm" aria-live="polite">
+          <div className="flex flex-col gap-2" aria-live="polite">
             <ProbeRow label={st('iceStun')} ok={probe.stun} st={st} />
             {probe.symmetric ? (
-              <div className="row-between small">
-                <span className="muted">{st('iceSymmetric')}</span>
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <span className="text-muted-foreground">{st('iceSymmetric')}</span>
               </div>
             ) : null}
             <ProbeRow label={st('iceTurn')} ok={probe.turn} st={st} />
             <Banner
               tone={probe.verdict === 'good' ? 'info' : probe.verdict === 'stun' ? 'accent' : 'warning'}
             >
-              <span className="small">{st(VERDICT[probe.verdict])}</span>
+              <span className="text-xs">{st(VERDICT[probe.verdict])}</span>
             </Banner>
           </div>
         ) : null}
-      </div>
+      </Card>
     </SettingsPage>
   )
 }
 
 function ProbeRow({ label, ok, st }: { label: string; ok: boolean | null; st: CallSettingsTextFn }) {
-  const badge = ok === null ? 'badge' : ok ? 'badge badge-success' : 'badge badge-danger'
+  const badgeVariant = ok === null ? 'default' : ok ? 'success' : 'destructive'
   const text = st(ok === null ? 'iceNotSet' : ok ? 'iceWorking' : 'iceNotReachable')
   return (
-    <div className="row-between small">
+    <div className="flex items-center justify-between gap-3 text-xs">
       <span>{label}</span>
-      <span className={badge}>{text}</span>
+      <Badge variant={badgeVariant}>{text}</Badge>
     </div>
   )
 }

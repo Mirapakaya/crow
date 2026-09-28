@@ -26,15 +26,15 @@ export function MessageInfo({ message, onClose }: { message: Message; onClose: (
   const when = (at: number | undefined) => (at ? formatDateTime(at, locale) : t('chat.infoNotYet'))
 
   const pair = (key: string, label: string, value: string) => (
-    <div key={key} className="info-pair">
+    <div key={key} className="grid grid-cols-2 gap-2 py-1">
       <dt dir="auto">{label}</dt>
-      <dd>{value}</dd>
+      <dd className="text-end">{value}</dd>
     </div>
   )
 
   return (
     <Modal title={t('chat.infoTitle')} onClose={onClose}>
-      <dl className="info-list">
+      <dl className="flex flex-col gap-1">
         {pair('sent', t('status.sent'), formatDateTime(message.ts, locale))}
         {message.receipts
           ? Object.entries(message.receipts).map(([pubkey, state]) => {
@@ -53,7 +53,7 @@ export function MessageInfo({ message, onClose }: { message: Message; onClose: (
             ]}
         {pair('via', t('chat.infoVia'), message.via === 'direct' ? t('status.direct') : t('settings.relays'))}
       </dl>
-      <p className="hint">{t('chat.infoHint')}</p>
+      <p className="mt-4 text-sm text-muted-foreground">{t('chat.infoHint')}</p>
     </Modal>
   )
 }

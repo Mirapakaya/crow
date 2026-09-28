@@ -1,7 +1,9 @@
+import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
 import type { Message } from '../../core/models/types'
 import { useT } from '../../i18n'
 import { ownEvent } from './hold'
+import { CheckIcon } from './Icons'
 
 /** What every entry in a conversation shares: its place in a run, and being picked while selecting. */
 export interface EntryProps {
@@ -42,14 +44,17 @@ export function EntryRow({
   children: ReactNode
 }) {
   const t = useT()
-  const classes = ['bubble-row', message.direction === 'out' ? 'out' : 'in']
-  if (groupStart) classes.push('group-start')
-  if (groupEnd) classes.push('group-end')
-  if (failed) classes.push('failed')
-  if (selected) classes.push('selected')
   return (
     <div
-      className={classes.join(' ')}
+      className={cn(
+        'flex flex-col items-start scroll-my-6',
+        message.direction === 'out' ? 'items-end' : 'items-start',
+        groupStart && 'mt-3',
+        selecting && 'relative ps-9',
+        selected && 'bg-primary/10 rounded-md',
+      )}
+      data-group-end={groupEnd}
+      data-failed={failed}
       id={`msg-${message.id}`}
       onClickCapture={
         selecting
@@ -68,8 +73,15 @@ export function EntryRow({
           role="checkbox"
           aria-checked={selected}
           aria-label={t('chat.select')}
-          className="select-mark"
-        />
+          className={cn(
+            'absolute bottom-1 start-1 flex h-[1.375rem] w-[1.375rem] items-center justify-center rounded-full border-2 p-0 transition-colors',
+            selected
+              ? 'border-primary bg-primary'
+              : 'border-foreground/30 bg-card',
+          )}
+        >
+          {selected ? <CheckIcon size={14} className="text-primary-foreground" /> : null}
+        </button>
       ) : null}
       {children}
     </div>
@@ -89,7 +101,10 @@ export function MenuItem({
     <button
       type="button"
       role="menuitem"
-      className={danger ? 'menuitem-danger' : undefined}
+      className={cn(
+        'flex w-full flex-col items-start gap-px rounded-sm bg-transparent px-3 py-2 text-start text-sm transition-colors hover:bg-muted',
+        danger && 'text-destructive',
+      )}
       onClick={onClick}
     >
       {children}

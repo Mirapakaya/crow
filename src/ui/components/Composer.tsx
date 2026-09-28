@@ -165,7 +165,7 @@ export function AttachButton({ disabled }: { disabled?: boolean }) {
     <>
       <button
         type="button"
-        className="composer-action"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
         ref={setAnchor}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
@@ -192,7 +192,7 @@ export function AttachButton({ disabled }: { disabled?: boolean }) {
       {form ? (
         <Suspense
           fallback={
-            <div className="modal-backdrop" role="status">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="status">
               <Spinner label={t('interactive.loading')} />
             </div>
           }
@@ -207,7 +207,7 @@ export function AttachButton({ disabled }: { disabled?: boolean }) {
       <input
         ref={input}
         type="file"
-        className="visually-hidden"
+        className="sr-only"
         onChange={(event) => {
           const file = event.target.files?.[0]
           // Reset first, so picking the same file twice in a row still fires.
@@ -246,7 +246,7 @@ export function EmojiButton({
     <>
       <button
         type="button"
-        className="composer-action"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
         ref={setAnchor}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -254,7 +254,7 @@ export function EmojiButton({
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}
       >
-        <span aria-hidden="true" className="composer-emoji">
+        <span aria-hidden="true" className="text-lg">
           ☺
         </span>
       </button>
@@ -364,25 +364,25 @@ export function VoiceButton({ disabled }: { disabled?: boolean }) {
 
   if (recording) {
     return (
-      <div className="recording-bar" role="group" aria-label={t('attachment.recording')}>
+      <div className="flex flex-1 items-center gap-2" role="group" aria-label={t('attachment.recording')}>
         <button
           type="button"
-          className="composer-action"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
           aria-label={t('attachment.recordCancel')}
           onClick={() => void stop(false)}
         >
           <TrashIcon size={17} />
         </button>
-        <span className="recording-dot" aria-hidden="true" />
-        <span className="recording-time tabular">{formatDuration(elapsed)}</span>
+        <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" aria-hidden="true" />
+        <span className="tabular-nums text-sm">{formatDuration(elapsed)}</span>
         {/* A live level meter, so it is obvious the microphone is actually
             picking something up before a minute is wasted. */}
-        <span className="recording-meter" aria-hidden="true">
-          <span style={{ transform: `scaleX(${Math.max(0.03, level)})` }} />
+        <span className="h-1.5 flex-1 overflow-hidden rounded bg-muted" aria-hidden="true">
+          <span className="block h-full origin-left bg-primary transition-transform" style={{ transform: `scaleX(${Math.max(0.03, level)})` }} />
         </span>
         <button
           type="button"
-          className="composer-send"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 active:scale-95"
           aria-label={t('attachment.recordStop')}
           onClick={() => void stop(true)}
         >
@@ -395,7 +395,7 @@ export function VoiceButton({ disabled }: { disabled?: boolean }) {
   return (
     <button
       type="button"
-      className="composer-action"
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
       aria-label={t('attachment.recordStart')}
       disabled={disabled}
       onClick={() => void start()}

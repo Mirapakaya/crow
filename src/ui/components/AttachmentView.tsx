@@ -5,6 +5,8 @@ import { formatDuration } from '../../media/waveform'
 import type { Attachment } from '../../core/models/attachment'
 import { blobRef, blobRefKey } from '../../core/crypto/blobCrypto'
 import { DownloadIcon, AlertIcon } from './Icons'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 /**
  * Which transfer a bubble shows, remembered per descriptor: a hash of the key,
@@ -89,9 +91,9 @@ function TransferBar({ attachment }: { attachment: Attachment }) {
   if (!progress) return null
   const fraction = progress.total === 0 ? 0 : progress.received / progress.total
   return (
-    <div className="attachment-progress" role="progressbar" aria-label={t('attachment.transferring')}>
-      <div className="progress">
-        <div style={{ width: `${Math.round(fraction * 100)}%` }} />
+    <div className="absolute inset-x-2 bottom-2" role="progressbar" aria-label={t('attachment.transferring')}>
+      <div className="h-1 overflow-hidden rounded bg-muted">
+        <div className="h-full bg-foreground transition-all" style={{ width: `${Math.round(fraction * 100)}%` }} />
       </div>
     </div>
   )
@@ -141,10 +143,10 @@ function VoiceNote({ attachment }: { attachment: Attachment }) {
   if (undecodable) return <AttachmentError message={t('attachment.unplayable')} />
 
   return (
-    <div className="voice-note">
+    <div className="relative flex min-w-[13rem] items-center gap-2 py-1">
       <button
         type="button"
-        className="voice-play"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         onClick={toggle}
         disabled={!url}
         aria-label={playing ? t('attachment.pause') : t('attachment.play')}
@@ -152,12 +154,9 @@ function VoiceNote({ attachment }: { attachment: Attachment }) {
         {playing ? <PauseGlyph /> : <PlayGlyph />}
       </button>
 
-      {/*
-        A slider rather than a div: seeking a voice note with the keyboard is
-        the only way to do it without a pointer, and arrow keys come free.
-      */}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        className="voice-wave"
+        className="flex flex-1 items-end gap-0.5"
         role="slider"
         tabIndex={url ? 0 : -1}
         aria-label={t('attachment.seek')}
@@ -186,17 +185,19 @@ function VoiceNote({ attachment }: { attachment: Attachment }) {
           bars.map((bar, index) => (
             <span
               key={index}
-              className="voice-bar"
-              data-played={index / bars.length <= fraction ? 'true' : 'false'}
+              className={cn(
+                'w-1 rounded bg-current',
+                index / bars.length <= fraction ? 'opacity-100' : 'opacity-40',
+              )}
               style={{ height: `${Math.max(8, bar)}%` }}
             />
           ))
         ) : (
-          <span className="voice-bar-fallback" />
+          <span className="h-full w-full bg-muted" />
         )}
       </div>
 
-      <span className="voice-time tabular">{formatDuration(playing || elapsed > 0 ? elapsed : total)}</span>
+      <span className="tabular-nums text-xs">{formatDuration(playing || elapsed > 0 ? elapsed : total)}</span>
 
       {url ? (
         <audio
@@ -220,7 +221,7 @@ function VoiceNote({ attachment }: { attachment: Attachment }) {
         />
       ) : null}
 
-      <span className="visually-hidden">{formatBytes(attachment.size, locale)}</span>
+      <span className="sr-only">{formatBytes(attachment.size, locale)}</span>
       <TransferBar attachment={attachment} />
     </div>
   )
@@ -241,7 +242,7 @@ const PauseGlyph = () => (
 function AttachmentError({ message }: { message?: string }) {
   const { t } = useI18n()
   return (
-    <div className="attachment-error">
+    <div className="flex items-center gap-2 text-sm text-destructive">
       <AlertIcon size={15} />
       <span>{message ?? t('attachment.unavailable')}</span>
     </div>
@@ -268,22 +269,22 @@ function ImageAttachment({ attachment }: { attachment: Attachment }) {
     <>
       <button
         type="button"
-        className="attachment-image"
+        className="relative overflow-hidden rounded-lg"
         style={{ aspectRatio: ratio }}
         onClick={() => url && setExpanded(true)}
         disabled={!url}
         aria-label={t('attachment.openImage')}
       >
         {attachment.preview ? (
-          <img className="attachment-preview" src={attachment.preview} alt="" aria-hidden="true" />
+          <img className="absolute inset-0 h-full w-full object-cover blur-sm" src={attachment.preview} alt="" aria-hidden="true" />
         ) : null}
-        {url ? <img className="attachment-full" src={url} alt={attachment.name ?? ''} /> : null}
+        {url ? <img className="h-full w-full object-cover" src={url} alt={attachment.name ?? ''} /> : null}
         <TransferBar attachment={attachment} />
       </button>
 
       {expanded && url ? (
         <div
-          className="lightbox"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
           role="dialog"
           aria-modal="true"
           aria-label={t('attachment.openImage')}
@@ -305,11 +306,11 @@ function VideoAttachment({ attachment }: { attachment: Attachment }) {
   const ratio =
     attachment.width && attachment.height ? `${attachment.width} / ${attachment.height}` : '16 / 9'
   return (
-    <div className="attachment-image" style={{ aspectRatio: ratio }}>
+    <div className="relative overflow-hidden rounded-lg" style={{ aspectRatio: ratio }}>
       {attachment.preview && !url ? (
-        <img className="attachment-preview" src={attachment.preview} alt="" aria-hidden="true" />
+        <img className="absolute inset-0 h-full w-full object-cover blur-sm" src={attachment.preview} alt="" aria-hidden="true" />
       ) : null}
-      {url ? <video className="attachment-full" src={url} controls playsInline preload="metadata" /> : null}
+      {url ? <video className="h-full w-full object-cover" src={url} controls playsInline preload="metadata" /> : null}
       <TransferBar attachment={attachment} />
     </div>
   )
@@ -328,22 +329,24 @@ function FileAttachment({ attachment }: { attachment: Attachment }) {
 
   const name = attachment.name ?? t('attachment.file')
   return (
-    <div className="attachment-file">
-      <span className="attachment-file-icon" aria-hidden="true">
+    <div className="flex items-center gap-2 rounded-lg border p-2">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted" aria-hidden="true">
         <DownloadIcon size={16} />
       </span>
-      <span className="attachment-file-meta">
+      <span className="flex min-w-0 flex-1 flex-col">
         {/* The name is peer-supplied: isolate it so its own directionality
             cannot reorder the size that follows. */}
-        <bdi className="attachment-file-name truncate">{name}</bdi>
-        <span className="faint">{formatBytes(attachment.size, locale)}</span>
+        <bdi className="truncate font-medium">{name}</bdi>
+        <span className="text-sm text-muted-foreground/70">{formatBytes(attachment.size, locale)}</span>
       </span>
       {url ? (
-        <a className="btn btn-outline small" href={url} download={name}>
-          {t('attachment.save')}
-        </a>
+        <Button variant="outline" size="sm" asChild>
+          <a href={url} download={name}>
+            {t('attachment.save')}
+          </a>
+        </Button>
       ) : (
-        <span className="faint small">{t('attachment.transferring')}</span>
+        <span className="text-xs text-muted-foreground/70">{t('attachment.transferring')}</span>
       )}
       <TransferBar attachment={attachment} />
     </div>

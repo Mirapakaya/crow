@@ -14,6 +14,9 @@ import {
   type Invite,
 } from '../../core/identity/invite'
 import { parseProfilePointer } from '../../core/identity/keys'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Card } from '@/components/ui/card'
 
 type Mode = 'share' | 'scan' | 'paste'
 
@@ -96,82 +99,84 @@ export function AddContact() {
   )
 
   return (
-    <div className="screen">
-      <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <header className="flex items-center gap-2 min-h-[3.25rem] px-3 py-2 bg-card border-b border-border">
+        <Button variant="ghost" size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </button>
-        <h1 className="grow">{t('contacts.addTitle')}</h1>
+        </Button>
+        <h1 className="flex-1 min-w-0">{t('contacts.addTitle')}</h1>
       </header>
 
-      <div className="screen-scroll">
-        <div className="container stack" style={{ maxWidth: '32rem' }}>
-          <p className="muted">{t('contacts.addBody')}</p>
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <div className="w-full max-w-2xl mx-auto p-4 flex flex-col gap-4" style={{ maxWidth: '32rem' }}>
+          <p className="text-muted-foreground">{t('contacts.addBody')}</p>
 
-          <div className="row" role="tablist" style={{ gap: 'var(--space-2)' }}>
-            <button
+          <div className="flex items-center gap-2" role="tablist">
+            <Button
               role="tab"
               aria-selected={mode === 'share'}
-              className={`btn grow ${mode === 'share' ? 'btn-primary' : 'btn-outline'}`}
+              className="flex-1"
+              variant={mode === 'share' ? 'default' : 'outline'}
               onClick={() => setMode('share')}
             >
               <QrIcon size={16} />
               {t('contacts.myInvite')}
-            </button>
-            <button
+            </Button>
+            <Button
               role="tab"
               aria-selected={mode === 'scan'}
-              className={`btn grow ${mode === 'scan' ? 'btn-primary' : 'btn-outline'}`}
+              className="flex-1"
+              variant={mode === 'scan' ? 'default' : 'outline'}
               onClick={() => setMode('scan')}
             >
               <CameraIcon size={16} />
               {t('contacts.scan')}
-            </button>
+            </Button>
           </div>
 
           {mode === 'share' && invite ? (
-            <div className="stack">
-              <p className="muted small">{t('contacts.myInviteBody')}</p>
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-muted-foreground">{t('contacts.myInviteBody')}</p>
               <Suspense fallback={<QrPlaceholder />}>
                 <QrCode value={link} label={t('contacts.myInvite')} />
               </Suspense>
-              <div className="card stack-sm">
-                <code className="mono small" style={{ wordBreak: 'break-all' }}>
-                  {link}
-                </code>
-                <div className="row">
-                  <CopyButton value={link} className="btn btn-outline grow" />
+              <Card className="flex flex-col gap-2 p-4">
+                <code className="font-mono text-sm break-all">{link}</code>
+                <div className="flex items-center gap-3">
+                  <CopyButton value={link} className="flex-1" />
                   {typeof navigator !== 'undefined' && 'share' in navigator ? (
-                    <button
-                      className="btn btn-outline grow"
+                    <Button
+                      variant="outline"
+                      className="flex-1"
                       onClick={() => {
                         void navigator.share({ title: 'Crow', text: link }).catch(() => undefined)
                       }}
                     >
                       {t('common.add')}
-                    </button>
+                    </Button>
                   ) : null}
                 </div>
-              </div>
+              </Card>
             </div>
           ) : null}
 
           {mode === 'scan' ? (
-            <div className="stack">
-              <p className="muted small">{t('contacts.scanBody')}</p>
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-muted-foreground">{t('contacts.scanBody')}</p>
               <Suspense fallback={<QrPlaceholder scanner />}>
                 <QrScanner onResult={(text) => void accept(text)} onCancel={() => setMode('share')} />
               </Suspense>
             </div>
           ) : null}
 
-          <div className="stack-sm">
-            <span className="section-title">{t('contacts.pasteInvite')}</span>
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+              {t('contacts.pasteInvite')}
+            </span>
             <Field error={error ?? undefined}>
-              <textarea
-                className="textarea"
+              <Textarea
                 dir="ltr"
-                style={{ minHeight: '4.5rem' }}
+                className="min-h-[4.5rem]"
                 placeholder={t('contacts.pastePlaceholder')}
                 value={pasted}
                 onChange={(event) => {
@@ -180,17 +185,13 @@ export function AddContact() {
                 }}
               />
             </Field>
-            <button
-              className="btn btn-primary btn-block"
-              disabled={!pasted.trim()}
-              onClick={() => void accept(pasted)}
-            >
+            <Button className="w-full" disabled={!pasted.trim()} onClick={() => void accept(pasted)}>
               {t('common.add')}
-            </button>
+            </Button>
           </div>
 
           <Banner tone="accent">
-            <span className="small">{t('chat.verifyPromptBody')}</span>
+            <span className="text-xs">{t('chat.verifyPromptBody')}</span>
           </Banner>
         </div>
       </div>

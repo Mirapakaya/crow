@@ -1,5 +1,6 @@
 import { useRef, useState, type PointerEvent } from 'react'
 import { useT } from '../../i18n'
+import { Button } from '@/components/ui/button'
 
 const DOTS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 
@@ -95,10 +96,10 @@ export function PatternPad({
   const line = points.map((point) => `${point.x},${point.y}`).join(' ')
 
   return (
-    <div className="stack-sm">
+    <div className="flex flex-col gap-2">
       <div
         ref={pad}
-        className="pattern-pad"
+        className="relative w-full max-w-[15rem] aspect-square mx-auto touch-none select-none"
         dir="ltr"
         role="group"
         aria-label={label}
@@ -108,16 +109,27 @@ export function PatternPad({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <svg viewBox="0 0 300 300" aria-hidden="true">
+        <svg
+          viewBox="0 0 300 300"
+          className="absolute inset-0 h-full w-full fill-none pointer-events-none"
+          style={{
+            stroke: 'hsl(var(--accent))',
+            strokeWidth: 6,
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round',
+            opacity: 0.55,
+          }}
+          aria-hidden="true"
+        >
           {points.length > 1 ? <polyline points={line} /> : null}
           {last && pointer ? <line x1={last.x} y1={last.y} x2={pointer.x} y2={pointer.y} /> : null}
         </svg>
-        <div className="pattern-dots">
+        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3">
           {DOTS.map((dot) => (
             <button
               key={dot}
               type="button"
-              className="pattern-dot"
+              className="grid place-items-center p-0 bg-transparent border-0 rounded-full cursor-pointer after:content-[''] after:w-3.5 after:h-3.5 after:rounded-full after:bg-muted-foreground after:transition-all aria-pressed:after:bg-primary aria-pressed:after:scale-150 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={t('lock.patternDot', { n: dot })}
               aria-pressed={path.includes(dot)}
               disabled={disabled}
@@ -130,13 +142,13 @@ export function PatternPad({
         </div>
       </div>
       {path.length > 0 && !pointer ? (
-        <div className="row center" style={{ gap: 'var(--space-2)', justifyContent: 'center' }}>
-          <button type="button" className="btn btn-ghost small" onClick={() => choose([])}>
+        <div className="flex items-center justify-center gap-2" style={{ gap: '0.5rem' }}>
+          <Button variant="ghost" size="sm" onClick={() => choose([])}>
             {t('lock.patternClear')}
-          </button>
-          <button type="button" className="btn btn-outline small" onClick={finish}>
+          </Button>
+          <Button variant="outline" size="sm" onClick={finish}>
             {t('lock.patternDone')}
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>

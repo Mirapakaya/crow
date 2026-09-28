@@ -5,6 +5,10 @@ import { useNavigate, useRoute } from '../../crow/router'
 import { Avatar, EmptyState } from '../components/primitives'
 import { PlusIcon, ShieldCheckIcon } from '../components/Icons'
 import { displayName } from './ChatList'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 export function ContactsList() {
   const { t } = useI18n()
@@ -27,22 +31,22 @@ export function ContactsList() {
   }, [contacts, query])
 
   return (
-    <div className="screen">
-      <header className="app-header">
-        <h1 className="grow">{t('contacts.title')}</h1>
-        <button
-          className="btn btn-icon"
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <header className="flex items-center gap-2 min-h-[3.25rem] px-3 py-2 bg-card border-b border-border">
+        <h1 className="flex-1 min-w-0">{t('contacts.title')}</h1>
+        <Button
+          variant="ghost"
+          size="icon"
           aria-label={t('contacts.add')}
           onClick={() => navigate({ name: 'add-contact' })}
         >
           <PlusIcon />
-        </button>
+        </Button>
       </header>
 
       {contacts.size > 5 ? (
-        <div style={{ padding: 'var(--space-2) var(--space-3)' }}>
-          <input
-            className="input"
+        <div className="p-2 px-3">
+          <Input
             type="search"
             placeholder={t('common.search')}
             value={query}
@@ -51,21 +55,20 @@ export function ContactsList() {
         </div>
       ) : null}
 
-      <div className="screen-scroll">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
         {list.length === 0 ? (
           <EmptyState
             title={t('contacts.empty')}
-            action={
-              <button className="btn btn-primary" onClick={() => navigate({ name: 'add-contact' })}>
-                {t('contacts.add')}
-              </button>
-            }
+            action={<Button onClick={() => navigate({ name: 'add-contact' })}>{t('contacts.add')}</Button>}
           />
         ) : (
           list.map((contact) => (
             <button
               key={contact.pubkey}
-              className="list-row"
+              className={cn(
+                'flex items-center gap-3 w-full px-4 py-3 text-start hover:bg-accent/50',
+                open === contact.pubkey && 'bg-accent/30',
+              )}
               aria-current={open === contact.pubkey || undefined}
               onClick={() => navigate({ name: 'contact', peer: contact.pubkey })}
             >
@@ -75,11 +78,11 @@ export function ContactsList() {
                 src={contact.avatar}
                 size="sm"
               />
-              <span className="grow truncate">{displayName(contact, contact.pubkey)}</span>
+              <span className="flex-1 min-w-0 truncate">{displayName(contact, contact.pubkey)}</span>
               {contact.verification === 'verified' ? (
-                <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
+                <ShieldCheckIcon size={15} className="text-success" />
               ) : null}
-              {contact.blocked ? <span className="badge badge-danger">{t('chat.block')}</span> : null}
+              {contact.blocked ? <Badge variant="destructive">{t('chat.block')}</Badge> : null}
             </button>
           ))
         )}

@@ -4,6 +4,7 @@ import { APP_VERSION, BUILD_TIME, SOURCE_URL } from '../../crow/meta'
 import { useApp } from '../../crow/store'
 import { relayLabel } from '../../core/transport/relayUrl'
 import { useAboutText } from './aboutText'
+import { Card } from '@/components/ui/card'
 
 /**
  * "What leaves your device".
@@ -34,58 +35,58 @@ export function AboutScreen() {
 
   return (
     <SettingsPage title={about('title')}>
-      <p className="muted">{t('privacy.intro')}</p>
+      <p className="text-muted-foreground">{t('privacy.intro')}</p>
 
       {sections.map((section) => (
-        <div key={section.title} className="card stack-sm">
-          <h3 style={{ fontSize: 'var(--step-0)' }}>{section.title}</h3>
-          <p className="muted small">{section.body}</p>
+        <Card key={section.title} className="p-4 flex flex-col gap-2">
+          <h3 className="text-base">{section.title}</h3>
+          <p className="text-muted-foreground text-xs">{section.body}</p>
           {section.extra?.map((line) => (
-            <p key={line} className="hint">
+            <p key={line} className="text-sm text-muted-foreground">
               {line}
             </p>
           ))}
-        </div>
+        </Card>
       ))}
 
       {relays.length > 0 ? (
-        <div className="card stack-sm">
-          <h3 style={{ fontSize: 'var(--step-0)' }}>{t('settings.relays')}</h3>
-          <p className="hint" dir="ltr" lang="en">
+        <Card className="p-4 flex flex-col gap-2">
+          <h3 className="text-base">{t('settings.relays')}</h3>
+          <p className="text-sm text-muted-foreground" dir="ltr" lang="en">
             {relays.map((entry) => relayLabel(entry.url)).join(' · ')}
           </p>
-        </div>
+        </Card>
       ) : null}
 
-      <div className="card stack-sm">
-        <h3 style={{ fontSize: 'var(--step-0)', color: 'var(--warning)' }}>{about('limitsTitle')}</h3>
-        <ul className="stack-sm muted small" style={{ paddingInlineStart: '1.1rem' }}>
+      <Card className="p-4 flex flex-col gap-2">
+        <h3 className="text-base text-warning">{about('limitsTitle')}</h3>
+        <ul className="flex flex-col gap-2 text-muted-foreground text-xs pl-[1.1rem]">
           <li>{about('limitsForwardSecrecy')}</li>
           <li>{about('limitsMetadata')}</li>
           <li>{about('limitsNoPush')}</li>
           <li>{about('limitsXss')}</li>
         </ul>
-      </div>
+      </Card>
 
-      <div className="card stack-sm">
-        <div className="row-between">
-          <span className="muted">{t('settings.version')}</span>
-          <code className="mono small">{APP_VERSION}</code>
+      <Card className="p-4 flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-muted-foreground">{t('settings.version')}</span>
+          <code className="font-mono text-xs">{APP_VERSION}</code>
         </div>
-        <div className="row-between">
-          <span className="muted">{t('settings.sourceCode')}</span>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-muted-foreground">{t('settings.sourceCode')}</span>
           <a href={SOURCE_URL} target="_blank" rel="noreferrer noopener">
             github
           </a>
         </div>
-        <div className="row-between">
-          <span className="muted">{t('settings.licence')}</span>
-          <span className="mono small">AGPL-3.0-or-later</span>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-muted-foreground">{t('settings.licence')}</span>
+          <span className="font-mono text-xs">AGPL-3.0-or-later</span>
         </div>
-        <p className="hint" dir="ltr" lang="en">
+        <p className="text-sm text-muted-foreground" dir="ltr" lang="en">
           {BUILD_TIME}
         </p>
-      </div>
+      </Card>
     </SettingsPage>
   )
 }

@@ -3,6 +3,9 @@ import { getRepo, useApp } from '../../crow/store'
 import { useT } from '../../i18n'
 import { Banner, Field } from '../components/primitives'
 import { randomInt } from '../../core/util/bytes'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 
 /**
  * The recovery-phrase ceremony.
@@ -32,18 +35,24 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
   }
 
   return (
-    <div className="screen-scroll">
-      <div className="container stack" style={{ maxWidth: '32rem', paddingBlock: 'var(--space-6)' }}>
+    <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+      <div className="w-full max-w-[32rem] mx-auto px-4 py-6 flex flex-col gap-4">
         {!verifying ? (
           <>
-            <div className="stack-sm">
+            <div className="flex flex-col gap-2">
               <h1>{t('onboarding.backupTitle')}</h1>
-              <p className="muted">{t('onboarding.backupBody')}</p>
+              <p className="text-muted-foreground">{t('onboarding.backupBody')}</p>
             </div>
 
-            <div className={revealed ? 'mnemonic-grid' : 'mnemonic-grid blurred'} aria-hidden={!revealed}>
+            <div
+              className={cn(
+                'grid grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-2',
+                !revealed && 'blur-md select-none pointer-events-none',
+              )}
+              aria-hidden={!revealed}
+            >
               {words.map((word, position) => (
-                <div key={position} className="mnemonic-word">
+                <div key={position} className="flex items-baseline gap-2 rounded-sm bg-muted px-3 py-2 font-mono text-sm">
                   <span>{position + 1}</span>
                   {word}
                 </div>
@@ -51,30 +60,30 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
             </div>
 
             {!revealed ? (
-              <button className="btn btn-outline btn-block" onClick={() => setRevealed(true)}>
+              <Button variant="outline" className="w-full" onClick={() => setRevealed(true)}>
                 {t('onboarding.backupReveal')}
-              </button>
+              </Button>
             ) : (
-              <button className="btn btn-primary btn-block" onClick={() => setVerifying(true)}>
+              <Button className="w-full" onClick={() => setVerifying(true)}>
                 {t('onboarding.backupConfirm')}
-              </button>
+              </Button>
             )}
 
-            <button className="btn btn-ghost btn-block" onClick={() => deferBackup()}>
+            <Button variant="ghost" className="w-full" onClick={() => deferBackup()}>
               {t('onboarding.skipBackup')}
-            </button>
-            <p className="hint center">{t('onboarding.skipBackupWarning')}</p>
+            </Button>
+            <p className="text-sm text-muted-foreground text-center">{t('onboarding.skipBackupWarning')}</p>
           </>
         ) : (
           <>
-            <div className="stack-sm">
+            <div className="flex flex-col gap-2">
               <h1>{t('onboarding.verifyTitle')}</h1>
-              <p className="muted">{t('onboarding.verifyBody', { n: index + 1 })}</p>
+              <p className="text-muted-foreground">{t('onboarding.verifyBody', { n: index + 1 })}</p>
             </div>
 
             <Field error={error ?? undefined}>
-              <input
-                className="input mono"
+              <Input
+                className="font-mono text-sm"
                 dir="ltr"
                 autoFocus
                 autoCapitalize="none"
@@ -93,8 +102,8 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
               />
             </Field>
 
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              className="w-full"
               disabled={!answer.trim()}
               onClick={() => {
                 if (answer.trim().toLowerCase() === words[index]) void complete()
@@ -102,15 +111,15 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
               }}
             >
               {t('common.confirm')}
-            </button>
-            <button className="btn btn-ghost btn-block" onClick={() => setVerifying(false)}>
+            </Button>
+            <Button variant="ghost" className="w-full" onClick={() => setVerifying(false)}>
               {t('common.back')}
-            </button>
+            </Button>
           </>
         )}
 
         <Banner tone="warning">
-          <span className="small">{t('lock.forgotBodyRecovery')}</span>
+          <span className="text-xs">{t('lock.forgotBodyRecovery')}</span>
         </Banner>
       </div>
     </div>

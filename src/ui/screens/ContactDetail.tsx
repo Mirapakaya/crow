@@ -9,6 +9,11 @@ import { shortNpub, toNpub } from '../../core/identity/keys'
 import { relayLabel } from '../../core/transport/relayUrl'
 import { formatDateTime } from '../format'
 import { displayName } from './ChatList'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 /**
  * One contact: their name and note, their key, verifying and blocking them.
@@ -27,17 +32,19 @@ export function ContactDetail({ peer }: { peer: string }) {
   const [note, setNote] = useState(contact?.note ?? '')
 
   const back = (
-    <button className="btn btn-icon btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
+    <Button variant="ghost" size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
       <BackIcon />
-    </button>
+    </Button>
   )
 
   // Removed on another screen, or a link to someone never added: still a
   // page with a way back, not a dead end.
   if (!contact) {
     return (
-      <div className="screen">
-        <header className="app-header">{back}</header>
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        <header className="flex items-center gap-2 min-h-[3.25rem] px-3 py-2 bg-card border-b border-border">
+          {back}
+        </header>
         <EmptyState title={t('common.unknown')} />
       </div>
     )
@@ -46,42 +53,41 @@ export function ContactDetail({ peer }: { peer: string }) {
   const label = displayName(contact, peer)
 
   return (
-    <div className="screen">
-      <header className="app-header">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <header className="flex items-center gap-2 min-h-[3.25rem] px-3 py-2 bg-card border-b border-border">
         {back}
-        <h1 className="grow truncate">{label}</h1>
+        <h1 className="flex-1 min-w-0 truncate">{label}</h1>
       </header>
 
-      <div className="screen-scroll">
-        <div className="container stack" style={{ maxWidth: '32rem' }}>
-          <div className="stack-sm center">
-            <div style={{ display: 'grid', placeItems: 'center' }}>
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <div className="w-full max-w-2xl mx-auto p-4 flex flex-col gap-4" style={{ maxWidth: '32rem' }}>
+          <div className="flex flex-col gap-2 text-center">
+            <div className="grid place-items-center">
               <Avatar name={label} seed={peer} src={contact.avatar} size="lg" />
             </div>
-            <h2 style={{ fontSize: 'var(--step-1)' }}>{label}</h2>
-            {contact.about ? <p className="muted small">{contact.about}</p> : null}
-            <span className={`badge ${contact.verification === 'verified' ? 'badge-success' : ''}`}>
+            <h2 className="text-lg font-semibold">{label}</h2>
+            {contact.about ? <p className="text-sm text-muted-foreground">{contact.about}</p> : null}
+            <Badge variant={contact.verification === 'verified' ? 'success' : 'secondary'}>
               {contact.verification === 'verified' ? t('contacts.verified') : t('contacts.unverified')}
-            </span>
+            </Badge>
           </div>
 
-          <div className="row">
-            <button
-              className="btn btn-primary grow"
+          <div className="flex items-center gap-3">
+            <Button
+              className="flex-1"
               onClick={() => navigate({ name: 'chat', peer })}
               disabled={contact.blocked}
             >
               {t('nav.chats')}
-            </button>
-            <button className="btn btn-outline grow" onClick={() => navigate({ name: 'verify', peer })}>
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={() => navigate({ name: 'verify', peer })}>
               {t('contacts.verify')}
-            </button>
+            </Button>
           </div>
 
-          <div className="card stack">
+          <Card className="flex flex-col gap-4 p-4">
             <Field label={t('contacts.nameLabel')}>
-              <input
-                className="input"
+              <Input
                 value={name}
                 maxLength={64}
                 onChange={(event) => setName(event.target.value)}
@@ -91,9 +97,8 @@ export function ContactDetail({ peer }: { peer: string }) {
               />
             </Field>
             <Field label={t('contacts.noteLabel')} hint={t('contacts.noteHint')}>
-              <textarea
-                className="textarea"
-                style={{ minHeight: '3.5rem' }}
+              <Textarea
+                className="min-h-[3.5rem]"
                 value={note}
                 maxLength={500}
                 onChange={(event) => setNote(event.target.value)}
@@ -102,35 +107,33 @@ export function ContactDetail({ peer }: { peer: string }) {
                 }}
               />
             </Field>
-          </div>
+          </Card>
 
-          <div className="card stack-sm">
-            <span className="section-title">{t('contacts.copyKey')}</span>
-            <code className="mono small" style={{ wordBreak: 'break-all' }}>
-              {toNpub(peer)}
-            </code>
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+              {t('contacts.copyKey')}
+            </span>
+            <code className="font-mono text-sm break-all">{toNpub(peer)}</code>
             <CopyButton value={toNpub(peer)} />
             {contact.relays.length > 0 ? (
-              <p className="faint">{contact.relays.map(relayLabel).join(' · ')}</p>
+              <p className="text-sm text-muted-foreground/70">{contact.relays.map(relayLabel).join(' · ')}</p>
             ) : null}
-            <p className="faint">
+            <p className="text-sm text-muted-foreground/70">
               {t('common.add')}: {formatDateTime(contact.addedAt, locale)}
             </p>
           </div>
 
           {contact.blocked ? (
             <Banner tone="danger">
-              <span className="grow">{t('chat.blocked')}</span>
-              <button
-                className="btn btn-ghost small"
-                onClick={() => void updateContact(peer, { blocked: false })}
-              >
+              <span className="flex-1 min-w-0">{t('chat.blocked')}</span>
+              <Button variant="ghost" size="sm" onClick={() => void updateContact(peer, { blocked: false })}>
                 {t('chat.unblock')}
-              </button>
+              </Button>
             </Banner>
           ) : (
-            <button
-              className="btn btn-outline btn-block"
+            <Button
+              variant="outline"
+              className="w-full"
               onClick={async () => {
                 if (await confirmDanger(t('chat.block'), t('chat.block'), t('contacts.blockConfirm'))) {
                   void updateContact(peer, { blocked: true })
@@ -138,11 +141,12 @@ export function ContactDetail({ peer }: { peer: string }) {
               }}
             >
               {t('chat.block')}
-            </button>
+            </Button>
           )}
 
-          <button
-            className="btn btn-danger btn-block"
+          <Button
+            variant="destructive"
+            className="w-full"
             onClick={async () => {
               if (
                 !(await confirmDanger(t('common.remove'), t('common.remove'), t('contacts.removeConfirm')))
@@ -155,9 +159,9 @@ export function ContactDetail({ peer }: { peer: string }) {
           >
             <TrashIcon size={16} />
             {t('common.remove')}
-          </button>
+          </Button>
 
-          <p className="hint">{shortNpub(toNpub(peer))}</p>
+          <p className="text-sm text-muted-foreground">{shortNpub(toNpub(peer))}</p>
         </div>
       </div>
     </div>

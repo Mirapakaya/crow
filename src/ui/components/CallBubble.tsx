@@ -7,6 +7,7 @@ import { CallInIcon, CallOutIcon, MoreIcon, PhoneIcon, VideoIcon } from './Icons
 import { Popover } from './Popover'
 import { usePress } from './hold'
 import { EntryRow, MenuItem, type EntryProps } from './EntryRow'
+import { cn } from '@/lib/utils'
 
 export type CallEntry = Message & { call: CallRecord }
 
@@ -101,52 +102,61 @@ export const CallBubble = memo(function CallBubble({
       afterHold={press.afterHold}
     >
       <div
-        className="bubble call-bubble"
+        className={cn(
+          'relative max-w-[min(80%,34rem)] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 shadow-sm',
+          outgoing ? 'self-end bg-primary text-primary-foreground' : 'self-start bg-muted text-foreground',
+        )}
         data-outcome={call.outcome === 'completed' ? 'connected' : 'not-connected'}
         data-missed={call.outcome === 'missed' || undefined}
         {...press.handlers}
       >
-        <div className="call-bubble-text">
-          <span className="call-bubble-title" id={titleId}>
-            {callTitle(message, t)}
-          </span>
-          <span className="call-bubble-detail">
-            <Arrow size={14} className="call-bubble-arrow" />
-            <time dateTime={new Date(message.ts).toISOString()}>{formatTime(message.ts, locale)}</time>
-            {outcome ? (
-              <>
-                <span aria-hidden="true">·</span>
-                {/* Two clocks side by side: say which one is the length. */}
-                {call.outcome === 'completed' ? (
-                  <span className="visually-hidden">{t('calls.duration')}</span>
-                ) : null}
-                <span>{outcome}</span>
-              </>
-            ) : null}
-          </span>
+        <div className="flex min-w-[13rem] items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <span className="font-semibold leading-tight" id={titleId}>
+              {callTitle(message, t)}
+            </span>
+            <span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+              <Arrow size={14} className={cn(
+                'shrink-0',
+                !outgoing && call.outcome === 'completed' && 'text-green-500',
+                !outgoing && call.outcome !== 'completed' && 'text-destructive',
+              )} />
+              <time dateTime={new Date(message.ts).toISOString()}>{formatTime(message.ts, locale)}</time>
+              {outcome ? (
+                <>
+                  <span aria-hidden="true">·</span>
+                  {/* Two clocks side by side: say which one is the length. */}
+                  {call.outcome === 'completed' ? (
+                    <span className="sr-only">{t('calls.duration')}</span>
+                  ) : null}
+                  <span>{outcome}</span>
+                </>
+              ) : null}
+            </span>
+          </div>
+
+          {onCallBack ? (
+            <button
+              type="button"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary transition-colors hover:bg-primary/25 active:scale-95"
+              aria-label={t('calls.callBack')}
+              aria-describedby={titleId}
+              title={t('calls.callBack')}
+              onClick={() => onCallBack(call.media)}
+            >
+              <Glyph size={18} />
+            </button>
+          ) : (
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary opacity-60" aria-hidden="true">
+              <Glyph size={18} />
+            </span>
+          )}
         </div>
 
-        {onCallBack ? (
+        <div className="absolute top-1/2 -translate-y-1/2 end-full me-3 hidden gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 sm:flex">
           <button
             type="button"
-            className="call-bubble-back"
-            aria-label={t('calls.callBack')}
-            aria-describedby={titleId}
-            title={t('calls.callBack')}
-            onClick={() => onCallBack(call.media)}
-          >
-            <Glyph size={18} />
-          </button>
-        ) : (
-          <span className="call-bubble-back" aria-hidden="true">
-            <Glyph size={18} />
-          </span>
-        )}
-
-        <div className="bubble-actions">
-          <button
-            type="button"
-            className="bubble-action"
+            className="flex h-6 w-6 items-center justify-center rounded-sm text-foreground/75 hover:bg-foreground/20 hover:text-foreground"
             aria-haspopup="menu"
             aria-expanded={menuAt !== null}
             aria-label={t('chat.messageActions')}

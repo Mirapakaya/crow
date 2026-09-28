@@ -19,7 +19,10 @@ import {
 } from '../../core/crypto/biometricEnrol'
 import { canOpenInstantly, isValidPin, normalizePin } from '../../core/vault/keyslots'
 import type { SlotEnrolment } from '../../core/vault/vault'
-import './access.css'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Progress } from '@/components/ui/progress'
+import { cn } from '@/lib/utils'
 
 export const MIN_PASSPHRASE = 10
 
@@ -75,8 +78,7 @@ export function PassphraseFields({
   return (
     <>
       <Field label={text('passphrase')} hint={text('passphraseHint')}>
-        <input
-          className="input"
+        <Input
           type="password"
           autoFocus
           autoComplete="new-password"
@@ -86,8 +88,7 @@ export function PassphraseFields({
       </Field>
       {value ? <StrengthMeter score={score} label={label} caption={text('passphraseStrength')} /> : null}
       <Field label={text('passphraseConfirm')} error={error ?? undefined}>
-        <input
-          className="input"
+        <Input
           type="password"
           autoComplete="new-password"
           value={confirm}
@@ -110,15 +111,23 @@ export function PassphraseFields({
  */
 function StrengthMeter({ score, label, caption }: { score: 0 | 1 | 2 | 3; label: string; caption: string }) {
   const tone = score >= 2 ? 'good' : score === 1 ? 'fair' : 'weak'
+  const toneClasses = {
+    weak: 'bg-destructive text-destructive',
+    fair: 'bg-yellow-500 text-yellow-500',
+    good: 'bg-green-500 text-green-500',
+  }
   return (
-    <div className="stack-sm">
-      <div className="strength-meter" data-tone={tone} aria-hidden="true">
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-4 gap-1" aria-hidden="true">
         {[0, 1, 2, 3].map((index) => (
-          <span key={index} data-filled={index <= score ? 'true' : 'false'} />
+          <span
+            key={index}
+            className={cn('h-[3px] rounded-full bg-muted transition-colors', index <= score && toneClasses[tone])}
+          />
         ))}
       </div>
-      <span className="hint">
-        {caption}: <strong className={`strength-label strength-${tone}`}>{label}</strong>
+      <span className="text-sm text-muted-foreground">
+        {caption}: <strong className={cn('font-semibold', toneClasses[tone])}>{label}</strong>
       </span>
     </div>
   )
@@ -223,7 +232,7 @@ export function PinFields({
 }) {
   const text = useAccessText()
   const input = {
-    className: 'input pin-input',
+    className: 'text-center tracking-[0.3em]',
     type: 'password',
     dir: 'ltr',
     inputMode: 'numeric',
@@ -233,7 +242,7 @@ export function PinFields({
   return (
     <>
       <Field label={text('pin')} hint={text('pinHint')}>
-        <input
+        <Input
           {...input}
           autoFocus
           value={value}
@@ -241,7 +250,7 @@ export function PinFields({
         />
       </Field>
       <Field label={text('pinConfirm')} error={error ?? undefined}>
-        <input
+        <Input
           {...input}
           value={confirm}
           onChange={(event) => onConfirmChange(digitsOnly(event.target.value))}
@@ -270,8 +279,8 @@ export function PatternSetup({
   const [error, setError] = useState<string | null>(null)
   const prompt = first ? text('patternAgain') : text('patternDraw')
   return (
-    <div className="stack-sm">
-      <p className="small muted center">{prompt}</p>
+    <div className="flex flex-col gap-2">
+      <p className="text-center text-xs text-muted-foreground">{prompt}</p>
       <PatternPad
         label={prompt}
         disabled={disabled}
@@ -290,21 +299,21 @@ export function PatternSetup({
         }}
       />
       {error ? (
-        <p className="error-text center" role="alert">
+        <p className="text-center text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
       {first ? (
-        <button
-          type="button"
-          className="btn btn-ghost small"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => {
             setFirst(null)
             setError(null)
           }}
         >
           {text('patternRestart')}
-        </button>
+        </Button>
       ) : null}
     </div>
   )
@@ -421,15 +430,15 @@ export function ProtectionChooser({
   }
 
   const errorLine = error ? (
-    <p className="error-text" role="alert">
+    <p className="text-sm text-destructive" role="alert">
       {error}
     </p>
   ) : null
 
   const heading = (
-    <div className="stack-sm">
+    <div className="flex flex-col gap-2">
       <h1>{text('protectTitle')}</h1>
-      <p className="muted">{text('protectBody')}</p>
+      <p className="text-muted-foreground">{text('protectBody')}</p>
     </div>
   )
 
@@ -448,21 +457,30 @@ export function ProtectionChooser({
     <>
       {heading}
 
-      <div className="choice-list" role="radiogroup" aria-label={text('protectTitle')}>
-        {options.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            role="radio"
-            className="choice"
-            aria-checked={choice === option.value}
-            disabled={busy || option.disabled}
-            onClick={() => pick(option.value)}
-          >
-            <span className="choice-title">{option.title}</span>
-            <span className="small muted">{option.body}</span>
-          </button>
-        ))}
+      <div className="grid gap-2" role="radiogroup" aria-label={text('protectTitle')}>
+        {options.map((option) => {
+          const checked = choice === option.value
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              className={cn(
+                'w-full rounded-lg border border-border bg-card p-3 text-start transition-colors hover:bg-accent/50',
+                checked && 'border-primary bg-primary/10',
+                (busy || option.disabled) && 'cursor-not-allowed',
+              )}
+              aria-checked={checked}
+              disabled={busy || option.disabled}
+              onClick={() => pick(option.value)}
+            >
+              <span className="flex flex-wrap items-center gap-2 font-medium">{option.title}</span>
+              <span className={cn('text-xs', option.disabled && !checked ? 'text-muted-foreground' : 'text-muted-foreground')}>
+                {option.body}
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       {choice === 'passphrase' ? (
@@ -493,21 +511,19 @@ export function ProtectionChooser({
       )}
 
       {busy && choice !== 'biometric' && choice !== 'instant' ? (
-        <div className="progress">
-          <div style={{ width: `${Math.round(progress * 100)}%` }} />
-        </div>
+        <Progress value={Math.round(progress * 100)} />
       ) : null}
 
       {choice === 'biometric' || choice === 'security-key' ? (
-        <p className="hint">{capitalize(text('twoPrompts', { method }))}</p>
+        <p className="text-sm text-muted-foreground">{capitalize(text('twoPrompts', { method }))}</p>
       ) : null}
 
-      {recoveryNote ? <p className="hint">{text('recoveryNote')}</p> : null}
+      {recoveryNote ? <p className="text-sm text-muted-foreground">{text('recoveryNote')}</p> : null}
 
       {choice === 'pattern' ? null : (
-        <button className="btn btn-primary btn-block" disabled={busy} onClick={() => void go()}>
+        <Button className="w-full" disabled={busy} onClick={() => void go()}>
           {busy ? <Spinner label={t('common.working')} /> : t('common.next')}
-        </button>
+        </Button>
       )}
     </>
   )

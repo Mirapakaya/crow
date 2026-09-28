@@ -3,6 +3,7 @@ import encodeQR from 'qr'
 import { frameLoop, frontalCamera, QRCanvas } from 'qr/dom.js'
 import { useT } from '../../i18n'
 import { Banner } from './primitives'
+import { Button } from '@/components/ui/button'
 import { createLogger } from '../../core/util/log'
 
 const log = createLogger('qr')
@@ -27,7 +28,11 @@ export function QrCode({ value, label }: { value: string; label?: string }) {
 
   if (!svg) return null
   return (
-    <div className="qr-frame" role="img" aria-label={label ?? 'QR code'}>
+    <div
+      className="grid place-items-center rounded-lg bg-white p-4 w-fit mx-auto"
+      role="img"
+      aria-label={label ?? 'QR code'}
+    >
       <div dangerouslySetInnerHTML={{ __html: svg }} />
     </div>
   )
@@ -116,17 +121,21 @@ export function QrScanner({
   }, [onResult])
 
   return (
-    <div className="stack">
-      <div className="scanner-frame">
+    <div className="flex flex-col gap-4">
+      <div className="relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-lg bg-black">
         <video ref={videoRef} playsInline muted aria-label={t('contacts.scan')} />
-        {state === 'scanning' ? <div className="scanner-reticle" /> : null}
+        {state === 'scanning' ? (
+          <div className="absolute inset-[12%] rounded-md border-2 border-white/85 shadow-[0_0_0_100vmax_rgba(0,0,0,0.35)]" />
+        ) : null}
       </div>
       {state === 'denied' ? <Banner tone="warning">{t('contacts.cameraDenied')}</Banner> : null}
       {state === 'unavailable' ? <Banner tone="warning">{t('contacts.cameraUnavailable')}</Banner> : null}
-      {state === 'starting' ? <p className="muted center small">{t('common.loading')}…</p> : null}
-      <button type="button" className="btn btn-outline btn-block" onClick={onCancel}>
+      {state === 'starting' ? (
+        <p className="text-sm text-muted-foreground text-center">{t('common.loading')}…</p>
+      ) : null}
+      <Button variant="outline" className="w-full" onClick={onCancel}>
         {t('common.cancel')}
-      </button>
+      </Button>
     </div>
   )
 }

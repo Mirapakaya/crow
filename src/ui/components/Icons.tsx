@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import type { SVGProps } from 'react'
 
 /**
@@ -41,7 +42,7 @@ export const Icon = ({ size = 20, children, className, ...props }: IconProps) =>
  * NOT directional and must not be flipped.
  */
 const DirectionalIcon = ({ className, ...props }: IconProps) => (
-  <Icon className={className ? `icon-directional ${className}` : 'icon-directional'} {...props} />
+  <Icon className={cn('rtl:scale-x-[-1]', className)} {...props} />
 )
 
 export const ChatIcon = (p: IconProps) => (

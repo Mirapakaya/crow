@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../../crow/store'
 import { useNavigate } from '../../crow/router'
@@ -112,22 +113,58 @@ export function ConnectionBar() {
 
   if (!visible) return null
 
+  const tone = connectionTone(status.kind)
+  const isWarning = tone === 'warning'
+  const isSuccess = tone === 'success'
+
   return (
-    <div className="connection-bar" data-tone={connectionTone(status.kind)} data-busy={status.busy}>
+    <div
+      className={cn(
+        'relative flex shrink-0 overflow-hidden pt-[env(safe-area-inset-top)] bg-card border-b border-border',
+        isWarning && 'bg-warning/10 border-b-warning/30',
+      )}
+      data-tone={tone}
+      data-busy={status.busy}
+    >
       <button
         type="button"
-        className="connection-bar-body"
+        className={cn(
+          'flex-1 flex items-center justify-center gap-2 min-h-[1.875rem] px-4 border-0 bg-transparent text-muted-foreground text-xs cursor-pointer transition-colors hover:bg-accent/50',
+          isWarning && 'text-warning hover:bg-warning/10',
+          isSuccess && 'text-success',
+        )}
         onClick={() => navigate({ name: 'settings-relays' })}
         aria-label={t('connection.openRelays')}
       >
-        <span className="connection-dot" aria-hidden="true" />
+        <span
+          className={cn(
+            'h-[0.4375rem] w-[0.4375rem] shrink-0 rounded-full transition-colors',
+            isSuccess && 'bg-success',
+            isWarning && 'bg-warning',
+            !isSuccess && !isWarning && 'bg-muted-foreground',
+            status.busy && 'animate-pulse',
+          )}
+          aria-hidden="true"
+        />
         {/* Announced on change rather than on every re-render, so a screen
             reader hears "Connecting", then "Connected" — not a stream. */}
         <span role="status" aria-live="polite">
           {detailFor(status, t)}
         </span>
       </button>
-      {status.busy ? <span className="connection-progress" aria-hidden="true" /> : null}
+      {status.busy ? (
+        <span
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 overflow-hidden"
+          aria-hidden="true"
+        >
+          <span
+            className="absolute inset-y-0 w-[34%] rounded-full bg-primary"
+            style={{
+              animation: 'connection-sweep 1.15s ease-in-out infinite',
+            }}
+          />
+        </span>
+      ) : null}
     </div>
   )
 }
@@ -145,16 +182,32 @@ export function ConnectionBadge() {
   const status = useConnection()
   const tone = connectionTone(status.kind)
 
+  const isWarning = tone === 'warning'
+  const isSuccess = tone === 'success'
+
   return (
     <button
       type="button"
-      className="connection-badge"
+      className={cn(
+        'inline-flex items-center gap-2 max-w-[12rem] min-h-[2.125rem] px-3 border border-border rounded-full bg-muted text-muted-foreground text-xs tabular-nums whitespace-nowrap cursor-pointer transition-colors hover:bg-accent hover:text-foreground active:translate-y-px active:duration-75',
+        isWarning &&
+          'bg-warning/10 border-warning/30 text-warning hover:bg-warning/10 hover:text-warning',
+      )}
       data-tone={tone}
       data-busy={status.busy}
       onClick={() => navigate({ name: 'settings-relays' })}
       title={detailFor(status, t)}
     >
-      <span className="connection-dot" aria-hidden="true" />
+      <span
+        className={cn(
+          'h-[0.4375rem] w-[0.4375rem] shrink-0 rounded-full transition-colors',
+          isSuccess && 'bg-success',
+          isWarning && 'bg-warning',
+          !isSuccess && !isWarning && 'bg-muted-foreground',
+          status.busy && 'animate-pulse',
+        )}
+        aria-hidden="true"
+      />
       <span className="truncate">{shortFor(status, t)}</span>
     </button>
   )

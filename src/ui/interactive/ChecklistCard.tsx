@@ -3,6 +3,9 @@ import { foldChecklist, type ChecklistSpec, type InteractiveUpdate } from '../..
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS } from '../../core/models/protocol'
 import { PlusIcon } from '../components/Icons'
 import { useInteractiveText } from './interactiveText'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { cn } from '@/lib/utils'
 
 export interface ChecklistCardProps {
   checklist: ChecklistSpec
@@ -37,27 +40,30 @@ export function ChecklistCard({
   const headingId = `list-${messageId}`
 
   return (
-    <div className="checklist" role="group" aria-labelledby={headingId}>
-      <div className="row-between">
-        <span className="poll-question" id={headingId} dir="auto">
+    <div className="min-w-[min(16rem,62vw)] gap-2 whitespace-normal" role="group" aria-labelledby={headingId}>
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-semibold" id={headingId} dir="auto">
           {checklist.title}
         </span>
-        <span className="hint tabular">{text('progress', { done, total: entries.length })}</span>
+        <span className="tabular-nums text-sm text-muted-foreground">
+          {text('progress', { done, total: entries.length })}
+        </span>
       </div>
-      <ul className="checklist-items">
+      <ul className="flex flex-col gap-1">
         {entries.map((entry) => (
           <li key={entry.id}>
             <label
-              className={entry.done ? 'checklist-item done' : 'checklist-item'}
+              className={cn(
+                'flex cursor-pointer items-start gap-2 py-1',
+                entry.done && 'text-muted-foreground/65 line-through',
+              )}
               title={entry.by ? text('tickedBy', { name: nameOf(entry.by) }) : undefined}
             >
-              <input
-                type="checkbox"
-                className="checkbox checkbox-sm"
+              <Checkbox
                 checked={entry.done}
                 onChange={(event) => onCheck(entry.id, event.target.checked)}
               />
-              <span className="grow" dir="auto">
+              <span className="min-w-0 flex-1" dir="auto">
                 {entry.label}
               </span>
             </label>
@@ -66,7 +72,7 @@ export function ChecklistCard({
       </ul>
       {entries.length < MAX_CHECKLIST_ITEMS ? (
         <form
-          className="checklist-add"
+          className="mt-2 flex items-center gap-1"
           onSubmit={(event) => {
             event.preventDefault()
             const label = draft.trim()
@@ -75,8 +81,7 @@ export function ChecklistCard({
             setDraft('')
           }}
         >
-          <input
-            className="input"
+          <Input
             dir="auto"
             value={draft}
             maxLength={MAX_ITEM_CHARS}
@@ -86,7 +91,7 @@ export function ChecklistCard({
           />
           <button
             type="submit"
-            className="btn btn-icon"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
             aria-label={text('addItem')}
             disabled={!draft.trim()}
           >

@@ -12,6 +12,8 @@ import { QrPlaceholder } from '../components/QrPlaceholder'
 import { safetyNumber } from '../../core/crypto/safetyNumber'
 import { displayName } from './ChatList'
 import { useVerifyText } from './verifyText'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 /**
  * The safety-number ceremony.
@@ -40,31 +42,35 @@ export function VerifyScreen({ peer }: { peer: string }) {
   const verified = contact?.verification === 'verified'
 
   return (
-    <div className="screen">
-      <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <header className="flex items-center gap-2 min-h-[3.25rem] px-3 py-2 bg-card border-b border-border">
+        <Button variant="ghost" size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </button>
-        <h1 className="grow">{text('title')}</h1>
+        </Button>
+        <h1 className="flex-1 min-w-0">{text('title')}</h1>
       </header>
 
-      <div className="screen-scroll">
-        <div className="container stack" style={{ maxWidth: '30rem' }}>
-          <p className="muted">{text('body', { name })}</p>
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <div className="w-full max-w-2xl mx-auto p-4 flex flex-col gap-4" style={{ maxWidth: '30rem' }}>
+          <p className="text-muted-foreground">{text('body', { name })}</p>
 
-          <div className="card stack">
-            <div className="safety-emoji" aria-hidden="true">
+          <Card className="flex flex-col gap-4 p-4">
+            <div className="flex justify-center gap-2 text-2xl" dir="ltr" aria-hidden="true">
               {number.emoji.map((glyph, index) => (
                 <span key={index}>{glyph}</span>
               ))}
             </div>
-            <div className="safety-number" aria-label={number.groups.join(' ')}>
+            <div
+              className="grid grid-cols-3 gap-2 font-mono text-base tracking-wider text-center"
+              dir="ltr"
+              aria-label={number.groups.join(' ')}
+            >
               {number.groups.map((group, index) => (
                 <span key={index}>{group}</span>
               ))}
             </div>
-            <CopyButton value={number.groups.join(' ')} className="btn btn-outline btn-block" />
-          </div>
+            <CopyButton value={number.groups.join(' ')} className="w-full" />
+          </Card>
 
           <Suspense fallback={<QrPlaceholder />}>
             <QrCode value={`crow-sn:${number.compact}`} label={text('title')} />
@@ -76,16 +82,17 @@ export function VerifyScreen({ peer }: { peer: string }) {
                 <ShieldCheckIcon size={16} />
                 <span>{text('verifiedAt')}</span>
               </Banner>
-              <button
-                className="btn btn-outline btn-block"
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={() => void updateContact(peer, { verification: 'unverified' })}
               >
                 {text('markUnverified')}
-              </button>
+              </Button>
             </>
           ) : (
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              className="w-full"
               onClick={() => {
                 void updateContact(peer, { verification: 'verified' })
                 toast(t('contacts.verified'))
@@ -93,13 +100,13 @@ export function VerifyScreen({ peer }: { peer: string }) {
             >
               <ShieldCheckIcon size={16} />
               {text('markVerified')}
-            </button>
+            </Button>
           )}
 
-          <div className="card stack-sm">
-            <h3 style={{ fontSize: 'var(--step-0)' }}>{text('mismatchTitle')}</h3>
-            <p className="muted small">{text('mismatchBody')}</p>
-          </div>
+          <Card className="flex flex-col gap-2 p-4">
+            <h3 className="text-base font-semibold">{text('mismatchTitle')}</h3>
+            <p className="text-sm text-muted-foreground">{text('mismatchBody')}</p>
+          </Card>
         </div>
       </div>
     </div>

@@ -4,7 +4,8 @@ import { useI18n } from '../../i18n'
 import { LAZY_CHUNKS } from '../lazyViews'
 import type { Sticker, StickerPack } from '../../core/models/types'
 import { EMOJI_GROUPS } from './emojiSet'
-import './picker.css'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 /**
  * The emoji and sticker picker.
@@ -35,16 +36,23 @@ export default function EmojiPicker({ mode, onPickEmoji, onPickSticker }: EmojiP
   const [tab, setTab] = useState<Tab>('emoji')
 
   return (
-    <div className="picker" role="group" aria-label={t('emoji.title')}>
+    <div
+      className="rounded-md border border-border bg-card p-2 shadow-lg"
+      role="group"
+      aria-label={t('emoji.title')}
+    >
       {mode === 'compose' ? (
-        <div className="picker-tabs" role="tablist" aria-label={t('emoji.title')}>
+        <div className="flex gap-1 border-b border-border p-1" role="tablist" aria-label={t('emoji.title')}>
           <button
             type="button"
             role="tab"
             id="picker-tab-emoji"
             aria-selected={tab === 'emoji'}
             aria-controls="picker-panel"
-            className={tab === 'emoji' ? 'picker-tab active' : 'picker-tab'}
+            className={cn(
+              'flex-1 rounded-sm bg-transparent py-1 text-sm text-muted-foreground transition-colors hover:bg-accent/50',
+              tab === 'emoji' && 'bg-muted font-medium text-foreground',
+            )}
             onClick={() => setTab('emoji')}
           >
             {t('emoji.tabEmoji')}
@@ -55,7 +63,10 @@ export default function EmojiPicker({ mode, onPickEmoji, onPickSticker }: EmojiP
             id="picker-tab-stickers"
             aria-selected={tab === 'stickers'}
             aria-controls="picker-panel"
-            className={tab === 'stickers' ? 'picker-tab active' : 'picker-tab'}
+            className={cn(
+              'flex-1 rounded-sm bg-transparent py-1 text-sm text-muted-foreground transition-colors hover:bg-accent/50',
+              tab === 'stickers' && 'bg-muted font-medium text-foreground',
+            )}
             onClick={() => setTab('stickers')}
           >
             {t('emoji.tabStickers')}
@@ -64,7 +75,7 @@ export default function EmojiPicker({ mode, onPickEmoji, onPickSticker }: EmojiP
       ) : null}
 
       <div
-        className="picker-panel"
+        className="min-h-0 overflow-y-auto overscroll-contain p-2"
         id="picker-panel"
         role="tabpanel"
         aria-labelledby={tab === 'emoji' ? 'picker-tab-emoji' : 'picker-tab-stickers'}
@@ -84,14 +95,16 @@ function EmojiGrid({ onPick }: { onPick: (emoji: string) => void }) {
   return (
     <>
       {EMOJI_GROUPS.map((group) => (
-        <section key={group.key} className="picker-group">
-          <h3 className="picker-heading">{t(group.key)}</h3>
-          <div className="picker-grid">
+        <section key={group.key} className="mb-3 last:mb-0">
+          <h3 className="mb-1 flex items-center justify-between gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {t(group.key)}
+          </h3>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(2rem,1fr))] gap-0.5">
             {group.emoji.map((emoji) => (
               <button
                 key={emoji}
                 type="button"
-                className="picker-emoji"
+                className="grid aspect-square w-full place-items-center rounded-sm bg-transparent p-0 text-[20px] leading-none hover:bg-accent/50"
                 // The character is the label: a screen reader announces the
                 // emoji's own name, which is better than anything invented here.
                 onClick={() => onPick(emoji)}
@@ -148,19 +161,19 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
   }
 
   return (
-    <div className="picker-stickers">
+    <div className="flex flex-col gap-2">
       {packs.length === 0 ? (
-        <p className="muted small picker-empty">{t('emoji.noPacks')}</p>
+        <p className="my-3 text-center text-sm text-muted-foreground">{t('emoji.noPacks')}</p>
       ) : (
         packs.map((pack) => (
-          <section key={pack.id} className="picker-group">
-            <h3 className="picker-heading">
+          <section key={pack.id} className="mb-3 last:mb-0">
+            <h3 className="mb-1 flex items-center justify-between gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               <span dir="auto">{pack.name}</span>
-              <button type="button" className="btn btn-ghost small" onClick={() => void deletePack(pack.id)}>
+              <Button variant="ghost" size="sm" onClick={() => void deletePack(pack.id)}>
                 {t('emoji.removePack')}
-              </button>
+              </Button>
             </h3>
-            <div className="picker-grid stickers">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(3.5rem,1fr))] gap-1">
               {pack.stickers.map((sticker) => (
                 <StickerButton key={sticker.id} sticker={sticker} onPick={onPick} />
               ))}
@@ -169,7 +182,7 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
         ))
       )}
 
-      <label className="btn btn-ghost small picker-import">
+      <label className="mx-auto inline-flex cursor-pointer items-center justify-center rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/50">
         {busy ? t('emoji.importing') : t('emoji.addPack')}
         <input
           ref={fileRef}
@@ -200,8 +213,13 @@ function StickerButton({ sticker, onPick }: { sticker: Sticker; onPick?: (sticke
   }, [openSticker, sticker])
 
   return (
-    <button type="button" className="picker-sticker" onClick={() => onPick?.(sticker)} disabled={!url}>
-      {url ? <img src={url} alt="" loading="lazy" /> : <span className="picker-sticker-loading" />}
+    <button
+      type="button"
+      className="flex aspect-square items-center justify-center rounded-md border border-transparent bg-transparent p-1 hover:border-border hover:bg-accent/50"
+      onClick={() => onPick?.(sticker)}
+      disabled={!url}
+    >
+      {url ? <img src={url} alt="" loading="lazy" className="max-h-full max-w-full object-contain" /> : <span className="h-full w-full rounded-sm bg-muted" />}
     </button>
   )
 }

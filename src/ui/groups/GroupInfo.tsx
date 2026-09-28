@@ -7,6 +7,8 @@ import { confirmDanger } from '../components/dialog'
 import { BackIcon, ShieldCheckIcon, TrashIcon } from '../components/Icons'
 import { conversationTitle, displayName } from '../screens/ChatList'
 import { SecureGroupPanel } from './SecureGroupPanel'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 /**
  * Who is in a group, and what can be done to it here.
@@ -33,11 +35,11 @@ export function GroupInfo({ id }: { id: string }) {
   if (!group) {
     // Nothing to say until the list has been read; then, that it is not here.
     return (
-      <div className="screen">
-        <header className="app-header">
-          <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        <header className="flex items-center gap-2 min-h-[3.25rem] px-3 py-2 bg-card border-b border-border">
+          <Button variant="ghost" size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
             <BackIcon />
-          </button>
+          </Button>
         </header>
         {conversationsLoaded ? (
           <EmptyState title={t('groups.notFound')} body={t('groups.notFoundBody')} />
@@ -53,34 +55,34 @@ export function GroupInfo({ id }: { id: string }) {
   }
 
   return (
-    <div className="screen">
-      <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <header className="flex items-center gap-2 min-h-[3.25rem] px-3 py-2 bg-card border-b border-border">
+        <Button variant="ghost" size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </button>
-        <h1 className="grow">{t('groups.info')}</h1>
+        </Button>
+        <h1 className="flex-1 min-w-0">{t('groups.info')}</h1>
       </header>
 
-      <div className="screen-scroll">
-        <div className="container stack" style={{ maxWidth: '34rem' }}>
-          <div className="stack-sm center group-hero">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <div className="w-full max-w-[34rem] mx-auto p-4 flex flex-col gap-4">
+          <div className="flex flex-col items-center gap-2 py-3 text-center">
             <GroupAvatar seed={group.id} size="lg" />
             <h2 dir="auto">{conversationTitle(group, contacts, locale)}</h2>
-            <span className="muted small">{t('groups.members', { n: group.members.length + 1 })}</span>
+            <span className="text-muted-foreground text-xs">{t('groups.members', { n: group.members.length + 1 })}</span>
           </div>
 
           {group.mls ? (
             <SecureGroupPanel group={group} />
           ) : (
             <>
-              <div className="card-section">
+              <Card className="p-0 overflow-hidden divide-y divide-border">
                 {identity ? (
-                  <div className="list-row">
+                  <div className="flex items-center gap-3 w-full px-4 py-3 text-start hover:bg-accent/50">
                     <Avatar name={identity.name} seed={identity.pubkey} src={identity.avatar} size="sm" />
-                    <span className="grow truncate">
+                    <span className="flex-1 min-w-0 truncate">
                       <bdi>{identity.name}</bdi>
                     </span>
-                    <span className="hint">{t('groups.you')}</span>
+                    <span className="text-sm text-muted-foreground">{t('groups.you')}</span>
                   </div>
                 ) : null}
                 {[...group.members]
@@ -95,14 +97,16 @@ export function GroupInfo({ id }: { id: string }) {
                     const body = (
                       <>
                         <Avatar name={name} seed={pubkey} src={contact?.avatar} size="sm" />
-                        <span className="grow stack-sm" style={{ minWidth: 0 }}>
+                        <span className="flex-1 min-w-0 flex flex-col gap-2">
                           <span className="truncate">
                             <bdi>{name}</bdi>
                           </span>
-                          {known ? null : <span className="hint">{t('groups.notInContacts')}</span>}
+                          {known ? null : <span className="text-sm text-muted-foreground">{t('groups.notInContacts')}</span>}
                         </span>
                         {contact?.verification === 'verified' ? (
-                          <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
+                          <span className="text-success">
+                            <ShieldCheckIcon size={15} />
+                          </span>
                         ) : null}
                       </>
                     )
@@ -112,25 +116,30 @@ export function GroupInfo({ id }: { id: string }) {
                       <button
                         key={pubkey}
                         type="button"
-                        className="list-row"
+                        className="flex items-center gap-3 w-full px-4 py-3 text-start hover:bg-accent/50"
                         onClick={() => navigate({ name: 'contact', peer: pubkey })}
                       >
                         {body}
                       </button>
                     ) : (
-                      <div key={pubkey} className="list-row">
+                      <div key={pubkey} className="flex items-center gap-3 w-full px-4 py-3 text-start hover:bg-accent/50">
                         {body}
                       </div>
                     )
                   })}
-              </div>
+              </Card>
 
-              <p className="hint">{t('groups.fixedMembers')}</p>
+              <p className="text-sm text-muted-foreground">{t('groups.fixedMembers')}</p>
 
-              <button type="button" className="btn btn-danger-soft btn-block" onClick={() => void remove()}>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => void remove()}
+              >
                 <TrashIcon size={16} />
                 {t('groups.delete')}
-              </button>
+              </Button>
             </>
           )}
         </div>

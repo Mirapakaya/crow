@@ -27,7 +27,10 @@ export function LazyPicker({ mode, onPickEmoji, onPickSticker }: LazyPickerProps
   return (
     <Suspense
       fallback={
-        <div className="picker picker-loading" role="status">
+        <div
+          className="flex min-h-[12rem] items-center justify-center text-sm text-muted-foreground"
+          role="status"
+        >
           {t('emoji.loading')}
         </div>
       }

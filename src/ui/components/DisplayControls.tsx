@@ -2,6 +2,7 @@ import { useApp } from '../../crow/store'
 import { LOCALE_CODES, LOCALE_NAMES, LOCALE_SHORT_NAMES, useT } from '../../i18n'
 import type { LocaleCode, ThemePreference } from '../../core/models/types'
 import { SegmentedControl, type Segment } from './SegmentedControl'
+import { Select } from '@/components/ui/select'
 import { MonitorIcon, MoonIcon, SunIcon } from './Icons'
 
 /**
@@ -30,7 +31,7 @@ export function DisplayControls() {
   ]
 
   return (
-    <div className="entry-controls" role="group" aria-label={t('settings.displayControls')}>
+    <div className="flex items-center gap-2" role="group" aria-label={t('settings.displayControls')}>
       <LanguageSwitch value={locale} onChange={(next) => void setDisplayPreference({ locale: next })} />
       <SegmentedControl
         compact
@@ -56,8 +57,8 @@ function LanguageSwitch({ value, onChange }: { value: LocaleCode; onChange: (nex
 
   if (LOCALE_CODES.length > SEGMENT_LIMIT) {
     return (
-      <select
-        className="select select-compact"
+      <Select
+        className="w-auto"
         aria-label={t('settings.language')}
         value={value}
         onChange={(event) => onChange(event.target.value as LocaleCode)}
@@ -67,7 +68,7 @@ function LanguageSwitch({ value, onChange }: { value: LocaleCode; onChange: (nex
             {LOCALE_NAMES[code]}
           </option>
         ))}
-      </select>
+      </Select>
     )
   }
 

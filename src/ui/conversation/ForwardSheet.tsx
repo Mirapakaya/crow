@@ -3,6 +3,7 @@ import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { Avatar, GroupAvatar, Modal } from '../components/primitives'
 import { conversationTitle, isRequest } from '../screens/ChatList'
+import { Input } from '@/components/ui/input'
 import type { ChatAddress, Conversation } from '../../core/models/types'
 
 /** Where a conversation is reached: a group by its id, a person by their key. */
@@ -43,21 +44,20 @@ export function ForwardSheet({
 
   return (
     <Modal title={t('chat.forwardTitle')} onClose={onClose}>
-      <div className="stack-sm">
-        <input
-          className="input"
+      <div className="flex flex-col gap-2">
+        <Input
           type="search"
           placeholder={t('chats.searchPlaceholder')}
           aria-label={t('chats.searchPlaceholder')}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <div className="forward-list">
+        <div className="max-h-[60vh] overflow-y-auto">
           {targets.map(({ conversation, title }) => (
             <button
               key={conversation.id}
               type="button"
-              className="list-row"
+              className="flex w-full items-center gap-3 px-4 py-3 text-start hover:bg-accent/50"
               onClick={() => onPick(addressOf(conversation))}
             >
               {conversation.kind === 'group' ? (
@@ -70,7 +70,7 @@ export function ForwardSheet({
                   size="sm"
                 />
               )}
-              <span className="grow truncate" dir="auto">
+              <span className="flex-1 truncate" dir="auto">
                 {title}
               </span>
             </button>

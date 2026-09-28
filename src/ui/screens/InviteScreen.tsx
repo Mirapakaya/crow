@@ -6,6 +6,7 @@ import { Avatar, Banner } from '../components/primitives'
 import { decodeInvite, isInviteStale, type Invite } from '../../core/identity/invite'
 import { shortNpub, toNpub } from '../../core/identity/keys'
 import { relayLabel } from '../../core/transport/relayUrl'
+import { Button } from '@/components/ui/button'
 
 /**
  * Landing screen for `#/i/<payload>` links.
@@ -40,12 +41,12 @@ export function InviteScreen({ payload }: { payload: string }) {
 
   if ('error' in decoded) {
     return (
-      <div className="screen-scroll">
-        <div className="container stack">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <div className="w-full max-w-2xl mx-auto p-4 flex flex-col gap-4">
           <Banner tone="danger">{t('contacts.invalidInvite')}</Banner>
-          <button className="btn btn-outline btn-block" onClick={() => navigate({ name: 'chats' }, true)}>
+          <Button variant="outline" className="w-full" onClick={() => navigate({ name: 'chats' }, true)}>
             {t('common.close')}
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -72,18 +73,19 @@ export function InviteScreen({ payload }: { payload: string }) {
   }
 
   return (
-    <div className="screen-scroll">
-      <div className="container stack center" style={{ maxWidth: '28rem', paddingBlock: 'var(--space-6)' }}>
-        <div style={{ display: 'grid', placeItems: 'center' }}>
+    <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+      <div
+        className="w-full max-w-2xl mx-auto p-4 flex flex-col gap-4 text-center"
+        style={{ maxWidth: '28rem', paddingBlock: '2rem' }}
+      >
+        <div className="grid place-items-center">
           <Avatar name={name} seed={invite.pubkey} size="lg" />
         </div>
-        <h1 style={{ fontSize: 'var(--step-2)' }}>{name}</h1>
-        <code className="mono faint" style={{ wordBreak: 'break-all' }}>
-          {toNpub(invite.pubkey)}
-        </code>
+        <h1 className="text-2xl font-semibold">{name}</h1>
+        <code className="font-mono text-sm text-muted-foreground/70 break-all">{toNpub(invite.pubkey)}</code>
 
         {invite.relays.length > 0 ? (
-          <p className="faint">{invite.relays.map(relayLabel).join(' · ')}</p>
+          <p className="text-sm text-muted-foreground/70">{invite.relays.map(relayLabel).join(' · ')}</p>
         ) : null}
 
         {isInviteStale(invite) ? <Banner tone="warning">{t('contacts.staleInvite')}</Banner> : null}
@@ -91,25 +93,22 @@ export function InviteScreen({ payload }: { payload: string }) {
         {existing?.accepted ? (
           <>
             <Banner tone="accent">{t('contacts.alreadyAdded')}</Banner>
-            <button
-              className="btn btn-primary btn-block"
-              onClick={() => navigate({ name: 'chat', peer: invite.pubkey }, true)}
-            >
+            <Button className="w-full" onClick={() => navigate({ name: 'chat', peer: invite.pubkey }, true)}>
               {t('nav.chats')}
-            </button>
+            </Button>
           </>
         ) : (
-          <button className="btn btn-primary btn-block" disabled={busy} onClick={() => void accept()}>
+          <Button className="w-full" disabled={busy} onClick={() => void accept()}>
             {t('contacts.add')}
-          </button>
+          </Button>
         )}
 
-        <button className="btn btn-ghost btn-block" onClick={() => navigate({ name: 'chats' }, true)}>
+        <Button variant="ghost" className="w-full" onClick={() => navigate({ name: 'chats' }, true)}>
           {t('common.cancel')}
-        </button>
+        </Button>
 
         <Banner tone="accent">
-          <span className="small">{t('chat.verifyPromptBody')}</span>
+          <span className="text-xs">{t('chat.verifyPromptBody')}</span>
         </Banner>
       </div>
     </div>

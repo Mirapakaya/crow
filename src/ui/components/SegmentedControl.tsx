@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import { useRef, type ReactNode } from 'react'
 import { useI18n } from '../../i18n'
 import { nextSegmentIndex } from './segmentedNav'
@@ -64,7 +65,11 @@ export function SegmentedControl<T extends string>({
   const selected = options.findIndex((option) => option.value === value)
 
   return (
-    <div className="segmented" role="radiogroup" aria-label={label}>
+    <div
+      className="inline-flex items-center gap-0.5 rounded-md border border-border bg-muted p-0.5"
+      role="radiogroup"
+      aria-label={label}
+    >
       {options.map((option, index) => {
         const checked = option.value === value
         return (
@@ -86,9 +91,14 @@ export function SegmentedControl<T extends string>({
                 : {})}
             onClick={() => onChange(option.value)}
             onKeyDown={(event) => onKeyDown(event, index)}
+            className={cn(
+              'inline-flex min-h-[1.875rem] items-center justify-center gap-1 rounded-sm border border-transparent bg-transparent px-2 text-xs font-medium leading-none whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground hover:bg-accent active:translate-y-px active:duration-75',
+              checked &&
+                'bg-card text-foreground shadow-sm hover:bg-card',
+            )}
           >
             {option.icon}
-            {compact && option.icon ? null : <span className="segmented-label">{option.label}</span>}
+            {compact && option.icon ? null : <span className="tabular-nums">{option.label}</span>}
           </button>
         )
       })}

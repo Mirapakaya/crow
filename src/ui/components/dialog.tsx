@@ -1,6 +1,8 @@
 import { useCallback, useSyncExternalStore } from 'react'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useT } from '../../i18n'
-import { Modal } from './primitives'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogOverlay, DialogPortal } from '@/components/ui/dialog'
 
 /**
  * Questions asked in the app's own dialog, never the browser's.
@@ -74,23 +76,38 @@ export function DialogHost() {
   const dismiss = useCallback(() => question?.answer(null), [question])
   if (!question) return null
   return (
-    <Modal title={question.title} onClose={dismiss} closable={false} labelledBy="dialog-title">
-      {question.body ? <p className="muted dialog-body">{question.body}</p> : null}
-      <div className="dialog-actions">
-        {question.choices.map((choice) => (
-          <button
-            key={choice.value}
-            type="button"
-            className={choice.danger ? 'btn btn-danger' : 'btn btn-primary'}
-            onClick={() => question.answer(choice.value)}
-          >
-            {choice.label}
-          </button>
-        ))}
-        <button type="button" className="btn btn-ghost" data-autofocus onClick={dismiss}>
-          {t('common.cancel')}
-        </button>
-      </div>
-    </Modal>
+    <Dialog open={!!question} onOpenChange={() => {}}>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogPrimitive.Content
+          className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] rounded-lg border border-border bg-card p-6 shadow-lg"
+          onEscapeKeyDown={(event) => event.preventDefault()}
+          onPointerDownOutside={(event) => event.preventDefault()}
+          aria-labelledby="dialog-title"
+        >
+          <h2 id="dialog-title" className="text-base font-semibold">
+            {question.title}
+          </h2>
+          {question.body ? (
+            <p className="mt-2 text-sm text-muted-foreground">{question.body}</p>
+          ) : null}
+          <div className="mt-6 flex flex-wrap justify-end gap-2">
+            {question.choices.map((choice) => (
+              <Button
+                key={choice.value}
+                type="button"
+                variant={choice.danger ? 'destructive' : 'default'}
+                onClick={() => question.answer(choice.value)}
+              >
+                {choice.label}
+              </Button>
+            ))}
+            <Button type="button" variant="ghost" onClick={dismiss} autoFocus>
+              {t('common.cancel')}
+            </Button>
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    </Dialog>
   )
 }

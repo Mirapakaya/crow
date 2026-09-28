@@ -10,6 +10,9 @@ import type { Contact, Conversation } from '../../core/models/types'
 import type { LocaleCode } from '../../core/models/types'
 import { ConnectionBadge } from '../components/ConnectionStatus'
 import { callSummary, isCallEntry } from '../components/CallBubble'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export function displayName(contact: Contact | undefined, pubkey: string): string {
   return contact?.name || contact?.remoteName || shortNpub(toNpub(pubkey))
@@ -100,7 +103,7 @@ export function ChatList() {
     return (
       <button
         key={conversation.id}
-        className="convo-row"
+        className="flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-accent/50"
         aria-current={open === (group ? conversation.id : conversation.peerPubkey) || undefined}
         onClick={() =>
           navigate(
@@ -113,44 +116,47 @@ export function ChatList() {
         ) : (
           <Avatar name={name} seed={conversation.peerPubkey} src={contact?.avatar} />
         )}
-        <span className="convo-main">
-          <span className="convo-top">
-            <span className="convo-name" dir="auto">
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="flex items-baseline justify-between gap-2">
+            <span className="truncate font-semibold" dir="auto">
               {name}
               {contact?.verification === 'verified' ? (
                 <ShieldCheckIcon
                   size={14}
-                  style={{ display: 'inline', marginInlineStart: 4, color: 'var(--success)' }}
+                  className="ms-1 inline text-green-500"
                 />
               ) : null}
             </span>
-            <span className="convo-time">{formatListTimestamp(conversation.lastActivity, locale)}</span>
+            <span className="text-xs text-muted-foreground/70">{formatListTimestamp(conversation.lastActivity, locale)}</span>
           </span>
-          <span className="convo-preview">
-            <span className="convo-preview-text" dir="auto">
+          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="min-w-0 flex-1 truncate" dir="auto">
               {typing ? (
                 <em>{t('chat.typing')}</em>
               ) : contact?.blocked ? (
                 t('chat.blocked')
               ) : conversation.draft ? (
                 <>
-                  <span style={{ color: 'var(--warning)' }}>{t('chats.draft')}: </span>
+                  <span className="text-amber-500">{t('chats.draft')}: </span>
                   {conversation.draft}
                 </>
               ) : preview && isCallEntry(preview) ? (
-                <span className={preview.call.outcome === 'missed' ? 'convo-preview-missed' : undefined}>
+                <span className={preview.call.outcome === 'missed' ? 'text-destructive' : undefined}>
                   {callSummary(preview, t)}
                 </span>
               ) : preview ? (
                 <>
-                  {preview.direction === 'out' ? <span className="faint">{t('chats.you')}</span> : null}
-                  {author ? <span className="faint">{author}</span> : null}
+                  {preview.direction === 'out' ? <span className="text-muted-foreground/70">{t('chats.you')}</span> : null}
+                  {author ? <span className="text-muted-foreground/70">{author}</span> : null}
                   {preview.body}
                 </>
               ) : null}
             </span>
             {conversation.unread > 0 ? (
-              <span className="unread-dot" aria-label={String(conversation.unread)}>
+              <span
+                className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground"
+                aria-label={String(conversation.unread)}
+              >
                 {conversation.unread > 99 ? '99+' : conversation.unread}
               </span>
             ) : null}
@@ -161,34 +167,35 @@ export function ChatList() {
   }
 
   return (
-    <div className="screen">
-      <header className="app-header">
-        <h1 className="grow">{t('chats.title')}</h1>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <header className="flex min-h-[3.25rem] items-center gap-2 border-b border-border bg-card px-3 py-2">
+        <h1 className="min-w-0 flex-1 text-base font-semibold">{t('chats.title')}</h1>
         <ConnectionBadge />
-        <button
-          className="btn btn-icon"
+        <Button
+          variant="ghost"
+          size="icon"
           aria-label={t('groups.newGroup')}
           title={t('groups.newGroup')}
           onClick={() => navigate({ name: 'new-group' })}
         >
           <ContactsIcon />
-        </button>
-        <button
-          className="btn btn-icon"
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
           aria-label={t('contacts.add')}
           title={t('contacts.add')}
           onClick={() => navigate({ name: 'add-contact' })}
         >
           <PlusIcon />
-        </button>
+        </Button>
       </header>
 
       <Notices />
 
       {conversations.length > 4 ? (
-        <div style={{ padding: 'var(--space-2) var(--space-3)' }}>
-          <input
-            className="input"
+        <div className="px-3 py-2">
+          <Input
             type="search"
             placeholder={t('chats.searchPlaceholder')}
             value={query}
@@ -197,24 +204,26 @@ export function ChatList() {
         </div>
       ) : null}
 
-      <div className="screen-scroll">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {conversations.length === 0 ? (
           <EmptyState
             title={t('chats.empty')}
             body={t('chats.emptyBody')}
             action={
-              <button className="btn btn-primary" onClick={() => navigate({ name: 'add-contact' })}>
+              <Button onClick={() => navigate({ name: 'add-contact' })}>
                 {t('chats.addContact')}
-              </button>
+              </Button>
             }
           />
         ) : (
           <>
             {requests.length > 0 ? (
               <>
-                <div className="stack-sm" style={{ padding: 'var(--space-3) var(--space-4) var(--space-1)' }}>
-                  <span className="section-title">{t('chats.requests')}</span>
-                  <span className="hint">{t('chats.requestsBody')}</span>
+                <div className="flex flex-col gap-2 px-4 pt-3 pb-1">
+                  <span className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {t('chats.requests')}
+                  </span>
+                  <span className="text-sm text-muted-foreground">{t('chats.requestsBody')}</span>
                 </div>
                 {requests.map(renderRow)}
               </>
@@ -245,13 +254,13 @@ function Notices() {
   const backup = !!identity?.mnemonic && !identity.mnemonicBackedUp && deferred
   if (!backup && !opened && !retired) return null
   return (
-    <div className="stack-sm" style={{ padding: 'var(--space-2) var(--space-3) 0' }}>
+    <div className="flex flex-col gap-2 px-3 pt-2">
       {backup ? (
         <Banner tone="warning">
-          <span className="grow">{t('onboarding.backupTitle')}</span>
-          <button className="btn btn-ghost small" onClick={() => resumeBackup()}>
+          <span className="min-w-0 flex-1">{t('onboarding.backupTitle')}</span>
+          <Button variant="ghost" size="sm" onClick={() => resumeBackup()}>
             {t('common.show')}
-          </button>
+          </Button>
         </Banner>
       ) : null}
       {/* Opened with the recovery phrase, which usually means the everyday
@@ -259,16 +268,19 @@ function Notices() {
           Offer a new one rather than leave the person typing twelve words. */}
       {opened || retired ? (
         <Banner tone="accent">
-          <span className="grow small">{retired ? t('lock.retired') : t('lock.recovered')}</span>
-          <button
-            className="btn btn-ghost small"
+          <span className={cn('min-w-0 flex-1', retired ? 'text-xs' : 'text-xs')}>
+            {retired ? t('lock.retired') : t('lock.recovered')}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => {
               dismiss()
               navigate({ name: 'settings-security' })
             }}
           >
             {t('lock.recoveredAction')}
-          </button>
+          </Button>
         </Banner>
       ) : null}
     </div>

@@ -9,6 +9,11 @@ import { DEFAULT_DM_RELAYS, SUGGESTED_RELAYS } from '../../core/transport/defaul
 import type { RelayEntry } from '../../core/models/types'
 import { verdictFor } from '../../core/transport/relayHealth'
 import { useAboutText } from './aboutText'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 export function RelaySettings() {
   const { t, locale } = useI18n()
@@ -63,22 +68,22 @@ export function RelaySettings() {
 
   return (
     <SettingsPage title={t('settings.relays')}>
-      <p className="muted">{t('settings.relaysBody')}</p>
+      <p className="text-muted-foreground">{t('settings.relaysBody')}</p>
 
       {activeCount === 0 ? <Banner tone="danger">{t('settings.noRelaysWarning')}</Banner> : null}
 
-      <div className="card-section">
+      <Card className="p-0 overflow-hidden divide-y divide-border">
         {entries.map((entry) => {
           const status = statusByUrl.get(entry.url)
           const verdict = verdictFor(status)
-          const badgeClass =
+          const badgeVariant =
             verdict === 'healthy'
-              ? 'badge badge-success'
+              ? 'success'
               : verdict === 'degraded'
-                ? 'badge badge-warning'
+                ? 'warning'
                 : verdict === 'offline'
-                  ? 'badge badge-danger'
-                  : 'badge'
+                  ? 'destructive'
+                  : 'default'
           const badgeLabel =
             verdict === 'healthy'
               ? t('settings.relayHealthy')
@@ -89,35 +94,32 @@ export function RelaySettings() {
                   : t('settings.relayNever')
 
           return (
-            <div key={entry.id} className="stack-sm" style={{ padding: 'var(--space-3) var(--space-4)' }}>
-              <div className="row-between">
-                <span className="grow truncate" style={{ fontWeight: 550 }}>
+            <div key={entry.id} className="flex flex-col gap-2 py-3 px-4">
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex-1 min-w-0 truncate font-medium" dir="auto">
                   {relayLabel(entry.url)}
                 </span>
-                <span className={badgeClass}>{badgeLabel}</span>
-                <button
-                  className="btn btn-icon"
+                <Badge variant={badgeVariant}>{badgeLabel}</Badge>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   aria-label={t('settings.relayRemove')}
                   onClick={() => void remove(entry)}
                 >
                   <TrashIcon size={16} />
-                </button>
+                </Button>
               </div>
 
-              <div className="row faint" style={{ flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-                <label className="row" style={{ gap: '0.35rem' }}>
-                  <input
-                    className="checkbox checkbox-sm"
-                    type="checkbox"
+              <div className="flex items-center gap-3 flex-wrap text-sm text-muted-foreground/70">
+                <label className="flex items-center gap-3">
+                  <Checkbox
                     checked={entry.read}
                     onChange={(event) => void update(entry, { read: event.target.checked })}
                   />
                   {t('settings.relayRead')}
                 </label>
-                <label className="row" style={{ gap: '0.35rem' }}>
-                  <input
-                    className="checkbox checkbox-sm"
-                    type="checkbox"
+                <label className="flex items-center gap-3">
+                  <Checkbox
                     checked={entry.write}
                     onChange={(event) => void update(entry, { write: event.target.checked })}
                   />
@@ -142,30 +144,28 @@ export function RelaySettings() {
                 simply never delivers. Say so in words, not just an error code.
               */}
               {status && status.health.readFail > 0 ? (
-                <span className="small" style={{ color: 'var(--warning)' }}>
-                  {t('settings.relayCannotRead')}
-                </span>
+                <span className="text-xs text-warning">{t('settings.relayCannotRead')}</span>
               ) : null}
 
               {status?.health.lastError ? (
-                <span className="faint truncate" title={status.health.lastError}>
+                <span className="text-sm text-muted-foreground/70 truncate" title={status.health.lastError}>
                   {status.health.lastError}
                 </span>
               ) : null}
 
-              <code className="mono faint" style={{ wordBreak: 'break-all' }} lang="en" dir="ltr">
+              <code className="font-mono text-sm text-muted-foreground/70 break-all" lang="en" dir="ltr">
                 {entry.url}
               </code>
             </div>
           )
         })}
-      </div>
+      </Card>
 
-      <div className="card stack-sm">
+      <Card className="p-4 flex flex-col gap-2">
         <Field label={t('settings.relayAdd')} error={error ?? undefined}>
-          <div className="row">
-            <input
-              className="input grow"
+          <div className="flex items-center gap-3">
+            <Input
+              className="flex-1 min-w-0"
               dir="ltr"
               lang="en"
               placeholder={t('settings.relayPlaceholder')}
@@ -178,33 +178,35 @@ export function RelaySettings() {
                 if (event.key === 'Enter') void addRelay(input)
               }}
             />
-            <button className="btn btn-primary" disabled={!input.trim()} onClick={() => void addRelay(input)}>
+            <Button disabled={!input.trim()} onClick={() => void addRelay(input)}>
               <PlusIcon size={16} />
-            </button>
+            </Button>
           </div>
         </Field>
-      </div>
+      </Card>
 
       {unusedSuggestions.length > 0 ? (
-        <div className="card stack-sm">
-          <span className="section-title">{t('settings.relaySuggested')}</span>
-          <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        <Card className="p-4 flex flex-col gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+            {t('settings.relaySuggested')}
+          </span>
+          <div className="flex items-center gap-3 flex-wrap">
             {unusedSuggestions.map((url) => (
-              <button key={url} className="btn btn-outline small" onClick={() => void addRelay(url)}>
+              <Button key={url} variant="outline" size="sm" onClick={() => void addRelay(url)}>
                 <PlusIcon size={13} />
                 {relayLabel(url)}
-              </button>
+              </Button>
             ))}
           </div>
-        </div>
+        </Card>
       ) : null}
 
-      <button className="btn btn-outline btn-block" onClick={() => void restoreDefaults()}>
+      <Button variant="outline" className="w-full" onClick={() => void restoreDefaults()}>
         <RefreshIcon size={16} />
         {t('settings.relayResetDefaults')}
-      </button>
+      </Button>
 
-      <p className="hint" lang={locale}>
+      <p className="text-sm text-muted-foreground" lang={locale}>
         {about('relaysSee')}
       </p>
     </SettingsPage>

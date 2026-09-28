@@ -18,7 +18,8 @@ import {
   VideoOffIcon,
 } from './icons'
 import { playRingback, playRingtone } from './tones'
-import './calls.css'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 /**
  * Everything a call puts on screen: the incoming-call prompt, the call
@@ -62,7 +63,7 @@ function CallLayer({ call }: { call: CallView }) {
   }, [expanded, live])
 
   return (
-    <div ref={root} className="call-root">
+    <div ref={root} className="contents">
       {/* Always mounted, so minimising the call never interrupts what you hear. */}
       <MediaElement kind="audio" stream={call.remote.stream} />
       {call.phase === 'incoming' ? (
@@ -77,13 +78,16 @@ function CallLayer({ call }: { call: CallView }) {
           onMinimize={live ? () => setMinimized(true) : undefined}
         />
       ) : (
-        <button className="call-bar" onClick={() => setMinimized(false)}>
-          <span className="call-bar-dot" aria-hidden="true" />
-          <bdi className="call-bar-name">{name}</bdi>
-          <span className="call-bar-status">
+        <button
+          className="flex min-h-[2.25rem] shrink-0 items-center gap-2 bg-green-600 px-4 pb-1 pt-[calc(0.5rem+env(safe-area-inset-top))] text-start text-sm font-medium text-white hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-[-4px]"
+          onClick={() => setMinimized(false)}
+        >
+          <span className="h-2 w-2 animate-pulse rounded-full bg-white" aria-hidden="true" />
+          <bdi className="overflow-hidden text-ellipsis whitespace-nowrap font-semibold">{name}</bdi>
+          <span className="tabular-nums">
             <CallStatus call={call} name={name} ct={ct} />
           </span>
-          <span className="call-bar-hint">{ct('expand')}</span>
+          <span className="ms-auto opacity-85 whitespace-nowrap">{ct('expand')}</span>
         </button>
       )}
     </div>
@@ -130,23 +134,23 @@ function IncomingCall({
   useEffect(() => accept.current?.focus(), [])
   const video = call.media === 'video'
   return (
-    <div className="call-incoming-backdrop">
+    <div className="fixed inset-0 z-[85] grid place-items-center bg-black/60 p-4">
       <div
-        className="call-incoming"
+        className="flex w-full max-w-[22rem] flex-col items-center gap-3 rounded-lg border border-border bg-card p-6 pt-5 text-center shadow-lg"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="call-incoming-name"
         aria-describedby="call-incoming-kind"
       >
         <Avatar name={name} seed={call.peer} src={avatar} size="lg" />
-        <bdi id="call-incoming-name" className="call-incoming-name">
+        <bdi id="call-incoming-name" className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-semibold">
           {name}
         </bdi>
-        <span id="call-incoming-kind" className="call-incoming-kind">
+        <span id="call-incoming-kind" className="inline-flex items-center gap-1 text-muted-foreground">
           {video ? <VideoIcon size={15} /> : <PhoneIcon size={15} />}
           {ct(video ? 'incomingVideo' : 'incomingVoice')}
         </span>
-        <div className="call-incoming-actions">
+        <div className="my-3 mt-1 flex justify-center gap-7">
           <CallButton
             label={ct('decline')}
             tone="danger"
@@ -164,9 +168,9 @@ function IncomingCall({
           />
         </div>
         {video ? (
-          <button className="btn btn-ghost small" onClick={() => control({ type: 'accept', media: 'audio' })}>
+          <Button variant="ghost" size="sm" onClick={() => control({ type: 'accept', media: 'audio' })}>
             {ct('acceptVoice')}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>
@@ -202,13 +206,18 @@ function CallScreen({
   const mirrored = local.camera && !local.screen && local.facing === 'user'
 
   return (
-    <div className="call-screen" role="dialog" aria-modal="true" aria-label={ct('callWith', { name })}>
-      <div className="call-stage">
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-crow-nearBlack text-white"
+      role="dialog"
+      aria-modal="true"
+      aria-label={ct('callWith', { name })}
+    >
+      <div className="absolute inset-0 grid place-items-center overflow-hidden">
         {showRemote ? (
           <MediaElement
             kind="video"
             stream={remote.stream}
-            className="call-remote-video"
+            className="absolute inset-0 h-full w-full bg-crow-nearBlack"
             fit={remote.screen ? 'contain' : 'cover'}
           />
         ) : null}
@@ -216,15 +225,20 @@ function CallScreen({
           <MediaElement
             kind="video"
             stream={local.stream}
-            className={answered ? 'call-self-view' : 'call-self-full'}
+            className={cn(
+              'absolute z-[2] bg-crow-graphite object-cover shadow-lg',
+              answered
+                ? 'bottom-[calc(3.5rem+1.5rem+0.75rem+env(safe-area-inset-bottom))] end-4 aspect-[3/4] w-[clamp(5.5rem,24vw,10rem)] rounded-md border border-white/20'
+                : 'inset-0 h-full w-full opacity-55',
+            )}
             mirrored={mirrored}
           />
         ) : null}
         {!showRemote ? (
-          <div className="call-identity">
+          <div className="relative flex flex-col items-center gap-4">
             <Avatar name={name} seed={call.peer} src={avatar} size="lg" />
             {answered && call.media === 'video' && !remote.video ? (
-              <span className="call-chip">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-xs font-medium whitespace-nowrap text-white">
                 <VideoOffIcon size={14} />
                 {ct('cameraIsOff')}
               </span>
@@ -233,10 +247,10 @@ function CallScreen({
         ) : null}
       </div>
 
-      <div className="call-top">
+      <div className="relative z-[3] flex items-center gap-3 bg-gradient-to-b from-black/60 to-transparent px-4 pb-6 pt-[calc(0.75rem+env(safe-area-inset-top))]">
         {onMinimize ? (
           <button
-            className="call-icon-button"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-none bg-white/15 text-white transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
             aria-label={ct('minimize')}
             title={ct('minimize')}
             onClick={onMinimize}
@@ -244,43 +258,43 @@ function CallScreen({
             <MinimizeIcon size={18} />
           </button>
         ) : null}
-        <div className="call-heading">
-          <bdi className="call-name">{name}</bdi>
-          <span className="call-status" aria-live="polite">
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+          <bdi className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-lg font-semibold tracking-tight leading-tight">{name}</bdi>
+          <span className="text-sm text-white/80" aria-live="polite">
             <CallStatus call={call} name={name} ct={ct} />
           </span>
         </div>
         {answered ? (
           <span
-            className="call-chip call-path"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-xs font-medium whitespace-nowrap text-white"
             title={ct(call.path === 'relay' ? 'relayedHint' : 'directHint')}
           >
             <LockIcon size={13} />
-            <span className="visually-hidden">{ct('encrypted')} · </span>
+            <span className="sr-only">{ct('encrypted')} · </span>
             {call.path ? ct(call.path === 'relay' ? 'relayed' : 'direct') : ct('encrypted')}
           </span>
         ) : null}
       </div>
 
-      <div className="call-notices" aria-live="polite">
+      <div className="relative z-[3] flex flex-col items-center gap-2 px-4 text-center" aria-live="polite">
         {call.notReached && call.phase === 'outgoing' ? (
-          <p className="call-note">{ct('notReached', { name })}</p>
+          <p className="max-w-[26rem] rounded-md bg-crow-nearBlack/70 p-2 px-3 text-sm leading-snug text-white/90">{ct('notReached', { name })}</p>
         ) : null}
         {answered && !remote.audio ? (
-          <span className="call-chip">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-xs font-medium whitespace-nowrap text-white">
             <MicOffIcon size={14} />
             {ct('theyMuted', { name })}
           </span>
         ) : null}
-        {answered && remote.screen ? <span className="call-chip">{ct('theyShare', { name })}</span> : null}
+        {answered && remote.screen ? <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-xs font-medium whitespace-nowrap text-white">{ct('theyShare', { name })}</span> : null}
         {local.screen && !ended ? (
-          <span className="call-chip">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-xs font-medium whitespace-nowrap text-white">
             <ScreenShareIcon size={14} />
             {ct('sharing')}
           </span>
         ) : null}
         {call.notice ? (
-          <span className="call-chip call-chip-warning">
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2 py-1 text-xs font-medium whitespace-nowrap text-crow-nearBlack">
             {ct(call.notice === 'camera-unavailable' ? 'cameraUnavailable' : 'screenFailed')}
           </span>
         ) : null}
@@ -289,7 +303,7 @@ function CallScreen({
       {ended ? (
         <CallEnding call={call} name={name} ct={ct} control={control} primary={primary} />
       ) : (
-        <div className="call-controls">
+        <div className="relative z-[3] mt-auto flex flex-wrap justify-center gap-4 bg-gradient-to-t from-black/60 to-transparent p-6 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
           <CallButton
             label={ct(local.muted ? 'unmute' : 'mute')}
             pressed={local.muted}
@@ -382,28 +396,32 @@ function CallEnding({
   }
 
   return (
-    <div className="call-ending" role="alert">
-      <strong className="call-ending-title">{title}</strong>
-      <p className="call-ending-body">{body}</p>
-      <div className="call-ending-actions">
+    <div
+      className="relative z-[3] mx-4 mb-[calc(2rem+env(safe-area-inset-bottom))] mt-auto flex w-[min(100%-2rem,26rem)] flex-col gap-3 self-center rounded-lg border border-border bg-card p-5 text-start text-card-foreground shadow-lg"
+      role="alert"
+    >
+      <strong className="text-base font-semibold">{title}</strong>
+      <p className="leading-snug text-muted-foreground">{body}</p>
+      <div className="flex flex-wrap gap-2">
         {turn ? (
-          <button
-            className="btn btn-primary"
+          <Button
+            className="flex-1"
             onClick={() => {
               control({ type: 'dismiss' })
               navigate({ name: 'settings-calls' })
             }}
           >
             {ct(turn)}
-          </button>
+          </Button>
         ) : null}
-        <button
+        <Button
           ref={primary}
-          className="btn btn-outline call-ending-close"
+          variant="outline"
+          className="flex-1"
           onClick={() => control({ type: 'dismiss' })}
         >
           {ct('close')}
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -466,24 +484,31 @@ function CallButton({
   showLabel?: boolean
   ref?: React.Ref<HTMLButtonElement>
 }) {
-  const className = `call-button${tone ? ` call-button-${tone}` : ''}`
   const button = (
-    <button
+    <Button
       ref={ref}
-      className={className}
+      className={cn(
+        'h-14 w-14 rounded-full transition-colors active:scale-95',
+        tone === 'danger'
+          ? 'bg-red-600 text-white hover:bg-red-700'
+          : tone === 'accept'
+            ? 'bg-green-600 text-white hover:bg-green-700'
+            : 'bg-white/15 text-white hover:bg-white/25',
+        pressed === true && 'bg-white text-crow-nearBlack hover:bg-white',
+      )}
       aria-label={label}
       title={label}
       aria-pressed={pressed === undefined ? undefined : pressed}
       onClick={onClick}
     >
       {icon}
-    </button>
+    </Button>
   )
   if (!showLabel) return button
   return (
-    <span className="call-control">
+    <span className="flex flex-col items-center gap-2">
       {button}
-      <span className="call-control-label" aria-hidden="true">
+      <span className="text-xs font-medium text-white/70" aria-hidden="true">
         {label}
       </span>
     </span>
@@ -514,13 +539,11 @@ function MediaElement({
     if (element.srcObject !== stream) element.srcObject = stream
     if (stream) void element.play().catch(() => undefined)
   }, [stream])
-  if (kind === 'audio') return <audio ref={ref} autoPlay className="visually-hidden" />
+  if (kind === 'audio') return <audio ref={ref} autoPlay className="sr-only" />
   return (
     <video
       ref={ref}
-      className={className}
-      data-mirrored={mirrored || undefined}
-      data-fit={fit}
+      className={cn(className, mirrored && '-scale-x-100', fit === 'contain' && 'object-contain')}
       autoPlay
       playsInline
       // Picture only: sound comes from the one audio element, so it keeps
