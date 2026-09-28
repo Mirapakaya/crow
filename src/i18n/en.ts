@@ -205,6 +205,7 @@ export const en = {
     fromYou: 'You said',
     fromThem: '{name} said',
     replyingTo: 'Replying to',
+    cancelReply: 'Cancel reply',
     copyText: 'Copy text',
     forward: 'Forward',
     forwardTitle: 'Forward to…',

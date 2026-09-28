@@ -1,10 +1,7 @@
 import { useApp } from './store'
 import { translate } from '../i18n'
-import { createLogger } from '../core/util/log'
 import { useRegisterSW } from '@/lib/useRegisterSW'
 import { Button } from '@/components/ui/button'
-
-const log = createLogger('pwa')
 
 /**
  * Service-worker update flow.

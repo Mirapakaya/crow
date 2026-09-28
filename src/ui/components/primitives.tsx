@@ -3,7 +3,6 @@ import { CloseIcon, ContactsIcon } from './Icons'
 import { useT } from '../../i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 /** Deterministic avatar colour from a public key — stable across devices. */
 export function avatarColor(seed: string): string {

@@ -7,7 +7,6 @@ import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS, MAX_POLL_OPTIONS } from '../../cor
 import { useInteractiveText } from './interactiveText'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 
 /**
  * Write a poll or a checklist and send it to the open conversation.

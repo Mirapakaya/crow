@@ -17,21 +17,20 @@ export function useRegisterSW(): UseRegisterSWReturn {
 
     let current: ServiceWorker | null = null
 
-    const handleUpdate = () => {
+    const handleUpdate = (worker: ServiceWorker) => {
       const onStateChange = () => {
-        if (!current) return
-        if (current.state === 'installed' && navigator.serviceWorker.controller) {
-          waitingWorkerRef.current = current
+        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+          waitingWorkerRef.current = worker
           setNeedRefresh(true)
         }
       }
-      current.addEventListener('statechange', onStateChange)
+      worker.addEventListener('statechange', onStateChange)
     }
 
     navigator.serviceWorker.ready.then((registration) => {
       registration.addEventListener('updatefound', () => {
         current = registration.installing
-        if (current) handleUpdate()
+        if (current) handleUpdate(current)
       })
     })
   }, [])
