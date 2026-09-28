@@ -20,22 +20,4 @@ export default withPWA({
   dest: 'public',
   register: true,
   disable: isDev,
-  manifest: {
-    id: '/',
-    name: 'Crow',
-    short_name: 'Crow',
-    description: 'Private, end-to-end-encrypted messaging that runs entirely in your browser.',
-    lang: 'en',
-    theme_color: '#0e1116',
-    background_color: '#0e1116',
-    display: 'standalone',
-    orientation: 'portrait-primary',
-    start_url: '/',
-    scope: '/',
-    categories: ['social', 'communication', 'productivity'],
-    icons: [
-      { src: '/crow.svg', sizes: 'any', type: 'image/svg+xml' },
-      { src: '/icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
-    ],
-  },
 })(nextConfig)
