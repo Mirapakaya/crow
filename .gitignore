@@ -22,3 +22,4 @@ public/worker-*.js.map
 public/swe-worker-*.js
 public/swe-worker-*.js.map
 public/manifest.json
+package-lock.json
