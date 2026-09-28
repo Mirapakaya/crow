@@ -13,7 +13,7 @@ function threshold(): number {
   } catch {
     /* storage can be blocked; fall through to the default */
   }
-  return process.env.NODE_ENV === 'development' ? ORDER.info : ORDER.warn
+  return process.env.NODE_ENV === 'production' ? ORDER.warn : ORDER.info
 }
 
 function emit(level: Level, scope: string, msg: string, extra?: unknown) {
