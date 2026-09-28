@@ -319,7 +319,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
       if (announced === null || (message.ts > announced && !isSameDay(announced, message.ts))) {
         announced = message.ts
         output.push(
-          <div key={`day-${message.id}`} className="self-center my-4 mb-2 rounded-full bg-muted px-3 py-0.5 text-xs font-medium text-muted-foreground">
+          <div key={`day-${message.id}`} className="day-separator self-center my-4 mb-2 rounded-full bg-muted px-3 py-0.5 text-xs font-medium text-muted-foreground">
             {formatDayLabel(message.ts, locale, { today: t('chat.today'), yesterday: t('chat.yesterday') })}
           </div>,
         )
@@ -435,7 +435,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
       {/* While selecting, the header becomes what can be done to the
           selection, as it does in Telegram: how many, forward, delete. */}
       {selecting ? (
-        <header className="flex min-h-[3.25rem] items-center gap-2 border-b border-border bg-card px-3 py-2">
+        <header className="selection-bar flex min-h-[3.25rem] items-center gap-2 border-b border-border bg-card px-3 py-2">
           <Button
             variant="ghost"
             size="icon"
@@ -445,7 +445,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
           >
             <CloseIcon />
           </Button>
-          <span className="min-w-0 flex-1 font-semibold" role="status">
+          <span className="selection-count min-w-0 flex-1 font-semibold" role="status">
             {t('chat.selected', { n: picked.length })}
           </span>
           <Button
@@ -612,8 +612,8 @@ export function ChatView({ address }: { address: ChatAddress }) {
         </div>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" ref={listRef} onScroll={onScroll} role="log" aria-live="polite">
-        <div className={cn('flex flex-col gap-0.5 mt-auto py-4', selecting && 'relative')}>
+      <div className="message-list min-h-0 flex-1 overflow-y-auto overscroll-contain" ref={listRef} onScroll={onScroll} role="log" aria-live="polite">
+        <div className={cn('message-stream flex flex-col gap-0.5 mt-auto py-4', selecting && 'relative')}>
           {messages.length === 0 ? (
             <EmptyState title={t('chats.noMessages')} body={t('chat.encryptedNote')} />
           ) : hasEarlierMessages ? (
