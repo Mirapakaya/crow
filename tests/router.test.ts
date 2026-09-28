@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseHash, routeToHash, type Route } from '@/app/router'
+import { parseHash, routeToHash, type Route } from '@/crow/router'
 
 const HEX = 'a'.repeat(64)
 const GROUP = 'b'.repeat(32)

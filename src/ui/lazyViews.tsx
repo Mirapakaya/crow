@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import type { ChunkLoader } from '../app/warmup'
+import type { ChunkLoader } from '../crow/warmup'
 
 /**
  * Every screen and component that is not on the path from a cold start to a

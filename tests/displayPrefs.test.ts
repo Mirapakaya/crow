@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearDisplayPrefs, loadDisplayPrefs, saveDisplayPrefs } from '@/app/displayPrefs'
+import { clearDisplayPrefs, loadDisplayPrefs, saveDisplayPrefs } from '@/crow/displayPrefs'
 
 /** Minimal localStorage stand-in; Node has none. */
 function installStorage(impl?: Partial<Storage>) {

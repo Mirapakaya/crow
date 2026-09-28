@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useApp } from '../../app/store'
+import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { useCallSettingsText, type CallSettingsTextFn, type CallSettingsTextKey } from './callSettingsText'
 import { Banner, Field, Toggle } from '../components/primitives'

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useApp } from '../../app/store'
+import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { Avatar, GroupAvatar, Modal } from '../components/primitives'
 import { conversationTitle, isRequest } from '../screens/ChatList'

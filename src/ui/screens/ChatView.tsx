@@ -1,7 +1,7 @@
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useApp } from '../../app/store'
+import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
-import { goBack, useNavigate } from '../../app/router'
+import { goBack, useNavigate } from '../../crow/router'
 import { Avatar, Banner, EmptyState, GroupAvatar } from '../components/primitives'
 import {
   ArrowDownIcon,

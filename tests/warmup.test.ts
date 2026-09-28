@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { browserWarmupEnvironment, warmLazyChunks, type WarmupEnvironment } from '@/app/warmup'
+import { browserWarmupEnvironment, warmLazyChunks, type WarmupEnvironment } from '@/crow/warmup'
 
 /**
  * The warm-up is what keeps lazy screens available offline without putting

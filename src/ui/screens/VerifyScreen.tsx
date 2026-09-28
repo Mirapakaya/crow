@@ -1,7 +1,7 @@
 import { Suspense, useMemo } from 'react'
-import { useApp } from '../../app/store'
+import { useApp } from '../../crow/store'
 import { useT } from '../../i18n'
-import { goBack } from '../../app/router'
+import { goBack } from '../../crow/router'
 import { Banner, CopyButton, EmptyState } from '../components/primitives'
 import { BackIcon, ShieldCheckIcon } from '../components/Icons'
 // Through the lazy table rather than directly: a static import here would make

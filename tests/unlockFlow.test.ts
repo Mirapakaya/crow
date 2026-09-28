@@ -10,7 +10,7 @@ import { FakeSocketNetwork, type FakeWebSocket } from './fakeWebSocket'
 import { TEST_KDF } from './helpers'
 // Type-only: the module itself is imported at run time, once its database has
 // been installed.
-import type * as StoreModule from '@/app/store'
+import type * as StoreModule from '@/crow/store'
 
 /**
  * How the app opens a vault (ADR-054, ADR-058), through the real store against
@@ -65,7 +65,7 @@ describe('opening the vault through the store', () => {
     await repo.upsertRelay(RELAY, { read: true, write: true })
     vault.lock('manual')
 
-    store = await import('@/app/store')
+    store = await import('@/crow/store')
   }, 30_000)
 
   afterAll(async () => {

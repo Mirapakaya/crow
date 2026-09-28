@@ -2,12 +2,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, createElement, Fragment } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { useApp } from '@/app/store'
+import { useApp } from '@/crow/store'
 import { ChatView } from '@/ui/screens/ChatView'
 import { HOLD_MS, ownEvent } from '@/ui/components/hold'
 import { DialogHost } from '@/ui/components/dialog'
-import { levelOf, sectionOf } from '@/app/layout'
-import { parseHash } from '@/app/router'
+import { levelOf, sectionOf } from '@/crow/layout'
+import { parseHash } from '@/crow/router'
 import type { Contact, Conversation, Message } from '@/core/models/types'
 
 /**

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest'
-import { applyDisplayPrefs } from '@/app/displayPrefs'
+import { applyDisplayPrefs } from '@/crow/displayPrefs'
 import { nextSegmentIndex } from '@/ui/components/segmentedNav'
 
 describe('applying display preferences to the document', () => {
@@ -99,8 +99,8 @@ describe('segmented control keyboard navigation', () => {
  */
 describe('changing display preferences before the vault is open', () => {
   it('persists without a vault, and survives a reload', async () => {
-    const { useApp } = await import('@/app/store')
-    const { loadDisplayPrefs } = await import('@/app/displayPrefs')
+    const { useApp } = await import('@/crow/store')
+    const { loadDisplayPrefs } = await import('@/crow/displayPrefs')
 
     expect(useApp.getState().phase).not.toBe('ready')
 
@@ -115,7 +115,7 @@ describe('changing display preferences before the vault is open', () => {
   })
 
   it('leaves the rest of the settings untouched', async () => {
-    const { useApp } = await import('@/app/store')
+    const { useApp } = await import('@/crow/store')
     const before = useApp.getState().settings
 
     await useApp.getState().setDisplayPreference({ theme: 'dark' })
@@ -132,7 +132,7 @@ describe('changing display preferences before the vault is open', () => {
 
 describe('carrying an entry-screen choice into the vault', () => {
   it('remembers the change as pending until a session starts', async () => {
-    const { useApp } = await import('@/app/store')
+    const { useApp } = await import('@/crow/store')
 
     // Whatever earlier tests left behind, a fresh explicit change is pending.
     await useApp.getState().setDisplayPreference({ locale: 'fa', theme: 'dark' })
@@ -140,7 +140,7 @@ describe('carrying an entry-screen choice into the vault', () => {
   })
 
   it('accumulates changes instead of replacing them', async () => {
-    const { useApp } = await import('@/app/store')
+    const { useApp } = await import('@/crow/store')
 
     await useApp.getState().setDisplayPreference({ locale: 'en' })
     await useApp.getState().setDisplayPreference({ theme: 'light' })

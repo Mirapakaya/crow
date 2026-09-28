@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getRepo, useApp } from '../../app/store'
-import { estimateStorage, type StorageEstimate } from '../../app/storagePersistence'
+import { getRepo, useApp } from '../../crow/store'
+import { estimateStorage, type StorageEstimate } from '../../crow/storagePersistence'
 import { useT } from '../../i18n'
 import { Banner, Field, Spinner, Toggle } from '../components/primitives'
 import { DownloadIcon, TrashIcon, UploadIcon } from '../components/Icons'

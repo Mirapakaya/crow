@@ -12,7 +12,7 @@ import { FakeSocketNetwork, type FakeWebSocket } from './fakeWebSocket'
 import { TEST_KDF } from './helpers'
 // Type-only: the module itself is imported at run time, once its database has
 // been installed.
-import type * as StoreModule from '@/app/store'
+import type * as StoreModule from '@/crow/store'
 
 /**
  * The reported defect, reproduced through the pieces it actually involved: the
@@ -113,7 +113,7 @@ describe('the unread badge through the store', () => {
     // Written; the store opens the same database through its own vault.
     vault.lock('manual')
 
-    store = await import('@/app/store')
+    store = await import('@/crow/store')
     await store.useApp.getState().unlock({ type: 'passphrase', passphrase: PASSPHRASE })
     await settle(500)
     expect(store.useApp.getState().phase).toBe('ready')

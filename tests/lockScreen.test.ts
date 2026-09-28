@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { useApp } from '@/app/store'
+import { useApp } from '@/crow/store'
 import { LockScreen } from '@/ui/screens/LockScreen'
 import { bytesToB64url, randomBytes } from '@/core/util/bytes'
 import type { KeyslotSummary } from '@/core/vault/vault'

@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { useApp, type SendAttachmentInput } from '../../app/store'
+import { useApp, type SendAttachmentInput } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import type { VoiceRecorder } from '../../media/recorder'
 import { canRecordVoice } from '../../media/voiceSupport'
