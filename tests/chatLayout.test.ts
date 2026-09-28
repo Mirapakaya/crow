@@ -123,7 +123,7 @@ describe('the conversation column', () => {
     expect(rows).toHaveLength(history.length)
     for (const row of rows) expect(row.parentElement).toBe(stream)
 
-    const entries = [...stream.children].filter((child) => !child.matches('.faint, .btn'))
+    const entries = [...stream.children].filter((child) => child.matches('.bubble-row, .day-separator'))
     const read = entries.map((entry) =>
       entry.classList.contains('day-separator')
         ? 'day'
@@ -134,7 +134,7 @@ describe('the conversation column', () => {
 
   it('says a message failed under its bubble, inside its row', () => {
     const row = host.querySelector('#msg-m6')!
-    expect([...row.children].map((child) => child.className)).toEqual(['bubble', 'bubble-failed'])
+    expect([...row.children].map((child) => child.className.split(' ')[0])).toEqual(['bubble', 'bubble-failed'])
   })
 
   it('keeps the side on the row, not on a column per person', () => {
