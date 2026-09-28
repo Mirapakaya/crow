@@ -2,6 +2,10 @@ import { useApp } from '../../app/store'
 import { useI18n, LOCALE_NAMES } from '../../i18n'
 import { useNavigate, useRoute, type Route } from '../../app/router'
 import { Avatar, Banner, Field, Toggle } from '../components/primitives'
+import { Button } from '../components/ui/button'
+import { Card, CardContent } from '../components/ui/card'
+import { Input } from '../components/ui/input'
+import { Select } from '../components/ui/select'
 import {
   ChevronIcon,
   GlobeIcon,
@@ -52,8 +56,9 @@ export function SettingsHome() {
       <div className="screen-scroll">
         <div className="container stack" style={{ maxWidth: '34rem' }}>
           <span className="section-title">{t('settings.profile')}</span>
-          <div className="card stack">
-            <div className="row">
+          <Card className="stack">
+            <CardContent>
+              <div className="row">
               <Avatar name={identity.name} seed={identity.pubkey} src={identity.avatar} size="lg" />
               <div className="grow stack-sm">
                 <span style={{ fontWeight: 600 }}>{identity.name}</span>
@@ -72,9 +77,8 @@ export function SettingsHome() {
               effect and a render cascade on every keystroke elsewhere.
             */}
             <Field label={t('settings.displayName')}>
-              <input
+              <Input
                 key={`name:${identity.name}`}
-                className="input"
                 defaultValue={identity.name}
                 maxLength={64}
                 onBlur={(event) => {
@@ -85,9 +89,8 @@ export function SettingsHome() {
             </Field>
 
             <Field label={t('settings.about')}>
-              <input
+              <Input
                 key={`about:${identity.about}`}
-                className="input"
                 defaultValue={identity.about}
                 maxLength={200}
                 onBlur={(event) => {
@@ -97,67 +100,72 @@ export function SettingsHome() {
             </Field>
 
             <div className="row">
-              <label className="btn btn-outline grow">
-                {t('settings.avatarChoose')}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="visually-hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0]
-                    if (file) void pickAvatar(file)
-                  }}
-                />
-              </label>
+              <Button variant="outline" className="grow" asChild>
+                <label>
+                  {t('settings.avatarChoose')}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="visually-hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0]
+                      if (file) void pickAvatar(file)
+                    }}
+                  />
+                </label>
+              </Button>
               {identity.avatar ? (
-                <button className="btn btn-ghost" onClick={() => void updateProfile({ avatar: undefined })}>
+                <Button variant="ghost" onClick={() => void updateProfile({ avatar: undefined })}>
                   {t('settings.avatarRemove')}
-                </button>
+                </Button>
               ) : null}
             </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <span className="section-title">{t('settings.appearance')}</span>
-          <div className="card-section">
-            <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
-              <Field label={t('settings.language')}>
-                <select
-                  className="input select"
-                  value={settings.locale}
-                  onChange={(event) => void saveSettings({ locale: event.target.value as LocaleCode })}
-                >
-                  {(Object.keys(LOCALE_NAMES) as LocaleCode[]).map((code) => (
-                    <option key={code} value={code}>
-                      {LOCALE_NAMES[code]}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-            <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
-              {/* The same control as on the entry screens, so the theme switch
-                  looks and behaves identically wherever it is met. */}
-              <Field label={t('settings.theme')}>
-                <SegmentedControl
-                  label={t('settings.theme')}
-                  value={settings.theme}
-                  options={[
-                    { value: 'system', label: t('settings.themeSystem'), icon: <MonitorIcon size={15} /> },
-                    { value: 'light', label: t('settings.themeLight'), icon: <SunIcon size={15} /> },
-                    { value: 'dark', label: t('settings.themeDark'), icon: <MoonIcon size={15} /> },
-                  ]}
-                  onChange={(theme: ThemePreference) => void saveSettings({ theme })}
-                />
-              </Field>
-            </div>
-            <Toggle
-              label={t('settings.enterToSend')}
-              checked={settings.enterToSend}
-              onChange={(enterToSend) => void saveSettings({ enterToSend })}
-            />
-          </div>
+          <Card className="card-section">
+            <CardContent className="card-section">
+              <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
+                <Field label={t('settings.language')}>
+                  <Select
+                    className="select"
+                    value={settings.locale}
+                    onChange={(event) => void saveSettings({ locale: event.target.value as LocaleCode })}
+                  >
+                    {(Object.keys(LOCALE_NAMES) as LocaleCode[]).map((code) => (
+                      <option key={code} value={code}>
+                        {LOCALE_NAMES[code]}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
+              <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
+                {/* The same control as on the entry screens, so the theme switch
+                    looks and behaves identically wherever it is met. */}
+                <Field label={t('settings.theme')}>
+                  <SegmentedControl
+                    label={t('settings.theme')}
+                    value={settings.theme}
+                    options={[
+                      { value: 'system', label: t('settings.themeSystem'), icon: <MonitorIcon size={15} /> },
+                      { value: 'light', label: t('settings.themeLight'), icon: <SunIcon size={15} /> },
+                      { value: 'dark', label: t('settings.themeDark'), icon: <MoonIcon size={15} /> },
+                    ]}
+                    onChange={(theme: ThemePreference) => void saveSettings({ theme })}
+                  />
+                </Field>
+              </div>
+              <Toggle
+                label={t('settings.enterToSend')}
+                checked={settings.enterToSend}
+                onChange={(enterToSend) => void saveSettings({ enterToSend })}
+              />
+            </CardContent>
+          </Card>
 
-          <div className="card-section">
+          <Card className="card-section">
             <NavRow
               icon={<GlobeIcon size={18} />}
               label={t('settings.relays')}
@@ -183,10 +191,10 @@ export function SettingsHome() {
               label={t('settings.data')}
               to={{ name: 'settings-data' }}
             />
-          </div>
+          </Card>
 
           <span className="section-title">{t('settings.aboutSection')}</span>
-          <div className="card-section">
+          <Card className="card-section">
             <NavRow label={t('settings.whatLeaves')} to={{ name: 'about' }} />
             <a className="list-row" href={SOURCE_URL} target="_blank" rel="noreferrer noopener">
               <span className="grow">{t('settings.sourceCode')}</span>
@@ -196,12 +204,12 @@ export function SettingsHome() {
               <span className="grow muted">{t('settings.version')}</span>
               <code className="mono small">{APP_VERSION}</code>
             </div>
-          </div>
+          </Card>
 
-          <button className="btn btn-outline btn-block" onClick={() => lock()}>
+          <Button variant="outline" className="w-full" onClick={() => lock()}>
             <LockIcon size={16} />
             {t('settings.lockNow')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -252,7 +260,7 @@ export function PrivacySettings() {
 
   return (
     <SettingsPage title={t('settings.privacy')}>
-      <div className="card-section">
+      <Card className="card-section">
         <Toggle
           label={t('settings.notifications')}
           description={t('settings.notificationsBody')}
@@ -288,12 +296,12 @@ export function PrivacySettings() {
           checked={settings.mlsInvites}
           onChange={(mlsInvites) => void saveSettings({ mlsInvites })}
         />
-      </div>
+      </Card>
 
-      <div className="card stack-sm">
+      <Card className="stack-sm">
         <Field label={t('settings.retention')}>
-          <select
-            className="input select"
+          <Select
+            className="select"
             value={settings.retention}
             onChange={(event) =>
               void saveSettings({ retention: event.target.value as typeof settings.retention })
@@ -303,14 +311,14 @@ export function PrivacySettings() {
             <option value="90d">{t('settings.retentionDays', { n: 90 })}</option>
             <option value="30d">{t('settings.retentionDays', { n: 30 })}</option>
             <option value="7d">{t('settings.retentionDays', { n: 7 })}</option>
-          </select>
+          </Select>
         </Field>
-      </div>
+      </Card>
 
-      <div className="card stack-sm">
+      <Card className="stack-sm">
         <Field label={t('settings.messageExpiry')} hint={t('settings.messageExpiryBody')}>
-          <select
-            className="input select"
+          <Select
+            className="select"
             value={String(settings.messageExpirationDays)}
             onChange={(event) => void saveSettings({ messageExpirationDays: Number(event.target.value) })}
           >
@@ -319,9 +327,9 @@ export function PrivacySettings() {
                 {t('settings.retentionDays', { n: days })}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
-      </div>
+      </Card>
 
       <Banner tone="accent">
         <span className="small">{about('limitsForwardSecrecy')}</span>

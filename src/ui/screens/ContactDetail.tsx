@@ -4,6 +4,7 @@ import { useI18n } from '../../i18n'
 import { goBack, useNavigate } from '../../app/router'
 import { Avatar, Banner, CopyButton, EmptyState, Field } from '../components/primitives'
 import { Button } from '../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Textarea } from '../components/ui/textarea'
 import { confirmDanger } from '../components/dialog'
@@ -81,43 +82,49 @@ export function ContactDetail({ peer }: { peer: string }) {
             </Button>
           </div>
 
-          <div className="card stack">
-            <Field label={t('contacts.nameLabel')}>
-              <Input
-                value={name}
-                maxLength={64}
-                onChange={(event) => setName(event.target.value)}
-                onBlur={() => {
-                  if (name !== contact.name) void updateContact(peer, { name })
-                }}
-              />
-            </Field>
-            <Field label={t('contacts.noteLabel')} hint={t('contacts.noteHint')}>
-              <Textarea
-                style={{ minHeight: '3.5rem' }}
-                value={note}
-                maxLength={500}
-                onChange={(event) => setNote(event.target.value)}
-                onBlur={() => {
-                  if (note !== (contact.note ?? '')) void updateContact(peer, { note })
-                }}
-              />
-            </Field>
-          </div>
+          <Card className="stack">
+            <CardContent className="stack">
+              <Field label={t('contacts.nameLabel')}>
+                <Input
+                    value={name}
+                    maxLength={64}
+                    onChange={(event) => setName(event.target.value)}
+                    onBlur={() => {
+                      if (name !== contact.name) void updateContact(peer, { name })
+                    }}
+                  />
+              </Field>
+              <Field label={t('contacts.noteLabel')} hint={t('contacts.noteHint')}>
+                <Textarea
+                    style={{ minHeight: '3.5rem' }}
+                    value={note}
+                    maxLength={500}
+                    onChange={(event) => setNote(event.target.value)}
+                    onBlur={() => {
+                      if (note !== (contact.note ?? '')) void updateContact(peer, { note })
+                    }}
+                  />
+              </Field>
+            </CardContent>
+          </Card>
 
-          <div className="card stack-sm">
-            <span className="section-title">{t('contacts.copyKey')}</span>
-            <code className="mono small" style={{ wordBreak: 'break-all' }}>
-              {toNpub(peer)}
-            </code>
-            <CopyButton value={toNpub(peer)} />
-            {contact.relays.length > 0 ? (
-              <p className="faint">{contact.relays.map(relayLabel).join(' · ')}</p>
-            ) : null}
-            <p className="faint">
-              {t('common.add')}: {formatDateTime(contact.addedAt, locale)}
-            </p>
-          </div>
+          <Card className="stack-sm">
+            <CardHeader>
+              <CardTitle className="section-title">{t('contacts.copyKey')}</CardTitle>
+            </CardHeader>
+            <CardContent className="stack-sm">
+              <code className="mono small" style={{ wordBreak: 'break-all' }}>
+                {toNpub(peer)}
+              </code>
+              <CopyButton value={toNpub(peer)} />
+              {contact.relays.length > 0 ? (
+                <p className="faint">{contact.relays.map(relayLabel).join(' · ')}</p>
+              ) : null}
+              <p className="faint">
+                {t('common.add')}: {formatDateTime(contact.addedAt, locale)}
+              </p>
+            </CardContent>
+          </Card>
 
           {contact.blocked ? (
             <Banner tone="danger">

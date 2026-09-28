@@ -5,6 +5,9 @@ import { type KeyslotType, type SlotSecret } from '../../core/vault/vault'
 import { isGuarded, isValidPin } from '../../core/vault/keyslots'
 import { confirmBiometric, GateCancelledError } from '../../core/crypto/biometricGate'
 import { Banner, Field, Spinner } from '../components/primitives'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 import { confirmDanger } from '../components/dialog'
 import { EntryLayout } from '../components/EntryLayout'
 import { LockIcon } from '../components/Icons'
@@ -165,15 +168,15 @@ export function LockScreen() {
 
       {way === 'device' || way === 'biometric' ? (
         <>
-          <button
-            className="btn btn-primary btn-block"
+          <Button
+            className="w-full"
             disabled={busy}
             onClick={
               way === 'device' ? () => void attempt(async () => ({ type: 'device' })) : () => withBiometric()
             }
           >
             {busy ? <Spinner label={t('lock.unlocking')} /> : labels[way]}
-          </button>
+          </Button>
           {error ? (
             <p className="error-text center" role="alert">
               {error}
@@ -210,8 +213,8 @@ export function LockScreen() {
         >
           <Field label={way === 'recovery' ? t('lock.recoveryPhrase') : undefined} error={error ?? undefined}>
             {way === 'recovery' ? (
-              <textarea
-                className="textarea mono"
+              <Textarea
+                className="mono"
                 dir="ltr"
                 autoFocus
                 autoCapitalize="none"
@@ -226,8 +229,8 @@ export function LockScreen() {
                 }}
               />
             ) : (
-              <input
-                className={way === 'pin' ? 'input pin-input' : 'input'}
+              <Input
+                className={way === 'pin' ? 'pin-input' : undefined}
                 type="password"
                 dir={way === 'pin' ? 'ltr' : undefined}
                 inputMode={way === 'pin' ? 'numeric' : undefined}
@@ -253,9 +256,9 @@ export function LockScreen() {
               <div style={{ width: `${Math.round(progress * 100)}%` }} />
             </div>
           ) : null}
-          <button className="btn btn-primary btn-block" type="submit" disabled={!ready || busy}>
+          <Button className="w-full" type="submit" disabled={!ready || busy}>
             {busy ? <Spinner label={t('lock.unlocking')} /> : t('lock.unlock')}
-          </button>
+          </Button>
         </form>
       ) : null}
 
@@ -263,17 +266,18 @@ export function LockScreen() {
         {available
           .filter((other) => other !== way)
           .map((other) => (
-            <button key={other} className="btn btn-ghost small" onClick={() => choose(other)}>
+            <Button key={other} variant="ghost" size="sm" onClick={() => choose(other)}>
               {labels[other]}
-            </button>
+            </Button>
           ))}
-        <button
-          className="btn btn-ghost small"
+        <Button
+          variant="ghost"
+          size="sm"
           aria-expanded={showForgot}
           onClick={() => setShowForgot((value) => !value)}
         >
           {t('lock.forgot')}
-        </button>
+        </Button>
       </div>
 
       {showForgot ? (
@@ -281,8 +285,9 @@ export function LockScreen() {
           <Banner tone="warning">
             {available.includes('recovery') ? t('lock.forgotBodyRecovery') : t('lock.forgotBody')}
           </Banner>
-          <button
-            className="btn btn-danger-soft btn-block"
+          <Button
+            variant="destructive"
+            className="w-full"
             onClick={async () => {
               if (await confirmDanger(t('lock.startOver'), t('lock.startOver'), t('lock.startOverConfirm'))) {
                 void wipeDevice()
@@ -290,7 +295,7 @@ export function LockScreen() {
             }}
           >
             {t('lock.startOver')}
-          </button>
+          </Button>
         </div>
       ) : null}
     </EntryLayout>
