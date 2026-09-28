@@ -71,8 +71,8 @@ function statusLabel(message: Message, t: TranslateFn): string {
   return t(STATUS_LABEL[message.status])
 }
 
-function StatusIcon({ status, label }: { status: Message['status']; label: string }) {
-  const shared = { size: 13, className: 'inline-flex items-center', role: 'img' as const, 'aria-label': label }
+function StatusIcon({ status, label, className }: { status: Message['status']; label: string; className?: string }) {
+  const shared = { size: 13, className: cn('inline-flex items-center', className), role: 'img' as const, 'aria-label': label }
   switch (status) {
     case 'queued':
     case 'sending':
@@ -204,7 +204,7 @@ export const MessageBubble = memo(function MessageBubble({
           type="button"
           role="menuitem"
           className={cn(
-            'rounded p-1 text-xl transition-colors hover:bg-muted',
+            'quick-emoji rounded p-1 text-xl transition-colors hover:bg-muted',
             grouped.some((e) => e.mine && e.emoji === emoji) && 'bg-primary/20',
           )}
           onClick={() => react(emoji)}
@@ -238,7 +238,7 @@ export const MessageBubble = memo(function MessageBubble({
     >
       <div
         className={cn(
-          'relative max-w-[min(80%,34rem)] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 shadow-sm',
+          'bubble relative max-w-[min(80%,34rem)] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 shadow-sm',
           outgoing
             ? 'self-end bg-primary text-primary-foreground'
             : 'self-start bg-muted text-foreground',
@@ -293,7 +293,7 @@ export const MessageBubble = memo(function MessageBubble({
           <time dateTime={new Date(message.ts).toISOString()}>{formatTime(message.ts, locale)}</time>
           {outgoing ? (
             <span className="inline-flex items-center" title={status}>
-              <StatusIcon status={message.status} label={status} />
+              <StatusIcon status={message.status} label={status} className="tick" />
             </span>
           ) : null}
         </div>
@@ -410,7 +410,7 @@ export const MessageBubble = memo(function MessageBubble({
       </div>
 
       {message.status === 'failed' ? (
-        <div className="mt-0.5 flex items-center gap-2">
+        <div className="bubble-failed mt-0.5 flex items-center gap-2">
           <span className="text-xs text-destructive">{t('chat.failed')}</span>
           <Button variant="ghost" size="sm" onClick={() => onRetry(message)}>
             {t('chat.retrySend')}
