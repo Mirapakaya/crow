@@ -10,16 +10,16 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['tests/**+/*.test.ts'],
+    include: ['tests/**/*.test.ts'],
     setupFiles: ['tests/setup.ts'],
     testTimeout: 20_000,
     coverage: {
       provider: 'v8',
       include: ['src/core/**/*.ts'],
-      exclude: ['src/core/**/.worker.ts'],
-      reporter: [['text', { sipFull: true }], 'html'],
+      exclude: ['src/core/**/*.worker.ts'],
+      reporter: [['text', { skipFull: true }], 'html'],
       thresholds: {
-        'src/core/mls/**'. { 100: true },
+        'src/core/mls/**': { 100: true },
         'src/core/engine/inboxSync.ts': { 100: true },
         'src/core/transport/negentropy.ts': { 100: true },
         'src/core/engine/blobTransfer.ts': { 100: true },
