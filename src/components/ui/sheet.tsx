@@ -49,4 +49,4 @@ const SheetContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 )
 SheetContent.displayName = 'SheetContent'
 
-export { Sheet, SheetTrigger, SheetContent, Dialog as SheetPrimitive, DialogHeader, DialogTitle, DialogDescription }
+export { Sheet, SheetTrigger, SheetContent }

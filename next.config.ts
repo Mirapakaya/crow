@@ -19,7 +19,6 @@ const nextConfig: NextConfig = {
 export default withPWA({
   dest: 'public',
   register: true,
-  clientsClaim: true,
   disable: isDev,
   manifest: {
     id: '/',

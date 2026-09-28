@@ -215,6 +215,7 @@ export const fa: Dictionary = {
     fromYou: 'شما گفتید',
     fromThem: '{name} گفت',
     replyingTo: 'در پاسخ به',
+    cancelReply: 'لغو پاسخ',
     copyText: 'کپی متن',
     forward: 'هدایت',
     forwardTitle: 'هدایت به…',
