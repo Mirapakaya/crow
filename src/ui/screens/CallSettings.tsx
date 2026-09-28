@@ -133,12 +133,15 @@ export function CallSettings() {
                 size="icon"
                 aria-label={st('iceRemove')}
                 title={st('iceRemove')}
-                onClick={() => void remove(index)}
+                onClick={() => {
+                  void remove(index)
+                }}
               >
                 <TrashIcon size={16} />
               </Button>
             </div>
-          ))}
+          ))
+        )}
       </Card>
 
       <Card className="p-4 flex flex-col gap-2">
