@@ -3,6 +3,7 @@ import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../app/router'
 import { Avatar, Banner, EmptyState, GroupAvatar } from '../components/primitives'
+import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -156,9 +157,9 @@ export function ChatList() {
                 ) : null}
               </span>
               {conversation.unread > 0 ? (
-                <span className="unread-dot" aria-label={String(conversation.unread)}>
+                <Badge variant="default" aria-label={String(conversation.unread)}>
                   {conversation.unread > 99 ? '99+' : conversation.unread}
-                </span>
+                </Badge>
               ) : null}
             </span>
           </span>

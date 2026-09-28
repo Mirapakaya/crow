@@ -3,6 +3,7 @@ import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../app/router'
 import { Avatar, EmptyState } from '../components/primitives'
+import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -85,7 +86,7 @@ export function ContactsList() {
                 {contact.verification === 'verified' ? (
                   <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
                 ) : null}
-                {contact.blocked ? <span className="badge badge-danger">{t('chat.block')}</span> : null}
+                {contact.blocked ? <Badge variant="destructive">{t('chat.block')}</Badge> : null}
               </button>
             </Card>
           ))
