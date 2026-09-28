@@ -154,7 +154,6 @@ function VoiceNote({ attachment }: { attachment: Attachment }) {
         {playing ? <PauseGlyph /> : <PlayGlyph />}
       </button>
 
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
         className="flex flex-1 items-end gap-0.5"
         role="slider"
