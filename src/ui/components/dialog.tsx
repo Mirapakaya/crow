@@ -91,7 +91,7 @@ export function DialogHost() {
           {question.body ? (
             <p className="mt-2 text-sm text-muted-foreground">{question.body}</p>
           ) : null}
-          <div className="mt-6 flex flex-wrap justify-end gap-2">
+          <div className="dialog-actions mt-6 flex flex-wrap justify-end gap-2">
             {question.choices.map((choice) => (
               <Button
                 key={choice.value}
