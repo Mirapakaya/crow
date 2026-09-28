@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { CloseIcon, ContactsIcon } from './Icons'
+import { Users, X, Copy, Check } from 'lucide-react'
 import { useT } from '../../i18n'
+import { Button } from './ui/button'
+import { Switch } from './ui/switch'
+import { cn } from '@/lib/utils'
 
 /** Deterministic avatar colour from a public key — stable across devices. */
 export function avatarColor(seed: string): string {
   let hash = 0
   for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
-  // Fixed saturation and lightness keep contrast with white text predictable.
   return `hsl(${Math.abs(hash) % 360} 46% 42%)`
 }
 
@@ -29,7 +31,7 @@ export function GroupAvatar({ seed, size = 'md' }: { seed: string; size?: 'sm' |
   const className = `avatar avatar-group${size === 'sm' ? ' avatar-sm' : size === 'lg' ? ' avatar-lg' : ''}`
   return (
     <div className={className} style={{ background: avatarColor(seed) }} aria-hidden="true">
-      <ContactsIcon size={size === 'lg' ? 30 : size === 'sm' ? 15 : 19} />
+      <Users size={size === 'lg' ? 30 : size === 'sm' ? 15 : 19} />
     </div>
   )
 }
@@ -63,7 +65,10 @@ export function Avatar({
 export function Spinner({ label }: { label?: string }) {
   return (
     <span className="row" style={{ gap: '0.5rem' }}>
-      <span className="spinner" />
+      <span
+        className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[var(--surface-3)] border-t-[var(--accent)]"
+        aria-hidden="true"
+      />
       {label ? <span className="muted small">{label}</span> : null}
     </span>
   )
@@ -76,9 +81,19 @@ export function Banner({
   tone?: 'info' | 'warning' | 'danger' | 'accent'
   children: ReactNode
 }) {
-  const cls = tone === 'info' ? 'banner' : `banner banner-${tone}`
+  const toneClass =
+    tone === 'warning'
+      ? 'bg-[var(--warning-soft)] text-[var(--warning)]'
+      : tone === 'danger'
+        ? 'bg-[var(--danger-soft)] text-[var(--danger)]'
+        : tone === 'accent'
+          ? 'bg-[var(--accent-soft)] text-[var(--accent-text)]'
+          : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
   return (
-    <div className={cls} role={tone === 'danger' ? 'alert' : undefined}>
+    <div
+      className={cn('rounded-md px-4 py-3 text-sm', toneClass)}
+      role={tone === 'danger' ? 'alert' : undefined}
+    >
       {children}
     </div>
   )
@@ -128,7 +143,6 @@ export function Modal({
   onClose: () => void
   children: ReactNode
   labelledBy?: string
-  /** False for a question, whose own answers include not going ahead. */
   closable?: boolean
 }) {
   const t = useT()
@@ -187,9 +201,9 @@ export function Modal({
             {title}
           </h2>
           {closable ? (
-            <button type="button" className="btn btn-icon" onClick={onClose} aria-label={t('common.close')}>
-              <CloseIcon />
-            </button>
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.close')}>
+              <X size={20} />
+            </Button>
           ) : null}
         </div>
         {children}
@@ -224,13 +238,7 @@ export function Toggle({
           </span>
         ) : null}
       </span>
-      <input
-        className="checkbox"
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        onChange={(event) => onChange(event.target.checked)}
-      />
+      <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} />
     </label>
   )
 }
@@ -253,7 +261,7 @@ export function EmptyState({ title, body, action }: { title: string; body?: stri
 export function CopyButton({
   value,
   label,
-  className = 'btn btn-outline',
+  className = '',
 }: {
   value: string
   label?: string
@@ -262,8 +270,9 @@ export function CopyButton({
   const t = useT()
   const [copied, setCopied] = useCopyState()
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
+      size="sm"
       className={className}
       onClick={async () => {
         try {
@@ -275,8 +284,9 @@ export function CopyButton({
         }
       }}
     >
+      {copied ? <Check size={16} /> : <Copy size={16} />}
       {copied ? t('common.copied') : (label ?? t('common.copy'))}
-    </button>
+    </Button>
   )
 }
 

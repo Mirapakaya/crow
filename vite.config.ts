@@ -3,6 +3,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import tailwindcss from '@tailwindcss/vite'
 
 // GitHub Pages: a project page is served from /<repo>/, a user/custom-domain
 // page from /. BASE_PATH lets CI pick without editing source.
@@ -195,6 +196,7 @@ export default defineConfig({
   worker: { format: 'es' },
   plugins: [
     react(),
+    tailwindcss(),
     cspPlugin,
     notFoundPlugin,
     VitePWA({
