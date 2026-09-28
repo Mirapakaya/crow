@@ -11,7 +11,6 @@ import { Popover } from './Popover'
 import { LazyPicker } from './LazyPicker'
 import { QUICK_REACTIONS } from './quickReactions'
 import { usePress } from './hold'
-import { Button } from '@/components/ui/button'
 
 /**
  * Delivery state, rendered the way Telegram's readers already read it
@@ -395,10 +394,10 @@ export const MessageBubble = memo(function MessageBubble({
 
       {message.status === 'failed' ? (
         <div className="bubble-failed">
-          <span className="text-danger text-xs">{t('chat.failed')}</span>
-          <Button type="button" variant="ghost" size="sm" onClick={() => onRetry(message)}>
+          <span className="danger-text small">{t('chat.failed')}</span>
+          <button type="button" className="btn btn-ghost small" onClick={() => onRetry(message)}>
             {t('chat.retrySend')}
-          </Button>
+          </button>
         </div>
       ) : null}
     </EntryRow>

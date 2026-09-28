@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import type { Message } from '../../core/models/types'
 import { useT } from '../../i18n'
 import { ownEvent } from './hold'
-import { cn } from '@/lib/utils'
 
 /** What every entry in a conversation shares: its place in a run, and being picked while selecting. */
 export interface EntryProps {
@@ -43,16 +42,14 @@ export function EntryRow({
   children: ReactNode
 }) {
   const t = useT()
+  const classes = ['bubble-row', message.direction === 'out' ? 'out' : 'in']
+  if (groupStart) classes.push('group-start')
+  if (groupEnd) classes.push('group-end')
+  if (failed) classes.push('failed')
+  if (selected) classes.push('selected')
   return (
     <div
-      className={cn(
-        'bubble-row',
-        message.direction === 'out' ? 'out' : 'in',
-        groupStart && 'group-start',
-        groupEnd && 'group-end',
-        failed && 'failed',
-        selected && 'selected',
-      )}
+      className={classes.join(' ')}
       id={`msg-${message.id}`}
       onClickCapture={
         selecting
@@ -92,7 +89,7 @@ export function MenuItem({
     <button
       type="button"
       role="menuitem"
-      className={danger ? 'text-danger' : undefined}
+      className={danger ? 'menuitem-danger' : undefined}
       onClick={onClick}
     >
       {children}

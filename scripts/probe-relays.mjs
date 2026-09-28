@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Probe candidate Nostr relays for suitability as Crow DM relays.
+ * Probe candidate Nostr relays for suitability as Textor DM relays.
  *
  * Checks, per relay:
  *   - NIP-11 relay information document (name, supported NIPs, limitations)
@@ -64,7 +64,7 @@ async function buildProbeEvent() {
         ['p', recipient],
         ['expiration', String(Math.floor(Date.now() / 1000) + 3600)],
       ],
-      content: nip44.encrypt(JSON.stringify({ probe: 'crow relay capability check' }), conversationKey),
+      content: nip44.encrypt(JSON.stringify({ probe: 'textor relay capability check' }), conversationKey),
     },
     sk,
   )
@@ -142,7 +142,7 @@ function probeSocket(url, probeEvent) {
       result.connected = true
       result.connectMs = Date.now() - started
       // A gift-wrap inbox query for a key nobody has ever written to:
-      // valid, cheap, and exercises the exact filter shape Crow uses.
+      // valid, cheap, and exercises the exact filter shape Textor uses.
       ws.send(JSON.stringify(['REQ', 'probe', { kinds: [1059], '#p': [randomHex32()], limit: 1 }]))
       ws.send(JSON.stringify(['EVENT', probeEvent]))
     }

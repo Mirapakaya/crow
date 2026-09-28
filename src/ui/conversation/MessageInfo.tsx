@@ -53,7 +53,7 @@ export function MessageInfo({ message, onClose }: { message: Message; onClose: (
             ]}
         {pair('via', t('chat.infoVia'), message.via === 'direct' ? t('status.direct') : t('settings.relays'))}
       </dl>
-      <p className="text-xs text-text-muted">{t('chat.infoHint')}</p>
+      <p className="hint">{t('chat.infoHint')}</p>
     </Modal>
   )
 }

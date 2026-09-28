@@ -34,14 +34,14 @@ export function AboutScreen() {
 
   return (
     <SettingsPage title={about('title')}>
-      <p className="text-sm text-[var(--text-muted)]">{t('privacy.intro')}</p>
+      <p className="muted">{t('privacy.intro')}</p>
 
       {sections.map((section) => (
-        <div key={section.title} className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
+        <div key={section.title} className="card stack-sm">
           <h3 style={{ fontSize: 'var(--step-0)' }}>{section.title}</h3>
-          <p className="text-sm text-[var(--text-muted)] small">{section.body}</p>
+          <p className="muted small">{section.body}</p>
           {section.extra?.map((line) => (
-            <p key={line} className="text-xs text-[var(--text-muted)]">
+            <p key={line} className="hint">
               {line}
             </p>
           ))}
@@ -49,17 +49,17 @@ export function AboutScreen() {
       ))}
 
       {relays.length > 0 ? (
-        <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
+        <div className="card stack-sm">
           <h3 style={{ fontSize: 'var(--step-0)' }}>{t('settings.relays')}</h3>
-          <p className="text-xs text-[var(--text-muted)]" dir="ltr" lang="en">
+          <p className="hint" dir="ltr" lang="en">
             {relays.map((entry) => relayLabel(entry.url)).join(' · ')}
           </p>
         </div>
       ) : null}
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
+      <div className="card stack-sm">
         <h3 style={{ fontSize: 'var(--step-0)', color: 'var(--warning)' }}>{about('limitsTitle')}</h3>
-        <ul className="flex flex-col gap-2 text-sm text-[var(--text-muted)] small" style={{ paddingInlineStart: '1.1rem' }}>
+        <ul className="stack-sm muted small" style={{ paddingInlineStart: '1.1rem' }}>
           <li>{about('limitsForwardSecrecy')}</li>
           <li>{about('limitsMetadata')}</li>
           <li>{about('limitsNoPush')}</li>
@@ -67,22 +67,22 @@ export function AboutScreen() {
         </ul>
       </div>
 
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
-        <div className="flex w-full items-center justify-between">
-          <span className="text-sm text-[var(--text-muted)]">{t('settings.version')}</span>
+      <div className="card stack-sm">
+        <div className="row-between">
+          <span className="muted">{t('settings.version')}</span>
           <code className="mono small">{APP_VERSION}</code>
         </div>
-        <div className="flex w-full items-center justify-between">
-          <span className="text-sm text-[var(--text-muted)]">{t('settings.sourceCode')}</span>
+        <div className="row-between">
+          <span className="muted">{t('settings.sourceCode')}</span>
           <a href={SOURCE_URL} target="_blank" rel="noreferrer noopener">
             github
           </a>
         </div>
-        <div className="flex w-full items-center justify-between">
-          <span className="text-sm text-[var(--text-muted)]">{t('settings.licence')}</span>
+        <div className="row-between">
+          <span className="muted">{t('settings.licence')}</span>
           <span className="mono small">AGPL-3.0-or-later</span>
         </div>
-        <p className="text-xs text-[var(--text-muted)]" dir="ltr" lang="en">
+        <p className="hint" dir="ltr" lang="en">
           {BUILD_TIME}
         </p>
       </div>

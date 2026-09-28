@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // GitHub Pages: a project page is served from /<repo>/, a user/custom-domain
@@ -195,7 +194,6 @@ export default defineConfig({
   },
   worker: { format: 'es' },
   plugins: [
-    tailwindcss(),
     react(),
     cspPlugin,
     notFoundPlugin,
@@ -221,10 +219,10 @@ export default defineConfig({
         short_name: 'Crow',
         description: 'Private, end-to-end-encrypted messaging that runs entirely in your browser.',
         lang: 'en',
-        // The brand charcoal, not a surface colour: this paints the task-switcher
+        // The brand blue, not a surface colour: this paints the task-switcher
         // and title bar, where the app should read as itself rather than as a
         // sheet of background. The splash keeps the light canvas.
-        theme_color: '#1a1a1e',
+        theme_color: '#1a56b8',
         background_color: '#f4f6f8',
         display: 'standalone',
         orientation: 'portrait-primary',

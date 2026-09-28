@@ -11,6 +11,17 @@ import { LazyPicker } from './LazyPicker'
 import { Spinner } from './primitives'
 import { ChecklistComposer, LAZY_CHUNKS, PollComposer } from '../lazyViews'
 
+/**
+ * Attachment controls for the composer.
+ *
+ * Two entry points, deliberately different shapes. Files go through a normal
+ * picker, because that is what every platform's own share sheet expects.
+ * Voice is a press-to-arm, press-to-send control rather than hold-to-talk:
+ * hold-to-talk is unusable with a keyboard, fails on a flaky touch digitiser,
+ * and loses the whole recording when a finger slips.
+ */
+
+/** Microphone glyph. Local, so the icon set stays one file of one weight. */
 const MicIcon = ({ size = 18 }: { size?: number }) => (
   <svg
     width={size}
@@ -28,6 +39,12 @@ const MicIcon = ({ size = 18 }: { size?: number }) => (
   </svg>
 )
 
+/**
+ * The "+" beside the input: bring something into the conversation that is not
+ * typed — a file, a poll, or a checklist. A menu rather than three buttons,
+ * because a phone-width composer has room for one, and it is the arrangement
+ * every messenger has taught people to look for.
+ */
 export function AttachButton({ disabled }: { disabled?: boolean }) {
   const { t } = useI18n()
   const sendAttachment = useApp((s) => s.sendAttachment)
@@ -45,6 +62,10 @@ export function AttachButton({ disabled }: { disabled?: boolean }) {
         const { audioDuration, kindForFile, prepareImage, prepareVideoPoster } = await LAZY_CHUNKS.media()
         const kind = kindForFile(file)
         const name = sanitizeName(file.name || t('attachment.file'))
+        // Every attachment carries a caption, even one the user did not type.
+        // A kind 14 whose content is empty renders as nothing in a client that
+        // does not know our attachment tag, and NIP-17's contract is that
+        // unknown tags are ignored while content is not.
         const caption = (k: 'image' | 'video' | 'voice' | 'file'): string =>
           k === 'image'
             ? t('attachment.captionImage')
@@ -56,6 +77,8 @@ export function AttachButton({ disabled }: { disabled?: boolean }) {
         let payload: SendAttachmentInput
 
         if (kind === 'image') {
+          // Re-encoding is what makes a phone photo sendable over relays at
+          // all, and it drops EXIF — location and camera serial — on the way.
           const prepared = await prepareImage(file)
           payload = prepared
             ? {
@@ -68,7 +91,8 @@ export function AttachButton({ disabled }: { disabled?: boolean }) {
                 height: prepared.height,
                 ...(prepared.preview ? { preview: prepared.preview } : {}),
               }
-            : {
+            : // An image the browser cannot decode is still a file worth sending.
+              {
                 bytes: new Uint8Array(await file.arrayBuffer()),
                 kind: 'file',
                 mime: file.type || 'application/octet-stream',
@@ -112,6 +136,8 @@ export function AttachButton({ disabled }: { disabled?: boolean }) {
           }
         }
 
+        // Check after preparation, not before: re-encoding often brings a photo
+        // from unsendable to comfortably within the relay budget.
         const reach = transportsFor(payload.bytes.length)
         if (!reach.direct) {
           toast(t('attachment.tooLarge'), 'danger')
@@ -129,6 +155,8 @@ export function AttachButton({ disabled }: { disabled?: boolean }) {
 
   const pick = (next: 'file' | 'poll' | 'checklist') => {
     setMenuOpen(false)
+    // Clicked straight from the menu item, inside the same user gesture, which
+    // is what browsers require before they will open a file picker.
     if (next === 'file') input.current?.click()
     else setForm(next)
   }
@@ -164,7 +192,7 @@ export function AttachButton({ disabled }: { disabled?: boolean }) {
       {form ? (
         <Suspense
           fallback={
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay)]" role="status">
+            <div className="modal-backdrop" role="status">
               <Spinner label={t('interactive.loading')} />
             </div>
           }
@@ -182,6 +210,7 @@ export function AttachButton({ disabled }: { disabled?: boolean }) {
         className="visually-hidden"
         onChange={(event) => {
           const file = event.target.files?.[0]
+          // Reset first, so picking the same file twice in a row still fires.
           event.target.value = ''
           if (file) void handle(file)
         }}
@@ -190,11 +219,22 @@ export function AttachButton({ disabled }: { disabled?: boolean }) {
   )
 }
 
+/**
+ * The emoji and sticker picker's toggle.
+ *
+ * Trailing the input rather than leading it: the attachment control opens a
+ * system file picker and belongs with the other "bring something in" actions,
+ * while this one edits the message being typed, so it sits at the end of the
+ * field next to send — where every mainstream messenger puts it, and where a
+ * thumb already is. Mirrored automatically in Persian, because the composer is
+ * a flex row and "trailing" follows the writing direction.
+ */
 export function EmojiButton({
   disabled,
   onInsertEmoji,
 }: {
   disabled?: boolean
+  /** Puts the chosen emoji into the message being typed. */
   onInsertEmoji: (emoji: string) => void
 }) {
   const { t } = useI18n()
@@ -251,6 +291,8 @@ export function VoiceButton({ disabled }: { disabled?: boolean }) {
   const [elapsed, setElapsed] = useState(0)
   const [level, setLevel] = useState(0)
 
+  // A live recording must not survive the component: leaving the microphone
+  // open after a navigation is the worst bug this control can have.
   useEffect(
     () => () => {
       recorder.current?.cancel()
@@ -287,6 +329,8 @@ export function VoiceButton({ disabled }: { disabled?: boolean }) {
         bytes: result.bytes,
         kind: 'voice',
         mime: result.mime,
+        // A caption so other Nostr clients show something rather than an empty
+        // bubble; NIP-17 says unknown tags are ignored but content is not.
         caption: `${t('attachment.captionVoice')} · ${formatDuration(result.durationMs)}`,
         durationMs: result.durationMs,
         waveform: result.waveform,
@@ -320,7 +364,7 @@ export function VoiceButton({ disabled }: { disabled?: boolean }) {
 
   if (recording) {
     return (
-      <div className="flex items-center gap-2" role="group" aria-label={t('attachment.recording')}>
+      <div className="recording-bar" role="group" aria-label={t('attachment.recording')}>
         <button
           type="button"
           className="composer-action"
@@ -330,7 +374,9 @@ export function VoiceButton({ disabled }: { disabled?: boolean }) {
           <TrashIcon size={17} />
         </button>
         <span className="recording-dot" aria-hidden="true" />
-        <span className="text-xs tabular-nums text-[var(--text-muted)]">{formatDuration(elapsed)}</span>
+        <span className="recording-time tabular">{formatDuration(elapsed)}</span>
+        {/* A live level meter, so it is obvious the microphone is actually
+            picking something up before a minute is wasted. */}
         <span className="recording-meter" aria-hidden="true">
           <span style={{ transform: `scaleX(${Math.max(0.03, level)})` }} />
         </span>

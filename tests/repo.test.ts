@@ -50,7 +50,7 @@ describe('conversation paging', () => {
     let decryptions = 0
     const realOpen = t.vault.openRecord.bind(t.vault)
     t.vault.openRecord = ((blob: Uint8Array, aad: string) => {
-      if (aad.startsWith('textor/messages/')) decryptions += 1
+      if (aad.startsWith('crow/messages/')) decryptions += 1
       return realOpen(blob, aad)
     }) as typeof t.vault.openRecord
 

@@ -44,7 +44,7 @@ export function PollCard({ poll, convoId, messageId, updates, selfPubkey, nameOf
       <div className="poll-question" id={headingId} dir="auto">
         {poll.question}
       </div>
-      <div className="text-xs text-text-muted">{poll.multi ? text('chooseAny') : text('chooseOne')}</div>
+      <div className="hint">{poll.multi ? text('chooseAny') : text('chooseOne')}</div>
       <ul className="poll-options">
         {result.options.map((option) => {
           const mine = result.mine.includes(option.id)
@@ -71,7 +71,7 @@ export function PollCard({ poll, convoId, messageId, updates, selfPubkey, nameOf
           )
         })}
       </ul>
-      <div className="text-xs text-text-muted" aria-live="polite">
+      <div className="hint" aria-live="polite">
         {result.voters > 0 ? text('votes', { n: result.voters }) : text('noVotes')}
       </div>
     </div>

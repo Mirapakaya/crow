@@ -2,14 +2,9 @@ import { useState } from 'react'
 import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
 import { goBack, useNavigate } from '../../app/router'
-import { Avatar, CopyButton, EmptyState } from '../components/primitives'
+import { Avatar, Banner, CopyButton, EmptyState, Field } from '../components/primitives'
 import { confirmDanger } from '../components/dialog'
-import { ArrowLeft, Trash } from 'lucide-react'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { Textarea } from '../../components/ui/textarea'
-import { Badge } from '../../components/ui/badge'
+import { BackIcon, TrashIcon } from '../components/Icons'
 import { shortNpub, toNpub } from '../../core/identity/keys'
 import { relayLabel } from '../../core/transport/relayUrl'
 import { formatDateTime } from '../format'
@@ -32,19 +27,17 @@ export function ContactDetail({ peer }: { peer: string }) {
   const [note, setNote] = useState(contact?.note ?? '')
 
   const back = (
-    <Button variant="ghost" size="icon" className="btn-back shrink-0" aria-label={t('common.back')} onClick={() => goBack()}>
-      <ArrowLeft size={18} strokeWidth={1.75} />
-    </Button>
+    <button className="btn btn-icon btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
+      <BackIcon />
+    </button>
   )
 
   // Removed on another screen, or a link to someone never added: still a
   // page with a way back, not a dead end.
   if (!contact) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <header className="flex items-center gap-2 px-4 py-3 bg-[var(--surface)] border-b border-[var(--border)]">
-          {back}
-        </header>
+      <div className="screen">
+        <header className="app-header">{back}</header>
         <EmptyState title={t('common.unknown')} />
       </div>
     )
@@ -53,38 +46,42 @@ export function ContactDetail({ peer }: { peer: string }) {
   const label = displayName(contact, peer)
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <header className="flex items-center gap-2 px-4 py-3 bg-[var(--surface)] border-b border-[var(--border)]">
+    <div className="screen">
+      <header className="app-header">
         {back}
-        <h1 className="flex-1 truncate text-base font-semibold tracking-tight text-[var(--text)]">{label}</h1>
+        <h1 className="grow truncate">{label}</h1>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
-        <div className="mx-auto w-full max-w-[32rem] flex flex-col gap-4 p-4">
-          <div className="flex flex-col gap-2 items-center text-center">
+      <div className="screen-scroll">
+        <div className="container stack" style={{ maxWidth: '32rem' }}>
+          <div className="stack-sm center">
             <div style={{ display: 'grid', placeItems: 'center' }}>
               <Avatar name={label} seed={peer} src={contact.avatar} size="lg" />
             </div>
             <h2 style={{ fontSize: 'var(--step-1)' }}>{label}</h2>
-            {contact.about ? <p className="text-sm text-[var(--text-muted)]">{contact.about}</p> : null}
-            <Badge variant={contact.verification === 'verified' ? 'success' : 'outline'}>
+            {contact.about ? <p className="muted small">{contact.about}</p> : null}
+            <span className={`badge ${contact.verification === 'verified' ? 'badge-success' : ''}`}>
               {contact.verification === 'verified' ? t('contacts.verified') : t('contacts.unverified')}
-            </Badge>
+            </span>
           </div>
 
-          <div className="flex gap-2">
-            <Button className="flex-1" onClick={() => navigate({ name: 'chat', peer })} disabled={contact.blocked}>
+          <div className="row">
+            <button
+              className="btn btn-primary grow"
+              onClick={() => navigate({ name: 'chat', peer })}
+              disabled={contact.blocked}
+            >
               {t('nav.chats')}
-            </Button>
-            <Button variant="outline" className="flex-1" onClick={() => navigate({ name: 'verify', peer })}>
+            </button>
+            <button className="btn btn-outline grow" onClick={() => navigate({ name: 'verify', peer })}>
               {t('contacts.verify')}
-            </Button>
+            </button>
           </div>
 
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label>{t('contacts.nameLabel')}</Label>
-              <Input
+          <div className="card stack">
+            <Field label={t('contacts.nameLabel')}>
+              <input
+                className="input"
                 value={name}
                 maxLength={64}
                 onChange={(event) => setName(event.target.value)}
@@ -92,10 +89,10 @@ export function ContactDetail({ peer }: { peer: string }) {
                   if (name !== contact.name) void updateContact(peer, { name })
                 }}
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label>{t('contacts.noteLabel')}</Label>
-              <Textarea
+            </Field>
+            <Field label={t('contacts.noteLabel')} hint={t('contacts.noteHint')}>
+              <textarea
+                className="textarea"
                 style={{ minHeight: '3.5rem' }}
                 value={note}
                 maxLength={500}
@@ -104,53 +101,63 @@ export function ContactDetail({ peer }: { peer: string }) {
                   if (note !== (contact.note ?? '')) void updateContact(peer, { note })
                 }}
               />
-              <span className="text-xs text-[var(--text-muted)]">{t('contacts.noteHint')}</span>
-            </div>
+            </Field>
           </div>
 
-          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">{t('contacts.copyKey')}</span>
+          <div className="card stack-sm">
+            <span className="section-title">{t('contacts.copyKey')}</span>
             <code className="mono small" style={{ wordBreak: 'break-all' }}>
               {toNpub(peer)}
             </code>
             <CopyButton value={toNpub(peer)} />
             {contact.relays.length > 0 ? (
-              <p className="text-xs text-[var(--text-faint)]">{contact.relays.map(relayLabel).join(' · ')}</p>
+              <p className="faint">{contact.relays.map(relayLabel).join(' · ')}</p>
             ) : null}
-            <p className="text-xs text-[var(--text-faint)]">
+            <p className="faint">
               {t('common.add')}: {formatDateTime(contact.addedAt, locale)}
             </p>
           </div>
 
           {contact.blocked ? (
-            <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
-              <span className="flex-1">{t('chat.blocked')}</span>
-              <Button variant="ghost" size="sm" onClick={() => void updateContact(peer, { blocked: false })}>
+            <Banner tone="danger">
+              <span className="grow">{t('chat.blocked')}</span>
+              <button
+                className="btn btn-ghost small"
+                onClick={() => void updateContact(peer, { blocked: false })}
+              >
                 {t('chat.unblock')}
-              </Button>
-            </div>
+              </button>
+            </Banner>
           ) : (
-            <Button variant="outline" className="w-full" onClick={async () => {
-              if (await confirmDanger(t('chat.block'), t('chat.block'), t('contacts.blockConfirm'))) {
-                void updateContact(peer, { blocked: true })
-              }
-            }}>
+            <button
+              className="btn btn-outline btn-block"
+              onClick={async () => {
+                if (await confirmDanger(t('chat.block'), t('chat.block'), t('contacts.blockConfirm'))) {
+                  void updateContact(peer, { blocked: true })
+                }
+              }}
+            >
               {t('chat.block')}
-            </Button>
+            </button>
           )}
 
-          <Button variant="destructive" className="w-full" onClick={async () => {
-            if (!(await confirmDanger(t('common.remove'), t('common.remove'), t('contacts.removeConfirm')))) {
-              return
-            }
-            void removeContact(peer)
-            navigate({ name: 'contacts' }, true)
-          }}>
-            <Trash size={16} />
+          <button
+            className="btn btn-danger btn-block"
+            onClick={async () => {
+              if (
+                !(await confirmDanger(t('common.remove'), t('common.remove'), t('contacts.removeConfirm')))
+              ) {
+                return
+              }
+              void removeContact(peer)
+              navigate({ name: 'contacts' }, true)
+            }}
+          >
+            <TrashIcon size={16} />
             {t('common.remove')}
-          </Button>
+          </button>
 
-          <p className="text-xs text-[var(--text-muted)]">{shortNpub(toNpub(peer))}</p>
+          <p className="hint">{shortNpub(toNpub(peer))}</p>
         </div>
       </div>
     </div>
