@@ -92,7 +92,7 @@ anything.
 
 ## Try it
 
-The live app: **<https://noormohammadiazad.github.io/Crow/>**
+The live app: **<https://crow-deploy.vercel.app/>**
 
 Or run it yourself:
 
@@ -110,8 +110,8 @@ each, and exchange invite links.
 npm run build
 ```
 
-Output is a static `dist/` directory. Serve it from anywhere — GitHub Pages, any static
-host, a USB stick, IPFS.
+Output is a static `dist/` directory produced by Next.js. Serve it from any static host
+or deploy to Vercel.
 
 ## Verify
 
