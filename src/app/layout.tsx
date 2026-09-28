@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   icons: {
     icon: '/crow.svg',
     shortcut: '/crow.svg',
-    apple: '/icons/apple-touch-icon.png',
+    apple: '/icons/icon.svg',
   },
   manifest: '/manifest.json',
   other: {
@@ -51,10 +51,10 @@ export const viewport: Viewport = {
 const themeScript = `
 (function () {
   try {
-    const stored = JSON.parse(localStorage.getItem('crow-display-prefs') || '{}')
+    const stored = JSON.parse(localStorage.getItem('crow:display') || '{}')
     const theme = stored.theme || 'system'
     const resolved = theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme
-    const dir = stored.dir || 'ltr'
+    const dir = stored.locale === 'fa' ? 'rtl' : 'ltr'
     document.documentElement.classList.add(resolved)
     document.documentElement.setAttribute('data-theme', resolved)
     document.documentElement.setAttribute('dir', dir)
