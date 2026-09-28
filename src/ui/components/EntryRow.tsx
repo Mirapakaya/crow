@@ -47,11 +47,12 @@ export function EntryRow({
   return (
     <div
       className={cn(
-        'flex flex-col items-start scroll-my-6',
-        message.direction === 'out' ? 'items-end' : 'items-start',
+        'bubble-row flex flex-col scroll-my-6',
+        message.direction === 'out' ? 'out items-end' : 'in items-start',
         groupStart && 'mt-3',
         selecting && 'relative ps-9',
-        selected && 'bg-primary/10 rounded-md',
+        selected && 'selected bg-primary/10 rounded-md',
+        groupEnd && 'group-end',
       )}
       data-group-end={groupEnd}
       data-failed={failed}
