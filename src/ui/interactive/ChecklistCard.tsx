@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react'
 import { foldChecklist, type ChecklistSpec, type InteractiveUpdate } from '../../core/models/interactive'
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS } from '../../core/models/protocol'
 import { PlusIcon } from '../components/Icons'
+import { Button } from '../components/ui/button'
+import { Checkbox } from '../components/ui/checkbox'
+import { Input } from '../components/ui/input'
 import { useInteractiveText } from './interactiveText'
 
 export interface ChecklistCardProps {
@@ -51,11 +54,10 @@ export function ChecklistCard({
               className={entry.done ? 'checklist-item done' : 'checklist-item'}
               title={entry.by ? text('tickedBy', { name: nameOf(entry.by) }) : undefined}
             >
-              <input
-                type="checkbox"
-                className="checkbox checkbox-sm"
+              <Checkbox
+                className="checkbox-sm"
                 checked={entry.done}
-                onChange={(event) => onCheck(entry.id, event.target.checked)}
+                onChange={(event) => onCheck(entry.id, (event.target as HTMLInputElement).checked)}
               />
               <span className="grow" dir="auto">
                 {entry.label}
@@ -75,8 +77,7 @@ export function ChecklistCard({
             setDraft('')
           }}
         >
-          <input
-            className="input"
+          <Input
             dir="auto"
             value={draft}
             maxLength={MAX_ITEM_CHARS}
@@ -84,14 +85,14 @@ export function ChecklistCard({
             aria-label={text('addItem')}
             onChange={(event) => setDraft(event.target.value)}
           />
-          <button
+          <Button
             type="submit"
-            className="btn btn-icon"
+            size="icon"
             aria-label={text('addItem')}
             disabled={!draft.trim()}
           >
             <PlusIcon size={16} />
-          </button>
+          </Button>
         </form>
       ) : null}
     </div>

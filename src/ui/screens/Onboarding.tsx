@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useApp } from '../../app/store'
 import { useT } from '../../i18n'
 import { Field } from '../components/primitives'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 import { EntryLayout } from '../components/EntryLayout'
 import { ShieldCheckIcon, LockIcon, GlobeIcon } from '../components/Icons'
 import { isValidMnemonic, normalizeMnemonic } from '../../core/identity/keys'
@@ -58,12 +61,12 @@ export function Onboarding() {
           </ul>
 
           <div className="stack-sm">
-            <button className="btn btn-primary btn-block" onClick={() => setStep('name')}>
+            <Button className="w-full" onClick={() => setStep('name')}>
               {text('createIdentity')}
-            </button>
-            <button className="btn btn-outline btn-block" onClick={() => setStep('restore')}>
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => setStep('restore')}>
               {text('restoreIdentity')}
-            </button>
+            </Button>
           </div>
 
           <p className="hint center">{t('privacy.intro')}</p>
@@ -77,8 +80,8 @@ export function Onboarding() {
             <p className="muted">{text('restoreBody')}</p>
           </div>
           <Field label={text('restorePhrase')} error={error ?? undefined}>
-            <textarea
-              className="textarea mono"
+            <Textarea
+              className="mono"
               dir="ltr"
               autoCapitalize="none"
               autoCorrect="off"
@@ -92,8 +95,8 @@ export function Onboarding() {
             />
           </Field>
           <div className="stack-sm">
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              className="w-full"
               onClick={() => {
                 if (!isValidMnemonic(restorePhrase)) {
                   setError(text('restoreInvalid'))
@@ -104,13 +107,13 @@ export function Onboarding() {
               }}
             >
               {t('common.next')}
-            </button>
-            <button className="btn btn-outline btn-block" onClick={() => setStep('restore-file')}>
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => setStep('restore-file')}>
               {text('restoreFromFile')}
-            </button>
-            <button className="btn btn-ghost btn-block" onClick={() => setStep('welcome')}>
+            </Button>
+            <Button variant="ghost" className="w-full" onClick={() => setStep('welcome')}>
               {t('common.back')}
-            </button>
+            </Button>
           </div>
         </>
       ) : null}
@@ -122,8 +125,7 @@ export function Onboarding() {
             <p className="muted">{text('nameBody')}</p>
           </div>
           <Field>
-            <input
-              className="input"
+            <Input
               autoFocus
               maxLength={64}
               placeholder={text('namePlaceholder')}
@@ -135,16 +137,16 @@ export function Onboarding() {
             />
           </Field>
           <div className="stack-sm">
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              className="w-full"
               disabled={!name.trim()}
               onClick={() => setStep('protect')}
             >
               {t('common.next')}
-            </button>
-            <button className="btn btn-ghost btn-block" onClick={() => setStep('welcome')}>
+            </Button>
+            <Button variant="ghost" className="w-full" onClick={() => setStep('welcome')}>
               {t('common.back')}
-            </button>
+            </Button>
           </div>
         </>
       ) : null}
@@ -163,9 +165,9 @@ export function Onboarding() {
               // ceremony whenever the stored identity is not yet backed up.
             }}
           />
-          <button className="btn btn-ghost btn-block" onClick={() => setStep('name')}>
+          <Button variant="ghost" className="w-full" onClick={() => setStep('name')}>
             {t('common.back')}
-          </button>
+          </Button>
         </>
       ) : null}
     </EntryLayout>

@@ -5,6 +5,7 @@ import { goBack, useNavigate } from '../../app/router'
 import { Avatar, EmptyState, GroupAvatar } from '../components/primitives'
 import { confirmDanger } from '../components/dialog'
 import { BackIcon, ShieldCheckIcon, TrashIcon } from '../components/Icons'
+import { Button } from '../components/ui/button'
 import { conversationTitle, displayName } from '../screens/ChatList'
 import { SecureGroupPanel } from './SecureGroupPanel'
 
@@ -35,9 +36,9 @@ export function GroupInfo({ id }: { id: string }) {
     return (
       <div className="screen">
         <header className="app-header">
-          <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+          <Button size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
             <BackIcon />
-          </button>
+          </Button>
         </header>
         {conversationsLoaded ? (
           <EmptyState title={t('groups.notFound')} body={t('groups.notFoundBody')} />
@@ -55,9 +56,9 @@ export function GroupInfo({ id }: { id: string }) {
   return (
     <div className="screen">
       <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+        <Button size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </button>
+        </Button>
         <h1 className="grow">{t('groups.info')}</h1>
       </header>
 
@@ -127,10 +128,15 @@ export function GroupInfo({ id }: { id: string }) {
 
               <p className="hint">{t('groups.fixedMembers')}</p>
 
-              <button type="button" className="btn btn-danger-soft btn-block" onClick={() => void remove()}>
+              <Button
+                type="button"
+                variant="destructive"
+                className="w-full"
+                onClick={() => void remove()}
+              >
                 <TrashIcon size={16} />
                 {t('groups.delete')}
-              </button>
+              </Button>
             </>
           )}
         </div>

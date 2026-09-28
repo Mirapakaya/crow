@@ -3,6 +3,7 @@ import { useApp } from '../../app/store'
 import { useT } from '../../i18n'
 import { goBack } from '../../app/router'
 import { Banner, CopyButton, EmptyState } from '../components/primitives'
+import { Button } from '../components/ui/button'
 import { BackIcon, ShieldCheckIcon } from '../components/Icons'
 // Through the lazy table rather than directly: a static import here would make
 // the QR module reachable from two chunks, and the bundler would hoist it into
@@ -42,9 +43,9 @@ export function VerifyScreen({ peer }: { peer: string }) {
   return (
     <div className="screen">
       <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+        <Button size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </button>
+        </Button>
         <h1 className="grow">{text('title')}</h1>
       </header>
 
@@ -63,7 +64,7 @@ export function VerifyScreen({ peer }: { peer: string }) {
                 <span key={index}>{group}</span>
               ))}
             </div>
-            <CopyButton value={number.groups.join(' ')} className="btn btn-outline btn-block" />
+            <CopyButton value={number.groups.join(' ')} className="w-full" />
           </div>
 
           <Suspense fallback={<QrPlaceholder />}>
@@ -76,16 +77,17 @@ export function VerifyScreen({ peer }: { peer: string }) {
                 <ShieldCheckIcon size={16} />
                 <span>{text('verifiedAt')}</span>
               </Banner>
-              <button
-                className="btn btn-outline btn-block"
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={() => void updateContact(peer, { verification: 'unverified' })}
               >
                 {text('markUnverified')}
-              </button>
+              </Button>
             </>
           ) : (
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              className="w-full"
               onClick={() => {
                 void updateContact(peer, { verification: 'verified' })
                 toast(t('contacts.verified'))
@@ -93,7 +95,7 @@ export function VerifyScreen({ peer }: { peer: string }) {
             >
               <ShieldCheckIcon size={16} />
               {text('markVerified')}
-            </button>
+            </Button>
           )}
 
           <div className="card stack-sm">

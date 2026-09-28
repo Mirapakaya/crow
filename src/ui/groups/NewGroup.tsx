@@ -7,6 +7,9 @@ import { SegmentedControl } from '../components/SegmentedControl'
 import { BackIcon, ContactsIcon, LockIcon, ShieldCheckIcon } from '../components/Icons'
 import { displayName } from '../screens/ChatList'
 import { MAX_GROUP_MEMBERS, MAX_MLS_MEMBERS, MAX_SUBJECT_CHARS } from '../../core/models/protocol'
+import { Button } from '../components/ui/button'
+import { Checkbox } from '../components/ui/checkbox'
+import { Input } from '../components/ui/input'
 import { explainFailure, useSecureText } from './secureText'
 
 type Kind = 'small' | 'secure'
@@ -98,9 +101,9 @@ export function NewGroup() {
   return (
     <div className="screen">
       <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+        <Button size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </button>
+        </Button>
         <h1 className="grow">{t('groups.newGroup')}</h1>
       </header>
 
@@ -109,9 +112,9 @@ export function NewGroup() {
           <EmptyState
             title={t('groups.noContacts')}
             action={
-              <button className="btn btn-primary" onClick={() => navigate({ name: 'add-contact' })}>
+              <Button onClick={() => navigate({ name: 'add-contact' })}>
                 {t('chats.addContact')}
-              </button>
+              </Button>
             }
           />
         ) : (
@@ -145,8 +148,7 @@ export function NewGroup() {
             )}
 
             <Field label={t('groups.name')}>
-              <input
-                className="input"
+              <Input
                 dir="auto"
                 value={subject}
                 maxLength={MAX_SUBJECT_CHARS}
@@ -170,9 +172,7 @@ export function NewGroup() {
                 const name = displayName(contact, contact.pubkey)
                 return (
                   <label key={contact.pubkey} className={`list-row${!on && full ? ' is-disabled' : ''}`}>
-                    <input
-                      type="checkbox"
-                      className="checkbox"
+                    <Checkbox
                       checked={on}
                       aria-label={name}
                       disabled={!on && full}
@@ -201,15 +201,15 @@ export function NewGroup() {
               </Banner>
             ) : null}
 
-            <button
+            <Button
               type="button"
-              className="btn btn-primary btn-block"
+              className="w-full"
               disabled={!enough || busy}
               aria-busy={busy}
               onClick={() => void create()}
             >
               {busy && secure ? text('finding') : t('groups.create')}
-            </button>
+            </Button>
           </div>
         )}
       </div>

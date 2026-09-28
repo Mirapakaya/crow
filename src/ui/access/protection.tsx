@@ -19,6 +19,8 @@ import {
 } from '../../core/crypto/biometricEnrol'
 import { canOpenInstantly, isValidPin, normalizePin } from '../../core/vault/keyslots'
 import type { SlotEnrolment } from '../../core/vault/vault'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import './access.css'
 
 export const MIN_PASSPHRASE = 10
@@ -75,8 +77,7 @@ export function PassphraseFields({
   return (
     <>
       <Field label={text('passphrase')} hint={text('passphraseHint')}>
-        <input
-          className="input"
+        <Input
           type="password"
           autoFocus
           autoComplete="new-password"
@@ -86,8 +87,7 @@ export function PassphraseFields({
       </Field>
       {value ? <StrengthMeter score={score} label={label} caption={text('passphraseStrength')} /> : null}
       <Field label={text('passphraseConfirm')} error={error ?? undefined}>
-        <input
-          className="input"
+        <Input
           type="password"
           autoComplete="new-password"
           value={confirm}
@@ -233,16 +233,18 @@ export function PinFields({
   return (
     <>
       <Field label={text('pin')} hint={text('pinHint')}>
-        <input
+        <Input
           {...input}
+          className="pin-input"
           autoFocus
           value={value}
           onChange={(event) => onChange(digitsOnly(event.target.value))}
         />
       </Field>
       <Field label={text('pinConfirm')} error={error ?? undefined}>
-        <input
+        <Input
           {...input}
+          className="pin-input"
           value={confirm}
           onChange={(event) => onConfirmChange(digitsOnly(event.target.value))}
           onKeyDown={(event) => {
@@ -295,16 +297,17 @@ export function PatternSetup({
         </p>
       ) : null}
       {first ? (
-        <button
+        <Button
           type="button"
-          className="btn btn-ghost small"
+          variant="ghost"
+          size="sm"
           onClick={() => {
             setFirst(null)
             setError(null)
           }}
         >
           {text('patternRestart')}
-        </button>
+        </Button>
       ) : null}
     </div>
   )
@@ -505,9 +508,9 @@ export function ProtectionChooser({
       {recoveryNote ? <p className="hint">{text('recoveryNote')}</p> : null}
 
       {choice === 'pattern' ? null : (
-        <button className="btn btn-primary btn-block" disabled={busy} onClick={() => void go()}>
+        <Button className="w-full" disabled={busy} onClick={() => void go()}>
           {busy ? <Spinner label={t('common.working')} /> : t('common.next')}
-        </button>
+        </Button>
       )}
     </>
   )

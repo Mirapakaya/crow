@@ -18,6 +18,7 @@ import {
   VideoOffIcon,
 } from './icons'
 import { playRingback, playRingtone } from './tones'
+import { Button } from '../components/ui/button'
 import './calls.css'
 
 /**
@@ -164,9 +165,14 @@ function IncomingCall({
           />
         </div>
         {video ? (
-          <button className="btn btn-ghost small" onClick={() => control({ type: 'accept', media: 'audio' })}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => control({ type: 'accept', media: 'audio' })}
+          >
             {ct('acceptVoice')}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>
@@ -387,23 +393,25 @@ function CallEnding({
       <p className="call-ending-body">{body}</p>
       <div className="call-ending-actions">
         {turn ? (
-          <button
-            className="btn btn-primary"
+          <Button
+            type="button"
             onClick={() => {
               control({ type: 'dismiss' })
               navigate({ name: 'settings-calls' })
             }}
           >
             {ct(turn)}
-          </button>
+          </Button>
         ) : null}
-        <button
+        <Button
+          type="button"
           ref={primary}
-          className="btn btn-outline call-ending-close"
+          variant="outline"
+          className="call-ending-close"
           onClick={() => control({ type: 'dismiss' })}
         >
           {ct('close')}
-        </button>
+        </Button>
       </div>
     </div>
   )

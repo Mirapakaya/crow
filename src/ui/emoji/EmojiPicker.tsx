@@ -4,6 +4,7 @@ import { useI18n } from '../../i18n'
 import { LAZY_CHUNKS } from '../lazyViews'
 import type { Sticker, StickerPack } from '../../core/models/types'
 import { EMOJI_GROUPS } from './emojiSet'
+import { Button } from '../components/ui/button'
 import './picker.css'
 
 /**
@@ -156,9 +157,9 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
           <section key={pack.id} className="picker-group">
             <h3 className="picker-heading">
               <span dir="auto">{pack.name}</span>
-              <button type="button" className="btn btn-ghost small" onClick={() => void deletePack(pack.id)}>
+              <Button type="button" variant="ghost" size="sm" onClick={() => void deletePack(pack.id)}>
                 {t('emoji.removePack')}
-              </button>
+              </Button>
             </h3>
             <div className="picker-grid stickers">
               {pack.stickers.map((sticker) => (
@@ -169,18 +170,20 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
         ))
       )}
 
-      <label className="btn btn-ghost small picker-import">
-        {busy ? t('emoji.importing') : t('emoji.addPack')}
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          disabled={busy}
-          onChange={(event) => void onFiles(event.target.files)}
-        />
-      </label>
+      <Button variant="ghost" size="sm" asChild className="picker-import">
+        <label>
+          {busy ? t('emoji.importing') : t('emoji.addPack')}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            disabled={busy}
+            onChange={(event) => void onFiles(event.target.files)}
+          />
+        </label>
+      </Button>
     </div>
   )
 }

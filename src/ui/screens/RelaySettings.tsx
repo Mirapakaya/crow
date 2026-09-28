@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react'
 import { getRepo, useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
 import { Banner, Field } from '../components/primitives'
+import { Button } from '../components/ui/button'
+import { Checkbox } from '../components/ui/checkbox'
+import { Input } from '../components/ui/input'
 import { PlusIcon, RefreshIcon, TrashIcon } from '../components/Icons'
 import { SettingsPage } from './SettingsPage'
 import { normalizeRelayUrl, relayLabel } from '../../core/transport/relayUrl'
@@ -95,29 +98,27 @@ export function RelaySettings() {
                   {relayLabel(entry.url)}
                 </span>
                 <span className={badgeClass}>{badgeLabel}</span>
-                <button
-                  className="btn btn-icon"
+                <Button
+                  size="icon"
                   aria-label={t('settings.relayRemove')}
                   onClick={() => void remove(entry)}
                 >
                   <TrashIcon size={16} />
-                </button>
+                </Button>
               </div>
 
               <div className="row faint" style={{ flexWrap: 'wrap', gap: 'var(--space-3)' }}>
                 <label className="row" style={{ gap: '0.35rem' }}>
-                  <input
-                    className="checkbox checkbox-sm"
-                    type="checkbox"
+                  <Checkbox
+                    className="checkbox-sm"
                     checked={entry.read}
                     onChange={(event) => void update(entry, { read: event.target.checked })}
                   />
                   {t('settings.relayRead')}
                 </label>
                 <label className="row" style={{ gap: '0.35rem' }}>
-                  <input
-                    className="checkbox checkbox-sm"
-                    type="checkbox"
+                  <Checkbox
+                    className="checkbox-sm"
                     checked={entry.write}
                     onChange={(event) => void update(entry, { write: event.target.checked })}
                   />
@@ -164,8 +165,8 @@ export function RelaySettings() {
       <div className="card stack-sm">
         <Field label={t('settings.relayAdd')} error={error ?? undefined}>
           <div className="row">
-            <input
-              className="input grow"
+            <Input
+              className="grow"
               dir="ltr"
               lang="en"
               placeholder={t('settings.relayPlaceholder')}
@@ -178,9 +179,9 @@ export function RelaySettings() {
                 if (event.key === 'Enter') void addRelay(input)
               }}
             />
-            <button className="btn btn-primary" disabled={!input.trim()} onClick={() => void addRelay(input)}>
+            <Button disabled={!input.trim()} onClick={() => void addRelay(input)}>
               <PlusIcon size={16} />
-            </button>
+            </Button>
           </div>
         </Field>
       </div>
@@ -190,19 +191,19 @@ export function RelaySettings() {
           <span className="section-title">{t('settings.relaySuggested')}</span>
           <div className="row" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }}>
             {unusedSuggestions.map((url) => (
-              <button key={url} className="btn btn-outline small" onClick={() => void addRelay(url)}>
+              <Button key={url} variant="outline" size="sm" onClick={() => void addRelay(url)}>
                 <PlusIcon size={13} />
                 {relayLabel(url)}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
       ) : null}
 
-      <button className="btn btn-outline btn-block" onClick={() => void restoreDefaults()}>
+      <Button variant="outline" className="w-full" onClick={() => void restoreDefaults()}>
         <RefreshIcon size={16} />
         {t('settings.relayResetDefaults')}
-      </button>
+      </Button>
 
       <p className="hint" lang={locale}>
         {about('relaysSee')}

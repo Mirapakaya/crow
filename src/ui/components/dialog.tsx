@@ -1,5 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import { useT } from '../../i18n'
+import { Button } from '../components/ui/button'
 import { Modal } from './primitives'
 
 /**
@@ -78,18 +79,18 @@ export function DialogHost() {
       {question.body ? <p className="muted dialog-body">{question.body}</p> : null}
       <div className="dialog-actions">
         {question.choices.map((choice) => (
-          <button
+          <Button
             key={choice.value}
             type="button"
-            className={choice.danger ? 'btn btn-danger' : 'btn btn-primary'}
+            variant={choice.danger ? 'destructive' : 'default'}
             onClick={() => question.answer(choice.value)}
           >
             {choice.label}
-          </button>
+          </Button>
         ))}
-        <button type="button" className="btn btn-ghost" data-autofocus onClick={dismiss}>
+        <Button type="button" variant="ghost" data-autofocus onClick={dismiss}>
           {t('common.cancel')}
-        </button>
+        </Button>
       </div>
     </Modal>
   )

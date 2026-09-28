@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useT } from '../../i18n'
 import { Field, Spinner } from '../components/primitives'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 import { EntryLayout } from '../components/EntryLayout'
 import { LAZY_CHUNKS } from '../lazyViews'
 import { getRepo, getVault, useApp } from '../../app/store'
@@ -66,9 +69,9 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
     return (
       <EntryLayout>
         <ProtectionChooser recoveryNote={Boolean(payload.identity?.mnemonic)} onChoose={restore} />
-        <button className="btn btn-ghost btn-block" onClick={onCancel}>
+        <Button variant="ghost" className="w-full" onClick={onCancel}>
           {t('common.cancel')}
-        </button>
+        </Button>
       </EntryLayout>
     )
   }
@@ -81,8 +84,7 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
       </div>
 
       <Field label={t('settings.importChoose')}>
-        <input
-          className="input"
+        <Input
           type="file"
           accept=".json,application/json"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
@@ -94,8 +96,8 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
         error={error ?? undefined}
       >
         {withRecovery ? (
-          <textarea
-            className="textarea mono"
+          <Textarea
+            className="mono"
             dir="ltr"
             autoCapitalize="none"
             autoCorrect="off"
@@ -108,8 +110,7 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
             }}
           />
         ) : (
-          <input
-            className="input"
+          <Input
             type="password"
             autoComplete="off"
             value={secret}
@@ -120,8 +121,9 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
           />
         )}
       </Field>
-      <button
-        className="btn btn-ghost small"
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => {
           setWithRecovery((value) => !value)
           setSecret('')
@@ -129,18 +131,18 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
         }}
       >
         {withRecovery ? text('fileWithPassphrase') : text('fileWithRecovery')}
-      </button>
+      </Button>
 
-      <button
-        className="btn btn-primary btn-block"
+      <Button
+        className="w-full"
         disabled={!file || !secret.trim() || busy}
         onClick={() => void open()}
       >
         {busy ? <Spinner label={t('common.working')} /> : t('common.next')}
-      </button>
-      <button className="btn btn-ghost btn-block" onClick={onCancel} disabled={busy}>
+      </Button>
+      <Button variant="ghost" className="w-full" onClick={onCancel} disabled={busy}>
         {t('common.cancel')}
-      </button>
+      </Button>
     </EntryLayout>
   )
 }

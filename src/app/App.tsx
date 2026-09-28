@@ -28,6 +28,7 @@ import {
 } from '../ui/lazyViews'
 import { ChatIcon, ContactsIcon, SettingsIcon } from '../ui/components/Icons'
 import { Banner, Spinner } from '../ui/components/primitives'
+import { Button } from '../ui/components/ui/button'
 import { EntryLayout } from '../ui/components/EntryLayout'
 import { ConnectionBar } from '../ui/components/ConnectionStatus'
 import { UpdatePrompt } from './UpdatePrompt'
@@ -337,9 +338,9 @@ function ToastRegion() {
       {toasts.map((toast) => (
         <div key={toast.id} className={`toast ${toast.tone === 'danger' ? 'toast-danger' : ''}`}>
           <span className="grow">{toast.message}</span>
-          <button className="btn btn-ghost small" onClick={() => dismiss(toast.id)}>
+          <Button variant="ghost" size="sm" onClick={() => dismiss(toast.id)}>
             ×
-          </button>
+          </Button>
         </div>
       ))}
     </div>
