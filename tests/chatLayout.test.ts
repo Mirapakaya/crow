@@ -290,7 +290,7 @@ describe('a conversation whose clocks disagree (ADR-063)', () => {
     ])
     const stream = host.querySelector('.message-stream')!
     const read = [...stream.children]
-      .filter((entry) => !entry.matches('.faint, .btn'))
+      .filter((entry) => entry.matches('.bubble-row, .day-separator'))
       .map((entry) => (entry.classList.contains('day-separator') ? 'day' : entry.id.replace('msg-', '')))
     expect(read).toEqual(['day', 'q', 'a', 'b'])
     expect(host.querySelector('#msg-a time')?.getAttribute('datetime')).toBe(
