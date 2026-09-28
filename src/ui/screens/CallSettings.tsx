@@ -5,6 +5,8 @@ import { useCallSettingsText, type CallSettingsTextFn, type CallSettingsTextKey 
 import { Banner, Field, Toggle } from '../components/primitives'
 import { GlobeIcon, PlusIcon, RefreshIcon, TrashIcon } from '../components/Icons'
 import { SettingsPage } from './SettingsPage'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import { hasTurnServer } from '../../core/models/call'
 import { alreadyListed, parseIceServer, serverUrls } from '../../core/calls/iceServers'
 import { probeIce, type IceProbeResult, type IceVerdict } from '../../core/calls/iceProbe'
@@ -122,14 +124,15 @@ export function CallSettings() {
                   </span>
                 ) : null}
               </span>
-              <button
-                className="btn btn-icon"
+              <Button
+                variant="ghost"
+                size="icon"
                 aria-label={st('iceRemove')}
                 title={st('iceRemove')}
                 onClick={() => void remove(index)}
               >
                 <TrashIcon size={16} />
-              </button>
+              </Button>
             </div>
           ))
         )}
@@ -143,8 +146,7 @@ export function CallSettings() {
         }}
       >
         <Field label={st('iceUrl')} error={error ?? undefined}>
-          <input
-            className="input"
+          <Input
             dir="ltr"
             lang="en"
             inputMode="url"
@@ -162,8 +164,7 @@ export function CallSettings() {
         <div className="row" style={{ flexWrap: 'wrap', alignItems: 'flex-start' }}>
           <div className="grow" style={{ minWidth: '10rem' }}>
             <Field label={st('iceUsername')}>
-              <input
-                className="input"
+              <Input
                 dir="ltr"
                 lang="en"
                 autoCapitalize="off"
@@ -176,8 +177,7 @@ export function CallSettings() {
           </div>
           <div className="grow" style={{ minWidth: '10rem' }}>
             <Field label={st('icePassword')}>
-              <input
-                className="input"
+              <Input
                 dir="ltr"
                 lang="en"
                 type="password"
@@ -188,22 +188,22 @@ export function CallSettings() {
             </Field>
           </div>
         </div>
-        <button className="btn btn-primary" type="submit" disabled={!url.trim()}>
+        <Button type="submit" disabled={!url.trim()}>
           <PlusIcon size={16} />
           {st('iceAdd')}
-        </button>
+        </Button>
       </form>
 
       <div className="card stack-sm">
-        <button
-          className="btn btn-outline"
+        <Button
+          variant="outline"
           disabled={!canCall || probe === 'running'}
           onClick={() => void test()}
           aria-busy={probe === 'running'}
         >
           <RefreshIcon size={16} />
           {probe === 'running' ? st('iceTesting') : st('iceTest')}
-        </button>
+        </Button>
         {typeof probe === 'object' ? (
           <div className="stack-sm" aria-live="polite">
             <ProbeRow label={st('iceStun')} ok={probe.stun} st={st} />

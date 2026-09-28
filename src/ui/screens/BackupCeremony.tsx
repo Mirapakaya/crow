@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { getRepo, useApp } from '../../app/store'
 import { useT } from '../../i18n'
 import { Banner, Field } from '../components/primitives'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import { randomInt } from '../../core/util/bytes'
 
 /**
@@ -51,18 +53,18 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
             </div>
 
             {!revealed ? (
-              <button className="btn btn-outline btn-block" onClick={() => setRevealed(true)}>
+              <Button variant="outline" className="w-full" onClick={() => setRevealed(true)}>
                 {t('onboarding.backupReveal')}
-              </button>
+              </Button>
             ) : (
-              <button className="btn btn-primary btn-block" onClick={() => setVerifying(true)}>
+              <Button className="w-full" onClick={() => setVerifying(true)}>
                 {t('onboarding.backupConfirm')}
-              </button>
+              </Button>
             )}
 
-            <button className="btn btn-ghost btn-block" onClick={() => deferBackup()}>
+            <Button variant="ghost" className="w-full" onClick={() => deferBackup()}>
               {t('onboarding.skipBackup')}
-            </button>
+            </Button>
             <p className="hint center">{t('onboarding.skipBackupWarning')}</p>
           </>
         ) : (
@@ -73,8 +75,8 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
             </div>
 
             <Field error={error ?? undefined}>
-              <input
-                className="input mono"
+              <Input
+                className="font-mono"
                 dir="ltr"
                 autoFocus
                 autoCapitalize="none"
@@ -93,8 +95,8 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
               />
             </Field>
 
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              className="w-full"
               disabled={!answer.trim()}
               onClick={() => {
                 if (answer.trim().toLowerCase() === words[index]) void complete()
@@ -102,10 +104,10 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
               }}
             >
               {t('common.confirm')}
-            </button>
-            <button className="btn btn-ghost btn-block" onClick={() => setVerifying(false)}>
+            </Button>
+            <Button variant="ghost" className="w-full" onClick={() => setVerifying(false)}>
               {t('common.back')}
-            </button>
+            </Button>
           </>
         )}
 

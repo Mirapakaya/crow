@@ -3,6 +3,9 @@ import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../app/router'
 import { Avatar, EmptyState } from '../components/primitives'
+import { Button } from '../components/ui/button'
+import { Card } from '../components/ui/card'
+import { Input } from '../components/ui/input'
 import { PlusIcon, ShieldCheckIcon } from '../components/Icons'
 import { displayName } from './ChatList'
 
@@ -30,19 +33,19 @@ export function ContactsList() {
     <div className="screen">
       <header className="app-header">
         <h1 className="grow">{t('contacts.title')}</h1>
-        <button
-          className="btn btn-icon"
+        <Button
+          variant="ghost"
+          size="icon"
           aria-label={t('contacts.add')}
           onClick={() => navigate({ name: 'add-contact' })}
         >
           <PlusIcon />
-        </button>
+        </Button>
       </header>
 
       {contacts.size > 5 ? (
         <div style={{ padding: 'var(--space-2) var(--space-3)' }}>
-          <input
-            className="input"
+          <Input
             type="search"
             placeholder={t('common.search')}
             value={query}
@@ -56,31 +59,35 @@ export function ContactsList() {
           <EmptyState
             title={t('contacts.empty')}
             action={
-              <button className="btn btn-primary" onClick={() => navigate({ name: 'add-contact' })}>
+              <Button onClick={() => navigate({ name: 'add-contact' })}>
                 {t('contacts.add')}
-              </button>
+              </Button>
             }
           />
         ) : (
           list.map((contact) => (
-            <button
+            <Card
               key={contact.pubkey}
-              className="list-row"
-              aria-current={open === contact.pubkey || undefined}
-              onClick={() => navigate({ name: 'contact', peer: contact.pubkey })}
+              className="mx-3 mb-2 overflow-hidden p-0"
             >
-              <Avatar
-                name={displayName(contact, contact.pubkey)}
-                seed={contact.pubkey}
-                src={contact.avatar}
-                size="sm"
-              />
-              <span className="grow truncate">{displayName(contact, contact.pubkey)}</span>
-              {contact.verification === 'verified' ? (
-                <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
-              ) : null}
-              {contact.blocked ? <span className="badge badge-danger">{t('chat.block')}</span> : null}
-            </button>
+              <button
+                className="list-row"
+                aria-current={open === contact.pubkey || undefined}
+                onClick={() => navigate({ name: 'contact', peer: contact.pubkey })}
+              >
+                <Avatar
+                  name={displayName(contact, contact.pubkey)}
+                  seed={contact.pubkey}
+                  src={contact.avatar}
+                  size="sm"
+                />
+                <span className="grow truncate">{displayName(contact, contact.pubkey)}</span>
+                {contact.verification === 'verified' ? (
+                  <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
+                ) : null}
+                {contact.blocked ? <span className="badge badge-danger">{t('chat.block')}</span> : null}
+              </button>
+            </Card>
           ))
         )}
       </div>

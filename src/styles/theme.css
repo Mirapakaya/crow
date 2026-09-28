@@ -1,42 +1,43 @@
 /*
  * Vercel / Shadcn design tokens.
  *
- * Clean monochrome foundation with a blue accent. All components reference
- * these roles so light/dark and component styling stay consistent.
+ * Clean monochrome foundation with a Vercel blue accent (#0070f3). All
+ * components reference these roles so light/dark and component styling stay
+ * consistent.
  */
 
 :root {
   /* ---------------------------------------------------------------- ramps -- */
 
-  /* Neutral zinc scale. */
+  /* Neutral scale derived from Vercel's ds-gray tokens. */
   --n-0: #ffffff;
   --n-25: #fafafa;
-  --n-50: #f4f4f5;
-  --n-100: #e4e4e7;
-  --n-150: #d4d4d8;
-  --n-200: #d4d4d8;
-  --n-300: #a1a1aa;
-  --n-350: #a1a1aa;
-  --n-400: #71717a;
-  --n-450: #71717a;
-  --n-500: #52525b;
-  --n-600: #52525b;
-  --n-700: #3f3f46;
-  --n-800: #27272a;
-  --n-850: #18181b;
-  --n-900: #18181b;
-  --n-950: #09090b;
+  --n-50: #f2f2f2;
+  --n-100: #ebebeb;
+  --n-150: #e6e6e6;
+  --n-200: #e6e6e6;
+  --n-300: #c9c9c9;
+  --n-350: #c9c9c9;
+  --n-400: #a8a8a8;
+  --n-450: #a8a8a8;
+  --n-500: #8f8f8f;
+  --n-600: #8f8f8f;
+  --n-700: #7d7d7d;
+  --n-800: #666666;
+  --n-850: #555555;
+  --n-900: #333333;
+  --n-950: #111111;
 
   /* Vercel-style blue accent. */
-  --blue-100: #dbeafe;
-  --blue-200: #bfdbfe;
-  --blue-300: #93c5fd;
-  --blue-400: #60a5fa;
-  --blue-500: #3b82f6;
-  --blue-600: #2563eb;
-  --blue-700: #1d4ed8;
-  --blue-800: #1e40af;
-  --blue-900: #1e3a8a;
+  --blue-100: #eff6ff;
+  --blue-200: #e0f2fe;
+  --blue-300: #dbeafe;
+  --blue-400: #bae6fd;
+  --blue-500: #9cd3fe;
+  --blue-600: #66b6ff;
+  --blue-700: #0070f3;
+  --blue-800: #0060d1;
+  --blue-900: #0056b8;
 
   --green-100: #dcfce7;
   --green-400: #4ade80;
@@ -89,16 +90,17 @@
   --space-6: 2rem;
   --space-7: 3rem;
 
-  --radius-xs: 0.375rem;
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
+  /* Vercel radii. */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
   --radius-bubble: 15px;
   --radius-bubble-joined: 6px;
   --radius-full: 999px;
 
   --control-sm: 1.75rem;
-  --control-md: 2.25rem;
+  --control-md: 2rem;
   --control-lg: 2.5rem;
   --control-xl: 2.75rem;
 
@@ -127,30 +129,30 @@
 
   --bg: var(--n-0);
   --surface: var(--n-0);
-  --surface-2: var(--n-50);
-  --surface-3: var(--n-100);
-  --surface-hover: var(--n-50);
-  --surface-active: var(--n-100);
-  --surface-sunken: var(--n-50);
+  --surface-2: var(--n-25);
+  --surface-3: var(--n-50);
+  --surface-hover: var(--n-25);
+  --surface-active: var(--n-50);
+  --surface-sunken: var(--n-25);
 
   --border-subtle: var(--n-100);
-  --border: var(--n-200);
-  --border-strong: var(--n-300);
+  --border: var(--n-100);
+  --border-strong: var(--n-150);
 
-  --text: var(--n-900);
-  --text-muted: var(--n-500);
-  --text-faint: var(--n-400);
+  --text: var(--n-950);
+  --text-muted: var(--n-700);
+  --text-faint: var(--n-500);
   --text-inverse: var(--n-0);
 
-  --accent: var(--blue-600);
-  --accent-hover: var(--blue-700);
-  --accent-active: var(--blue-800);
+  --accent: var(--blue-700);
+  --accent-hover: var(--blue-800);
+  --accent-active: var(--blue-900);
   --accent-fg: var(--n-0);
   --accent-soft: var(--blue-100);
   --accent-soft-hover: var(--blue-200);
   --accent-border: var(--blue-200);
-  --accent-text: var(--blue-700);
-  --ring: var(--blue-600);
+  --accent-text: var(--blue-800);
+  --ring: var(--blue-700);
 
   --success: var(--green-600);
   --success-soft: var(--green-100);
@@ -161,10 +163,10 @@
   --danger-fg: var(--n-0);
   --danger-soft: var(--red-100);
 
-  --bubble-out: var(--blue-600);
+  --bubble-out: var(--blue-700);
   --bubble-out-text: var(--n-0);
   --bubble-in: var(--n-0);
-  --bubble-in-text: var(--n-900);
+  --bubble-in-text: var(--n-950);
 
   --overlay: rgb(0 0 0 / 0.4);
   --shadow-color: 240 10% 3.9%;
@@ -177,30 +179,30 @@
   color-scheme: dark;
 
   --bg: var(--n-950);
-  --surface: var(--n-900);
-  --surface-2: var(--n-800);
-  --surface-3: var(--n-700);
-  --surface-hover: var(--n-800);
-  --surface-active: var(--n-700);
-  --surface-sunken: var(--n-950);
+  --surface: var(--n-950);
+  --surface-2: var(--n-900);
+  --surface-3: var(--n-850);
+  --surface-hover: var(--n-900);
+  --surface-active: var(--n-850);
+  --surface-sunken: var(--n-900);
 
-  --border-subtle: var(--n-800);
-  --border: var(--n-700);
-  --border-strong: var(--n-500);
+  --border-subtle: var(--n-900);
+  --border: var(--n-850);
+  --border-strong: var(--n-700);
 
   --text: var(--n-0);
   --text-muted: var(--n-400);
-  --text-faint: var(--n-500);
+  --text-faint: var(--n-600);
   --text-inverse: var(--n-950);
 
-  --accent: var(--blue-500);
-  --accent-hover: var(--blue-400);
-  --accent-active: var(--blue-300);
-  --accent-fg: var(--n-0);
+  --accent: var(--blue-600);
+  --accent-hover: var(--blue-500);
+  --accent-active: var(--blue-400);
+  --accent-fg: var(--n-950);
   --accent-soft: var(--blue-900);
   --accent-soft-hover: var(--blue-800);
   --accent-border: var(--blue-800);
-  --accent-text: var(--blue-300);
+  --accent-text: var(--blue-400);
   --ring: var(--blue-500);
 
   --success: var(--green-400);
@@ -212,9 +214,9 @@
   --danger-fg: var(--n-950);
   --danger-soft: var(--red-950);
 
-  --bubble-out: #2563eb;
+  --bubble-out: #0070f3;
   --bubble-out-text: #ffffff;
-  --bubble-in: var(--n-800);
+  --bubble-in: var(--n-900);
   --bubble-in-text: var(--n-0);
 
   --overlay: rgb(0 0 0 / 0.66);
@@ -227,30 +229,30 @@
     color-scheme: dark;
 
     --bg: var(--n-950);
-    --surface: var(--n-900);
-    --surface-2: var(--n-800);
-    --surface-3: var(--n-700);
-    --surface-hover: var(--n-800);
-    --surface-active: var(--n-700);
-    --surface-sunken: var(--n-950);
+    --surface: var(--n-950);
+    --surface-2: var(--n-900);
+    --surface-3: var(--n-850);
+    --surface-hover: var(--n-900);
+    --surface-active: var(--n-850);
+    --surface-sunken: var(--n-900);
 
-    --border-subtle: var(--n-800);
-    --border: var(--n-700);
-    --border-strong: var(--n-500);
+    --border-subtle: var(--n-900);
+    --border: var(--n-850);
+    --border-strong: var(--n-700);
 
     --text: var(--n-0);
     --text-muted: var(--n-400);
-    --text-faint: var(--n-500);
+    --text-faint: var(--n-600);
     --text-inverse: var(--n-950);
 
-    --accent: var(--blue-500);
-    --accent-hover: var(--blue-400);
-    --accent-active: var(--blue-300);
-    --accent-fg: var(--n-0);
+    --accent: var(--blue-600);
+    --accent-hover: var(--blue-500);
+    --accent-active: var(--blue-400);
+    --accent-fg: var(--n-950);
     --accent-soft: var(--blue-900);
     --accent-soft-hover: var(--blue-800);
     --accent-border: var(--blue-800);
-    --accent-text: var(--blue-300);
+    --accent-text: var(--blue-400);
     --ring: var(--blue-500);
 
     --success: var(--green-400);
@@ -262,9 +264,9 @@
     --danger-fg: var(--n-950);
     --danger-soft: var(--red-950);
 
-    --bubble-out: #2563eb;
+    --bubble-out: #0070f3;
     --bubble-out-text: #ffffff;
-    --bubble-in: var(--n-800);
+    --bubble-in: var(--n-900);
     --bubble-in-text: var(--n-0);
 
     --overlay: rgb(0 0 0 / 0.66);
@@ -274,12 +276,9 @@
 }
 
 :root {
-  --shadow-sm:
-    0 1px 2px 0 hsl(var(--shadow-color) / calc(0.05 * var(--shadow-strength)));
-  --shadow-md:
-    0 4px 6px -1px hsl(var(--shadow-color) / calc(0.1 * var(--shadow-strength))),
-    0 2px 4px -2px hsl(var(--shadow-color) / calc(0.1 * var(--shadow-strength)));
-  --shadow-lg:
-    0 10px 15px -3px hsl(var(--shadow-color) / calc(0.1 * var(--shadow-strength))),
-    0 4px 6px -4px hsl(var(--shadow-color) / calc(0.1 * var(--shadow-strength)));
+  /* Vercel-style layered shadows. */
+  --shadow-sm: 0 2px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 2px rgba(0, 0, 0, 0.04), 0 8px 8px -8px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 2px 2px rgba(0, 0, 0, 0.04), 0 8px 16px -4px rgba(0, 0, 0, 0.04),
+    0 24px 32px -8px rgba(0, 0, 0, 0.06);
 }

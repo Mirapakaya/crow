@@ -3,6 +3,8 @@ import { getRepo, useApp } from '../../app/store'
 import { estimateStorage, type StorageEstimate } from '../../app/storagePersistence'
 import { useT } from '../../i18n'
 import { Banner, Field, Spinner, Toggle } from '../components/primitives'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import { DownloadIcon, TrashIcon, UploadIcon } from '../components/Icons'
 import { SettingsPage } from './SettingsPage'
 import { LAZY_CHUNKS } from '../lazyViews'
@@ -123,8 +125,7 @@ export function DataSettings() {
         <h3 style={{ fontSize: 'var(--step-0)' }}>{t('settings.exportBackup')}</h3>
         <p className="muted small">{t('settings.exportBackupBody')}</p>
         <Field label={t('settings.exportPassphrase')} hint={t('settings.exportPassphraseHint')}>
-          <input
-            className="input"
+          <Input
             type="password"
             autoComplete="new-password"
             value={exportPassphrase}
@@ -137,8 +138,8 @@ export function DataSettings() {
           checked={includeMessages}
           onChange={setIncludeMessages}
         />
-        <button
-          className="btn btn-primary btn-block"
+        <Button
+          className="w-full"
           disabled={exportPassphrase.length < 10 || busy !== null}
           onClick={() => void runExport()}
         >
@@ -150,30 +151,29 @@ export function DataSettings() {
               {t('settings.exportCreate')}
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       <div className="card stack">
         <h3 style={{ fontSize: 'var(--step-0)' }}>{t('settings.importBackup')}</h3>
         <Field label={t('settings.importChoose')}>
-          <input
-            className="input"
+          <Input
             type="file"
             accept=".json,application/json"
             onChange={(event) => setImportFile(event.target.files?.[0] ?? null)}
           />
         </Field>
         <Field label={t('settings.exportPassphrase')} error={error ?? undefined}>
-          <input
-            className="input"
+          <Input
             type="password"
             autoComplete="off"
             value={importPassphrase}
             onChange={(event) => setImportPassphrase(event.target.value)}
           />
         </Field>
-        <button
-          className="btn btn-outline btn-block"
+        <Button
+          variant="outline"
+          className="w-full"
           disabled={!importFile || !importPassphrase || busy !== null}
           onClick={() => void runImport()}
         >
@@ -185,7 +185,7 @@ export function DataSettings() {
               {t('settings.importBackup')}
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       <div className="card stack">
@@ -197,21 +197,21 @@ export function DataSettings() {
           <span className="small">{t('lock.startOverConfirm')}</span>
         </Banner>
         <Field label={t('settings.deleteEverythingConfirm')}>
-          <input
-            className="input"
+          <Input
             dir="ltr"
             value={deleteConfirm}
             onChange={(event) => setDeleteConfirm(event.target.value)}
           />
         </Field>
-        <button
-          className="btn btn-danger btn-block"
+        <Button
+          variant="destructive"
+          className="w-full"
           disabled={deleteConfirm !== 'DELETE'}
           onClick={() => void wipeDevice()}
         >
           <TrashIcon size={16} />
           {t('settings.deleteEverything')}
-        </button>
+        </Button>
       </div>
     </SettingsPage>
   )

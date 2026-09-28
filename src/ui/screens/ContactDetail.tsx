@@ -3,6 +3,9 @@ import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
 import { goBack, useNavigate } from '../../app/router'
 import { Avatar, Banner, CopyButton, EmptyState, Field } from '../components/primitives'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 import { confirmDanger } from '../components/dialog'
 import { BackIcon, TrashIcon } from '../components/Icons'
 import { shortNpub, toNpub } from '../../core/identity/keys'
@@ -27,9 +30,9 @@ export function ContactDetail({ peer }: { peer: string }) {
   const [note, setNote] = useState(contact?.note ?? '')
 
   const back = (
-    <button className="btn btn-icon btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
+    <Button variant="ghost" size="icon" className="btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
       <BackIcon />
-    </button>
+    </Button>
   )
 
   // Removed on another screen, or a link to someone never added: still a
@@ -66,22 +69,21 @@ export function ContactDetail({ peer }: { peer: string }) {
           </div>
 
           <div className="row">
-            <button
-              className="btn btn-primary grow"
+            <Button
+              className="grow"
               onClick={() => navigate({ name: 'chat', peer })}
               disabled={contact.blocked}
             >
               {t('nav.chats')}
-            </button>
-            <button className="btn btn-outline grow" onClick={() => navigate({ name: 'verify', peer })}>
+            </Button>
+            <Button variant="outline" className="grow" onClick={() => navigate({ name: 'verify', peer })}>
               {t('contacts.verify')}
-            </button>
+            </Button>
           </div>
 
           <div className="card stack">
             <Field label={t('contacts.nameLabel')}>
-              <input
-                className="input"
+              <Input
                 value={name}
                 maxLength={64}
                 onChange={(event) => setName(event.target.value)}
@@ -91,8 +93,7 @@ export function ContactDetail({ peer }: { peer: string }) {
               />
             </Field>
             <Field label={t('contacts.noteLabel')} hint={t('contacts.noteHint')}>
-              <textarea
-                className="textarea"
+              <Textarea
                 style={{ minHeight: '3.5rem' }}
                 value={note}
                 maxLength={500}
@@ -121,16 +122,18 @@ export function ContactDetail({ peer }: { peer: string }) {
           {contact.blocked ? (
             <Banner tone="danger">
               <span className="grow">{t('chat.blocked')}</span>
-              <button
-                className="btn btn-ghost small"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => void updateContact(peer, { blocked: false })}
               >
                 {t('chat.unblock')}
-              </button>
+              </Button>
             </Banner>
           ) : (
-            <button
-              className="btn btn-outline btn-block"
+            <Button
+              variant="outline"
+              className="w-full"
               onClick={async () => {
                 if (await confirmDanger(t('chat.block'), t('chat.block'), t('contacts.blockConfirm'))) {
                   void updateContact(peer, { blocked: true })
@@ -138,11 +141,12 @@ export function ContactDetail({ peer }: { peer: string }) {
               }}
             >
               {t('chat.block')}
-            </button>
+            </Button>
           )}
 
-          <button
-            className="btn btn-danger btn-block"
+          <Button
+            variant="destructive"
+            className="w-full"
             onClick={async () => {
               if (
                 !(await confirmDanger(t('common.remove'), t('common.remove'), t('contacts.removeConfirm')))
@@ -155,7 +159,7 @@ export function ContactDetail({ peer }: { peer: string }) {
           >
             <TrashIcon size={16} />
             {t('common.remove')}
-          </button>
+          </Button>
 
           <p className="hint">{shortNpub(toNpub(peer))}</p>
         </div>

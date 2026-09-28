@@ -3,6 +3,8 @@ import { useApp } from '../../app/store'
 import { useT } from '../../i18n'
 import { goBack, useNavigate } from '../../app/router'
 import { Banner, CopyButton, Field } from '../components/primitives'
+import { Button } from '../components/ui/button'
+import { Textarea } from '../components/ui/textarea'
 import { BackIcon, CameraIcon, QrIcon } from '../components/Icons'
 import { QrCode, QrScanner } from '../lazyViews'
 import { QrPlaceholder } from '../components/QrPlaceholder'
@@ -98,9 +100,9 @@ export function AddContact() {
   return (
     <div className="screen">
       <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+        <Button variant="ghost" size="icon" aria-label={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </button>
+        </Button>
         <h1 className="grow">{t('contacts.addTitle')}</h1>
       </header>
 
@@ -109,24 +111,26 @@ export function AddContact() {
           <p className="muted">{t('contacts.addBody')}</p>
 
           <div className="row" role="tablist" style={{ gap: 'var(--space-2)' }}>
-            <button
+            <Button
               role="tab"
               aria-selected={mode === 'share'}
-              className={`btn grow ${mode === 'share' ? 'btn-primary' : 'btn-outline'}`}
+              variant={mode === 'share' ? 'default' : 'outline'}
+              className="grow"
               onClick={() => setMode('share')}
             >
               <QrIcon size={16} />
               {t('contacts.myInvite')}
-            </button>
-            <button
+            </Button>
+            <Button
               role="tab"
               aria-selected={mode === 'scan'}
-              className={`btn grow ${mode === 'scan' ? 'btn-primary' : 'btn-outline'}`}
+              variant={mode === 'scan' ? 'default' : 'outline'}
+              className="grow"
               onClick={() => setMode('scan')}
             >
               <CameraIcon size={16} />
               {t('contacts.scan')}
-            </button>
+            </Button>
           </div>
 
           {mode === 'share' && invite ? (
@@ -140,16 +144,17 @@ export function AddContact() {
                   {link}
                 </code>
                 <div className="row">
-                  <CopyButton value={link} className="btn btn-outline grow" />
+                  <CopyButton value={link} className="grow" />
                   {typeof navigator !== 'undefined' && 'share' in navigator ? (
-                    <button
-                      className="btn btn-outline grow"
+                    <Button
+                      variant="outline"
+                      className="grow"
                       onClick={() => {
                         void navigator.share({ title: 'Crow', text: link }).catch(() => undefined)
                       }}
                     >
                       {t('common.add')}
-                    </button>
+                    </Button>
                   ) : null}
                 </div>
               </div>
@@ -168,8 +173,7 @@ export function AddContact() {
           <div className="stack-sm">
             <span className="section-title">{t('contacts.pasteInvite')}</span>
             <Field error={error ?? undefined}>
-              <textarea
-                className="textarea"
+              <Textarea
                 dir="ltr"
                 style={{ minHeight: '4.5rem' }}
                 placeholder={t('contacts.pastePlaceholder')}
@@ -180,13 +184,13 @@ export function AddContact() {
                 }}
               />
             </Field>
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              className="w-full"
               disabled={!pasted.trim()}
               onClick={() => void accept(pasted)}
             >
               {t('common.add')}
-            </button>
+            </Button>
           </div>
 
           <Banner tone="accent">

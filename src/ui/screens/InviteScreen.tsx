@@ -3,6 +3,7 @@ import { useApp } from '../../app/store'
 import { useT } from '../../i18n'
 import { useNavigate } from '../../app/router'
 import { Avatar, Banner } from '../components/primitives'
+import { Button } from '../components/ui/button'
 import { decodeInvite, isInviteStale, type Invite } from '../../core/identity/invite'
 import { shortNpub, toNpub } from '../../core/identity/keys'
 import { relayLabel } from '../../core/transport/relayUrl'
@@ -43,9 +44,9 @@ export function InviteScreen({ payload }: { payload: string }) {
       <div className="screen-scroll">
         <div className="container stack">
           <Banner tone="danger">{t('contacts.invalidInvite')}</Banner>
-          <button className="btn btn-outline btn-block" onClick={() => navigate({ name: 'chats' }, true)}>
+          <Button variant="outline" className="w-full" onClick={() => navigate({ name: 'chats' }, true)}>
             {t('common.close')}
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -91,22 +92,22 @@ export function InviteScreen({ payload }: { payload: string }) {
         {existing?.accepted ? (
           <>
             <Banner tone="accent">{t('contacts.alreadyAdded')}</Banner>
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              className="w-full"
               onClick={() => navigate({ name: 'chat', peer: invite.pubkey }, true)}
             >
               {t('nav.chats')}
-            </button>
+            </Button>
           </>
         ) : (
-          <button className="btn btn-primary btn-block" disabled={busy} onClick={() => void accept()}>
+          <Button className="w-full" disabled={busy} onClick={() => void accept()}>
             {t('contacts.add')}
-          </button>
+          </Button>
         )}
 
-        <button className="btn btn-ghost btn-block" onClick={() => navigate({ name: 'chats' }, true)}>
+        <Button variant="ghost" className="w-full" onClick={() => navigate({ name: 'chats' }, true)}>
           {t('common.cancel')}
-        </button>
+        </Button>
 
         <Banner tone="accent">
           <span className="small">{t('chat.verifyPromptBody')}</span>

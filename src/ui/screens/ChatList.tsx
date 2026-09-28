@@ -3,6 +3,9 @@ import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../app/router'
 import { Avatar, Banner, EmptyState, GroupAvatar } from '../components/primitives'
+import { Button } from '../components/ui/button'
+import { Card } from '../components/ui/card'
+import { Input } from '../components/ui/input'
 import { ContactsIcon, PlusIcon, ShieldCheckIcon } from '../components/Icons'
 import { formatListTimestamp } from '../format'
 import { shortNpub, toNpub } from '../../core/identity/keys'
@@ -98,65 +101,69 @@ export function ChatList() {
         ? `${displayName(contacts.get(preview.authorPubkey), preview.authorPubkey)}: `
         : null
     return (
-      <button
+      <Card
         key={conversation.id}
-        className="convo-row"
-        aria-current={open === (group ? conversation.id : conversation.peerPubkey) || undefined}
-        onClick={() =>
-          navigate(
-            group ? { name: 'group', id: conversation.id } : { name: 'chat', peer: conversation.peerPubkey },
-          )
-        }
+        className="mx-3 mb-2 overflow-hidden p-0"
       >
-        {group ? (
-          <GroupAvatar seed={conversation.id} />
-        ) : (
-          <Avatar name={name} seed={conversation.peerPubkey} src={contact?.avatar} />
-        )}
-        <span className="convo-main">
-          <span className="convo-top">
-            <span className="convo-name" dir="auto">
-              {name}
-              {contact?.verification === 'verified' ? (
-                <ShieldCheckIcon
-                  size={14}
-                  style={{ display: 'inline', marginInlineStart: 4, color: 'var(--success)' }}
-                />
-              ) : null}
-            </span>
-            <span className="convo-time">{formatListTimestamp(conversation.lastActivity, locale)}</span>
-          </span>
-          <span className="convo-preview">
-            <span className="convo-preview-text" dir="auto">
-              {typing ? (
-                <em>{t('chat.typing')}</em>
-              ) : contact?.blocked ? (
-                t('chat.blocked')
-              ) : conversation.draft ? (
-                <>
-                  <span style={{ color: 'var(--warning)' }}>{t('chats.draft')}: </span>
-                  {conversation.draft}
-                </>
-              ) : preview && isCallEntry(preview) ? (
-                <span className={preview.call.outcome === 'missed' ? 'convo-preview-missed' : undefined}>
-                  {callSummary(preview, t)}
-                </span>
-              ) : preview ? (
-                <>
-                  {preview.direction === 'out' ? <span className="faint">{t('chats.you')}</span> : null}
-                  {author ? <span className="faint">{author}</span> : null}
-                  {preview.body}
-                </>
-              ) : null}
-            </span>
-            {conversation.unread > 0 ? (
-              <span className="unread-dot" aria-label={String(conversation.unread)}>
-                {conversation.unread > 99 ? '99+' : conversation.unread}
+        <button
+          className="convo-row"
+          aria-current={open === (group ? conversation.id : conversation.peerPubkey) || undefined}
+          onClick={() =>
+            navigate(
+              group ? { name: 'group', id: conversation.id } : { name: 'chat', peer: conversation.peerPubkey },
+            )
+          }
+        >
+          {group ? (
+            <GroupAvatar seed={conversation.id} />
+          ) : (
+            <Avatar name={name} seed={conversation.peerPubkey} src={contact?.avatar} />
+          )}
+          <span className="convo-main">
+            <span className="convo-top">
+              <span className="convo-name" dir="auto">
+                {name}
+                {contact?.verification === 'verified' ? (
+                  <ShieldCheckIcon
+                    size={14}
+                    style={{ display: 'inline', marginInlineStart: 4, color: 'var(--success)' }}
+                  />
+                ) : null}
               </span>
-            ) : null}
+              <span className="convo-time">{formatListTimestamp(conversation.lastActivity, locale)}</span>
+            </span>
+            <span className="convo-preview">
+              <span className="convo-preview-text" dir="auto">
+                {typing ? (
+                  <em>{t('chat.typing')}</em>
+                ) : contact?.blocked ? (
+                  t('chat.blocked')
+                ) : conversation.draft ? (
+                  <>
+                    <span style={{ color: 'var(--warning)' }}>{t('chats.draft')}: </span>
+                    {conversation.draft}
+                  </>
+                ) : preview && isCallEntry(preview) ? (
+                  <span className={preview.call.outcome === 'missed' ? 'convo-preview-missed' : undefined}>
+                    {callSummary(preview, t)}
+                  </span>
+                ) : preview ? (
+                  <>
+                    {preview.direction === 'out' ? <span className="faint">{t('chats.you')}</span> : null}
+                    {author ? <span className="faint">{author}</span> : null}
+                    {preview.body}
+                  </>
+                ) : null}
+              </span>
+              {conversation.unread > 0 ? (
+                <span className="unread-dot" aria-label={String(conversation.unread)}>
+                  {conversation.unread > 99 ? '99+' : conversation.unread}
+                </span>
+              ) : null}
+            </span>
           </span>
-        </span>
-      </button>
+        </button>
+      </Card>
     )
   }
 
@@ -165,30 +172,31 @@ export function ChatList() {
       <header className="app-header">
         <h1 className="grow">{t('chats.title')}</h1>
         <ConnectionBadge />
-        <button
-          className="btn btn-icon"
+        <Button
+          variant="ghost"
+          size="icon"
           aria-label={t('groups.newGroup')}
           title={t('groups.newGroup')}
           onClick={() => navigate({ name: 'new-group' })}
         >
           <ContactsIcon />
-        </button>
-        <button
-          className="btn btn-icon"
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
           aria-label={t('contacts.add')}
           title={t('contacts.add')}
           onClick={() => navigate({ name: 'add-contact' })}
         >
           <PlusIcon />
-        </button>
+        </Button>
       </header>
 
       <Notices />
 
       {conversations.length > 4 ? (
         <div style={{ padding: 'var(--space-2) var(--space-3)' }}>
-          <input
-            className="input"
+          <Input
             type="search"
             placeholder={t('chats.searchPlaceholder')}
             value={query}
@@ -203,9 +211,9 @@ export function ChatList() {
             title={t('chats.empty')}
             body={t('chats.emptyBody')}
             action={
-              <button className="btn btn-primary" onClick={() => navigate({ name: 'add-contact' })}>
+              <Button onClick={() => navigate({ name: 'add-contact' })}>
                 {t('chats.addContact')}
-              </button>
+              </Button>
             }
           />
         ) : (
@@ -249,9 +257,9 @@ function Notices() {
       {backup ? (
         <Banner tone="warning">
           <span className="grow">{t('onboarding.backupTitle')}</span>
-          <button className="btn btn-ghost small" onClick={() => resumeBackup()}>
+          <Button variant="ghost" size="sm" onClick={() => resumeBackup()}>
             {t('common.show')}
-          </button>
+          </Button>
         </Banner>
       ) : null}
       {/* Opened with the recovery phrase, which usually means the everyday
@@ -260,15 +268,16 @@ function Notices() {
       {opened || retired ? (
         <Banner tone="accent">
           <span className="grow small">{retired ? t('lock.retired') : t('lock.recovered')}</span>
-          <button
-            className="btn btn-ghost small"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => {
               dismiss()
               navigate({ name: 'settings-security' })
             }}
           >
             {t('lock.recoveredAction')}
-          </button>
+          </Button>
         </Banner>
       ) : null}
     </div>

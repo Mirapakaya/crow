@@ -3,6 +3,7 @@ import { useApp } from '../../app/store'
 import { useI18n } from '../../i18n'
 import { goBack, useNavigate } from '../../app/router'
 import { Avatar, Banner, EmptyState, GroupAvatar } from '../components/primitives'
+import { Button } from '../components/ui/button'
 import {
   ArrowDownIcon,
   BackIcon,
@@ -408,17 +409,17 @@ export function ChatView({ address }: { address: ChatAddress }) {
     return (
       <div className="screen">
         <header className="app-header">
-          <button className="btn btn-icon btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
+          <Button variant="ghost" size="icon" className="btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
             <BackIcon />
-          </button>
+          </Button>
         </header>
         <EmptyState
           title={t('groups.notFound')}
           body={t('groups.notFoundBody')}
           action={
-            <button className="btn btn-primary" onClick={() => navigate({ name: 'chats' }, true)}>
+            <Button onClick={() => navigate({ name: 'chats' }, true)}>
               {t('nav.chats')}
-            </button>
+            </Button>
           }
         />
       </div>
@@ -433,40 +434,44 @@ export function ChatView({ address }: { address: ChatAddress }) {
           selection, as it does in Telegram: how many, forward, delete. */}
       {selecting ? (
         <header className="chat-header selection-bar">
-          <button
-            className="btn btn-icon"
+          <Button
+            variant="ghost"
+            size="icon"
             aria-label={t('chat.cancelSelection')}
             title={t('chat.cancelSelection')}
             onClick={() => setSelected(null)}
           >
             <CloseIcon />
-          </button>
+          </Button>
           <span className="grow selection-count" role="status">
             {t('chat.selected', { n: picked.length })}
           </span>
-          <button
-            className="btn btn-icon"
+          <Button
+            variant="ghost"
+            size="icon"
             aria-label={t('chat.forward')}
             title={t('chat.forward')}
             disabled={picked.some((message) => message.call)}
             onClick={() => setForwarding(picked.map((message) => message.id))}
           >
             <ForwardIcon />
-          </button>
-          <button
-            className="btn btn-icon danger-text"
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-[var(--danger)]"
             aria-label={t('chat.delete')}
             title={t('chat.delete')}
             onClick={() => void remove(picked)}
           >
             <TrashIcon />
-          </button>
+          </Button>
         </header>
       ) : (
         <header className="chat-header">
-          <button className="btn btn-icon btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
+          <Button variant="ghost" size="icon" className="btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
             <BackIcon />
-          </button>
+          </Button>
           {isGroup ? (
             <GroupAvatar seed={address} size="sm" />
           ) : (
@@ -511,22 +516,24 @@ export function ChatView({ address }: { address: ChatAddress }) {
           </button>
           {callable ? (
             <>
-              <button
-                className="btn btn-icon"
+              <Button
+                variant="ghost"
+                size="icon"
                 aria-label={t('calls.voiceCall')}
                 title={t('calls.voiceCall')}
                 onClick={() => void startCall(peer, 'audio')}
               >
                 <PhoneIcon />
-              </button>
-              <button
-                className="btn btn-icon"
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 aria-label={t('calls.videoCall')}
                 title={t('calls.videoCall')}
                 onClick={() => void startCall(peer, 'video')}
               >
                 <VideoIcon />
-              </button>
+              </Button>
             </>
           ) : null}
         </header>
@@ -536,11 +543,13 @@ export function ChatView({ address }: { address: ChatAddress }) {
         <div className="chat-notice">
           <Banner tone="warning">
             <span className="grow">{t('groups.requestBanner')}</span>
-            <button className="btn btn-ghost small" onClick={() => void acceptGroup(address)}>
+            <Button variant="ghost" size="sm" onClick={() => void acceptGroup(address)}>
               {t('groups.accept')}
-            </button>
-            <button
-              className="btn btn-ghost small danger-text"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[var(--danger)]"
               onClick={async () => {
                 if (!(await confirmDanger(t('groups.delete'), t('groups.delete'), t('groups.deleteConfirm'))))
                   return
@@ -548,7 +557,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
               }}
             >
               {t('groups.delete')}
-            </button>
+            </Button>
           </Banner>
         </div>
       ) : null}
@@ -557,18 +566,21 @@ export function ChatView({ address }: { address: ChatAddress }) {
         <div className="chat-notice">
           <Banner tone="warning">
             <span className="grow">{t('chat.requestBanner')}</span>
-            <button
-              className="btn btn-ghost small"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => void updateContact(peer, { accepted: true, source: 'manual' })}
             >
               {t('chat.accept')}
-            </button>
-            <button
-              className="btn btn-ghost small danger-text"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[var(--danger)]"
               onClick={() => void updateContact(peer, { blocked: true })}
             >
               {t('chat.block')}
-            </button>
+            </Button>
           </Banner>
         </div>
       ) : null}
@@ -577,12 +589,13 @@ export function ChatView({ address }: { address: ChatAddress }) {
         <div className="chat-notice">
           <Banner tone="danger">
             <span className="grow">{t('chat.blocked')}</span>
-            <button
-              className="btn btn-ghost small"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => void updateContact(peer, { blocked: false })}
             >
               {t('chat.unblock')}
-            </button>
+            </Button>
           </Banner>
         </div>
       ) : null}
@@ -592,9 +605,9 @@ export function ChatView({ address }: { address: ChatAddress }) {
           <Banner tone="accent">
             <ShieldIcon size={16} />
             <span className="grow">{t('chat.verifyPromptBody')}</span>
-            <button className="btn btn-ghost small" onClick={() => navigate({ name: 'verify', peer })}>
+            <Button variant="ghost" size="sm" onClick={() => navigate({ name: 'verify', peer })}>
               {t('contacts.verify')}
-            </button>
+            </Button>
           </Banner>
         </div>
       ) : null}
@@ -604,14 +617,15 @@ export function ChatView({ address }: { address: ChatAddress }) {
           {messages.length === 0 ? (
             <EmptyState title={t('chats.noMessages')} body={t('chat.encryptedNote')} />
           ) : hasEarlierMessages ? (
-            <button
+            <Button
               ref={earlierRef}
-              className="btn btn-ghost small"
+              variant="ghost"
+              size="sm"
               disabled={loadingEarlier}
               onClick={() => void loadEarlier()}
             >
               {loadingEarlier ? t('common.loading') : t('chat.loadEarlier')}
-            </button>
+            </Button>
           ) : (
             <p className="faint">{t('chat.startOfConversation')}</p>
           )}
@@ -651,9 +665,9 @@ export function ChatView({ address }: { address: ChatAddress }) {
             </span>
             {replyTo.body}
           </span>
-          <button className="btn btn-icon" aria-label={t('common.close')} onClick={() => setReplyTo(null)}>
+          <Button variant="ghost" size="icon" aria-label={t('common.close')} onClick={() => setReplyTo(null)}>
             <CloseIcon size={16} />
-          </button>
+          </Button>
         </div>
       ) : null}
 
