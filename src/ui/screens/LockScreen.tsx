@@ -173,7 +173,7 @@ export function LockScreen() {
       {way === 'device' || way === 'biometric' ? (
         <>
           <Button
-            className="w-full"
+            className="w-full btn-primary"
             disabled={busy}
             onClick={
               way === 'device' ? () => void attempt(async () => ({ type: 'device' })) : () => withBiometric()
