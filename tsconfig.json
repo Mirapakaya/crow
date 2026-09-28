@@ -28,6 +28,6 @@
     "baseUrl": ".",
     "paths": { "@/*": ["src/*"] }
   },
-  "include": ["next.config.ts", "postcss.config.mjs", "src", "tests"],
+  "include": ["next.config.ts", "src", "tests"],
   "exclude": ["node_modules", "dist"]
 }
