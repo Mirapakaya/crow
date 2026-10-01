@@ -58,12 +58,12 @@ export function Onboarding() {
           </ul>
 
           <div className="stack-sm">
-            <button className="btn btn-primary btn-block" onClick={() => setStep('name')}>
+            <Button  onClick={() => setStep('name')}>
               {text('createIdentity')}
-            </button>
-            <button className="btn btn-outline btn-block" onClick={() => setStep('restore')}>
+            </Button>
+            <Button variant="outline" block onClick={() => setStep('restore')}>
               {text('restoreIdentity')}
-            </button>
+            </Button>
           </div>
 
           <p className="hint center">{t('privacy.intro')}</p>
@@ -92,8 +92,8 @@ export function Onboarding() {
             />
           </Field>
           <div className="stack-sm">
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              
               onClick={() => {
                 if (!isValidMnemonic(restorePhrase)) {
                   setError(text('restoreInvalid'))
@@ -104,13 +104,13 @@ export function Onboarding() {
               }}
             >
               {t('common.next')}
-            </button>
-            <button className="btn btn-outline btn-block" onClick={() => setStep('restore-file')}>
+            </Button>
+            <Button variant="outline" block onClick={() => setStep('restore-file')}>
               {text('restoreFromFile')}
-            </button>
-            <button className="btn btn-ghost btn-block" onClick={() => setStep('welcome')}>
+            </Button>
+            <Button variant="ghost" block onClick={() => setStep('welcome')}>
               {t('common.back')}
-            </button>
+            </Button>
           </div>
         </>
       ) : null}
@@ -135,16 +135,16 @@ export function Onboarding() {
             />
           </Field>
           <div className="stack-sm">
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              
               disabled={!name.trim()}
               onClick={() => setStep('protect')}
             >
               {t('common.next')}
-            </button>
-            <button className="btn btn-ghost btn-block" onClick={() => setStep('welcome')}>
+            </Button>
+            <Button variant="ghost" block onClick={() => setStep('welcome')}>
               {t('common.back')}
-            </button>
+            </Button>
           </div>
         </>
       ) : null}
@@ -163,9 +163,9 @@ export function Onboarding() {
               // ceremony whenever the stored identity is not yet backed up.
             }}
           />
-          <button className="btn btn-ghost btn-block" onClick={() => setStep('name')}>
+          <Button variant="ghost" block onClick={() => setStep('name')}>
             {t('common.back')}
-          </button>
+          </Button>
         </>
       ) : null}
     </EntryLayout>
