@@ -145,7 +145,7 @@ export function AddContact() {
                     <button
                       className="btn btn-outline grow"
                       onClick={() => {
-                        void navigator.share({ title: 'Textor', text: link }).catch(() => undefined)
+                        void navigator.share({ title: 'Crow', text: link }).catch(() => undefined)
                       }}
                     >
                       {t('common.add')}

@@ -563,7 +563,7 @@ function useIncomingNotification(call: CallView, name: string, ct: CallTextFn): 
     if (Notification.permission !== 'granted' || document.visibilityState === 'visible') return
     let shown: Notification | null = null
     try {
-      shown = new Notification(name, { body, tag: 'textor-call', requireInteraction: true })
+      shown = new Notification(name, { body, tag: 'crow-call', requireInteraction: true })
       shown.onclick = () => {
         focus()
         shown?.close()
