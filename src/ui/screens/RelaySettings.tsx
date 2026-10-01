@@ -8,6 +8,7 @@ import { Badge } from '../components/ui/badge'
 import { PlusIcon, RefreshIcon, TrashIcon } from '../components/Icons'
 import { SettingsPage } from './SettingsPage'
 import { normalizeRelayUrl, relayLabel } from '../../core/transport/relayUrl'
+import { isValidRelayUrl, sanitizeRelayUrl } from '../../lib/utils'
 import { DEFAULT_DM_RELAYS, SUGGESTED_RELAYS } from '../../core/transport/defaultRelays'
 import type { RelayEntry } from '../../core/models/types'
 import { verdictFor } from '../../core/transport/relayHealth'
@@ -30,7 +31,12 @@ export function RelaySettings() {
   const activeCount = entries.filter((entry) => entry.enabled && entry.write).length
 
   const addRelay = async (raw: string) => {
-    const url = normalizeRelayUrl(raw)
+    const sanitized = sanitizeRelayUrl(raw)
+    if (!isValidRelayUrl(sanitized)) {
+      setError(t('settings.relayInvalid'))
+      return
+    }
+    const url = normalizeRelayUrl(sanitized)
     if (!url) {
       setError(t('settings.relayInvalid'))
       return
