@@ -14,6 +14,7 @@ import { callSummary, isCallEntry } from '../components/CallBubble'
 import { LiveBanner } from '../lazyViews'
 import { Skeleton } from '../components/Skeleton'
 import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 export function displayName(contact: Contact | undefined, pubkey: string): string {
   return contact?.name || contact?.remoteName || shortNpub(toNpub(pubkey))
@@ -249,8 +250,8 @@ export function ChatList() {
 
       {conversations.length > 4 ? (
         <div style={{ padding: 'var(--space-2) var(--space-3)' }}>
-          <input
-            className="input"
+          <Input
+            
             type="search"
             placeholder={t('chats.searchPlaceholder')}
             value={query}

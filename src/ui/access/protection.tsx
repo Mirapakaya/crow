@@ -21,6 +21,7 @@ import { canOpenInstantly, isValidPin, normalizePin } from '../../core/vault/key
 import type { SlotEnrolment } from '../../core/vault/vault'
 import './access.css'
 import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 export const MIN_PASSPHRASE = 10
 
@@ -76,8 +77,8 @@ export function PassphraseFields({
   return (
     <>
       <Field label={text('passphrase')} hint={text('passphraseHint')}>
-        <input
-          className="input"
+        <Input
+          
           type="password"
           autoFocus
           autoComplete="new-password"
@@ -87,8 +88,8 @@ export function PassphraseFields({
       </Field>
       {value ? <StrengthMeter score={score} label={label} caption={text('passphraseStrength')} /> : null}
       <Field label={text('passphraseConfirm')} error={error ?? undefined}>
-        <input
-          className="input"
+        <Input
+          
           type="password"
           autoComplete="new-password"
           value={confirm}
@@ -234,7 +235,7 @@ export function PinFields({
   return (
     <>
       <Field label={text('pin')} hint={text('pinHint')}>
-        <input
+        <Input
           {...input}
           autoFocus
           value={value}
@@ -242,7 +243,7 @@ export function PinFields({
         />
       </Field>
       <Field label={text('pinConfirm')} error={error ?? undefined}>
-        <input
+        <Input
           {...input}
           value={confirm}
           onChange={(event) => onConfirmChange(digitsOnly(event.target.value))}

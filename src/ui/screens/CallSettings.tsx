@@ -12,6 +12,7 @@ import { alreadyListed, parseIceServer, serverUrls } from '../../core/calls/iceS
 import { probeIce, type IceProbeResult, type IceVerdict } from '../../core/calls/iceProbe'
 import { DEFAULT_ICE_SERVERS } from '../../core/transport/defaultRelays'
 import { supportsWebRtc } from '../../core/transport/webrtc/directManager'
+import { Input } from '../components/ui/input'
 
 const VERDICT: Record<IceVerdict, CallSettingsTextKey> = {
   good: 'iceVerdictGood',
@@ -145,8 +146,8 @@ export function CallSettings() {
         }}
       >
         <Field label={st('iceUrl')} error={error ?? undefined}>
-          <input
-            className="input"
+          <Input
+            
             dir="ltr"
             lang="en"
             inputMode="url"
@@ -164,8 +165,8 @@ export function CallSettings() {
         <div className="row" style={{ flexWrap: 'wrap', alignItems: 'flex-start' }}>
           <div className="grow" style={{ minWidth: '10rem' }}>
             <Field label={st('iceUsername')}>
-              <input
-                className="input"
+              <Input
+                
                 dir="ltr"
                 lang="en"
                 autoCapitalize="off"
@@ -178,8 +179,8 @@ export function CallSettings() {
           </div>
           <div className="grow" style={{ minWidth: '10rem' }}>
             <Field label={st('icePassword')}>
-              <input
-                className="input"
+              <Input
+                
                 dir="ltr"
                 lang="en"
                 type="password"

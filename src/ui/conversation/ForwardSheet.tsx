@@ -4,6 +4,7 @@ import { useI18n } from '../../i18n'
 import { Avatar, GroupAvatar, Modal } from '../components/primitives'
 import { conversationTitle, isRequest } from '../screens/ChatList'
 import type { ChatAddress, Conversation } from '../../core/models/types'
+import { Input } from '../components/ui/input'
 
 /** Where a conversation is reached: a group by its id, a person by their key. */
 const addressOf = (conversation: Conversation): ChatAddress =>
@@ -44,8 +45,8 @@ export function ForwardSheet({
   return (
     <Modal title={t('chat.forwardTitle')} onClose={onClose}>
       <div className="stack-sm">
-        <input
-          className="input"
+        <Input
+          
           type="search"
           placeholder={t('chats.searchPlaceholder')}
           aria-label={t('chats.searchPlaceholder')}

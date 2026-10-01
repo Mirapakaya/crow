@@ -9,6 +9,7 @@ import { formatCoordinates, formatDistance } from './format'
 import { useLocationText, type LocationTextKey } from './locationText'
 import { MapView, type MapMarker } from './MapView'
 import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 /** Telegram's choices, and the one it added later. */
 const DURATIONS: [seconds: number, label: LocationTextKey][] = [
@@ -130,8 +131,8 @@ export function LocationPicker({ onClose }: { onClose: () => void }) {
         {center ? <p className="hint">{text('tapHint')}</p> : null}
 
         <Field label={text('paste')} error={unreadable ? text('notAPosition') : undefined}>
-          <input
-            className="input"
+          <Input
+            
             dir="ltr"
             inputMode="text"
             autoComplete="off"
@@ -150,8 +151,8 @@ export function LocationPicker({ onClose }: { onClose: () => void }) {
           />
         </Field>
         <Field label={text('placeName')}>
-          <input
-            className="input"
+          <Input
+            
             dir="auto"
             maxLength={MAX_PLACE_CHARS}
             value={place}
