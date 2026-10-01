@@ -80,7 +80,7 @@ export function Banner({
 }) {
   const cls = tone === 'info' ? 'banner' : `banner banner-${tone}`
   return (
-    <div className={cls} role={tone === 'danger' ? 'alert' : undefined}>
+    <div className={cls} role={tone === 'danger' ? 'alert' : tone === 'warning' ? 'status' : undefined} aria-live={tone === 'danger' || tone === 'warning' ? 'polite' : undefined}>
       {children}
     </div>
   )
@@ -97,16 +97,17 @@ export function Field({
   error?: string
   children: ReactNode
 }) {
+  const descId = error || hint ? `field-hint-${label?.replace(/\s+/g, '-').slice(0, 20)}` : undefined
   return (
-    <div className="field">
+    <div className="field" aria-describedby={descId}>
       {label ? <span className="label">{label}</span> : null}
       {children}
       {error ? (
-        <span className="error-text" role="alert">
+        <span id={descId} className="error-text" role="alert">
           {error}
         </span>
       ) : hint ? (
-        <span className="hint">{hint}</span>
+        <span id={descId} className="hint">{hint}</span>
       ) : null}
     </div>
   )

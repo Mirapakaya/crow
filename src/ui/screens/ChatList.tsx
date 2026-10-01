@@ -186,7 +186,7 @@ export function ChatList() {
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost" className="convo-row-more" aria-label={t('chats.messageActions')} title={t('chats.messageActions')}>
+          <Button size="icon" variant="ghost" className="convo-row-more" aria-label={t('chats.messageActions')} aria-haspopup="true" title={t('chats.messageActions')}>
             <MoreIcon size={16} />
           </Button>
         </DropdownMenuTrigger>
