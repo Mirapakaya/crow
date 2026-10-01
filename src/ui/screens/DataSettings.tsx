@@ -4,6 +4,8 @@ import { estimateStorage, type StorageEstimate } from '../../crow/storagePersist
 import { useT } from '../../i18n'
 import { Banner, Field, Spinner, Toggle } from '../components/primitives'
 import { DownloadIcon, TrashIcon, UploadIcon } from '../components/Icons'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import { SettingsPage } from './SettingsPage'
 import { LAZY_CHUNKS } from '../lazyViews'
 
@@ -137,8 +139,8 @@ export function DataSettings() {
           checked={includeMessages}
           onChange={setIncludeMessages}
         />
-        <button
-          className="btn btn-primary btn-block"
+        <Button
+          block
           disabled={exportPassphrase.length < 10 || busy !== null}
           onClick={() => void runExport()}
         >
@@ -150,7 +152,7 @@ export function DataSettings() {
               {t('settings.exportCreate')}
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       <div className="card stack">
@@ -164,16 +166,16 @@ export function DataSettings() {
           />
         </Field>
         <Field label={t('settings.exportPassphrase')} error={error ?? undefined}>
-          <input
-            className="input"
+          <Input
             type="password"
             autoComplete="off"
             value={importPassphrase}
             onChange={(event) => setImportPassphrase(event.target.value)}
           />
         </Field>
-        <button
-          className="btn btn-outline btn-block"
+        <Button
+          variant="outline"
+          block
           disabled={!importFile || !importPassphrase || busy !== null}
           onClick={() => void runImport()}
         >
@@ -185,7 +187,7 @@ export function DataSettings() {
               {t('settings.importBackup')}
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       <div className="card stack">
@@ -197,21 +199,21 @@ export function DataSettings() {
           <span className="small">{t('lock.startOverConfirm')}</span>
         </Banner>
         <Field label={t('settings.deleteEverythingConfirm')}>
-          <input
-            className="input"
+          <Input
             dir="ltr"
             value={deleteConfirm}
             onChange={(event) => setDeleteConfirm(event.target.value)}
           />
         </Field>
-        <button
-          className="btn btn-danger btn-block"
+        <Button
+          variant="destructive"
+          block
           disabled={deleteConfirm !== 'DELETE'}
           onClick={() => void wipeDevice()}
         >
           <TrashIcon size={16} />
           {t('settings.deleteEverything')}
-        </button>
+        </Button>
       </div>
     </SettingsPage>
   )
