@@ -1,6 +1,6 @@
 /** Build metadata, injected by Vite at build time. */
-export const APP_VERSION: string = __APP_VERSION__
-export const BUILD_TIME: string = __BUILD_TIME__
+export const APP_VERSION: string = process.env.NEXT_PUBLIC_APP_VERSION || "3.0.0"
+export const BUILD_TIME: string = process.env.NEXT_PUBLIC_BUILD_TIME || new Date().toISOString()
 /**
  * Where this build's source lives.
  *
@@ -12,7 +12,7 @@ export const BUILD_TIME: string = __BUILD_TIME__
  *
  * Overridable at build time with `VITE_SOURCE_URL` so a fork needs no patch.
  */
-export const SOURCE_URL: string = import.meta.env.VITE_SOURCE_URL || 'https://github.com/textor-ir/textor'
+export const SOURCE_URL: string = process.env.NEXT_PUBLIC_SOURCE_URL || 'https://github.com/Mirapakaya/crow'
 
 /** Host and path only, for prose where a bare URL reads better than a link. */
 export const SOURCE_LABEL: string = SOURCE_URL.replace(/^https?:\/\//, '')

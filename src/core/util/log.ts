@@ -1,7 +1,7 @@
 /**
  * Logging that is safe to leave in a privacy app: levels are off by default in
  * production, and payload contents are never passed through. Enable at runtime
- * with `localStorage.setItem('textor:debug', '1')`.
+ * with `localStorage.setItem('crow:debug', '1')`.
  */
 type Level = 'debug' | 'info' | 'warn' | 'error'
 
@@ -9,11 +9,11 @@ const ORDER: Record<Level, number> = { debug: 10, info: 20, warn: 30, error: 40 
 
 function threshold(): number {
   try {
-    if (globalThis.localStorage?.getItem('textor:debug') === '1') return ORDER.debug
+    if (globalThis.localStorage?.getItem('crow:debug') === '1') return ORDER.debug
   } catch {
     /* storage can be blocked; fall through to the default */
   }
-  return import.meta.env?.DEV ? ORDER.info : ORDER.warn
+  return process.env.NODE_ENV === "development" ? ORDER.info : ORDER.warn
 }
 
 function emit(level: Level, scope: string, msg: string, extra?: unknown) {
