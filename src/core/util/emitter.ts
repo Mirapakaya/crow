@@ -21,7 +21,7 @@ export class Emitter<Events extends Record<string, unknown>> {
       try {
         ;(fn as (p: Events[K]) => void)(payload)
       } catch (err) {
-        console.error('[textor:emitter] listener threw', err)
+        console.error('[crow:emitter] listener threw', err)
       }
     }
   }

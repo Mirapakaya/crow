@@ -30,11 +30,11 @@ const en = {
   accuracy: 'Accurate to {distance}',
   moved: 'Pin moved {distance} from you',
   denied:
-    'This browser is not letting Textor know where you are. You can still send a place by its coordinates.',
+    'This browser is not letting Crow know where you are. You can still send a place by its coordinates.',
   unavailable: 'Your position could not be found just now.',
   unsupported: 'This browser cannot tell where you are. You can still send a place by its coordinates.',
   paste: 'Coordinates or a map link',
-  notAPosition: 'That is not a position Textor can read. Try “35.6892, 51.3890” or a map link.',
+  notAPosition: 'That is not a position Crow can read. Try “35.6892, 51.3890” or a map link.',
   placeName: 'Name of the place (optional)',
   sendHere: 'Send your current location',
   sendPin: 'Send this place',
@@ -44,7 +44,7 @@ const en = {
   for480: '8 hours',
   forever: 'Until I turn it off',
   liveHint:
-    'Everyone in this chat sees where you are as you move, until the time is up or you stop. Textor moves it only while it is open.',
+    'Everyone in this chat sees where you are as you move, until the time is up or you stop. Crow moves it only while it is open.',
   tapHint: 'Drag to look around; tap to put the pin somewhere else.',
   privacy:
     'Encrypted end to end. The map is drawn on this device from the position alone, so no map service learns where anyone is. Your browser finds your position, and may ask its maker’s location service to.',
@@ -104,11 +104,11 @@ const fa: typeof en = {
   finding: 'در حال یافتن موقعیت شما…',
   accuracy: 'با دقت {distance}',
   moved: 'سنجاق {distance} دورتر از شماست',
-  denied: 'این مرورگر به تکستور اجازه نمی‌دهد بداند کجا هستید. هنوز می‌توانید مکانی را با مختصاتش بفرستید.',
+  denied: 'این مرورگر به کرو اجازه نمی‌دهد بداند کجا هستید. هنوز می‌توانید مکانی را با مختصاتش بفرستید.',
   unavailable: 'الان نمی‌شود موقعیت شما را پیدا کرد.',
   unsupported: 'این مرورگر نمی‌تواند بگوید کجا هستید. هنوز می‌توانید مکانی را با مختصاتش بفرستید.',
   paste: 'مختصات یا پیوند نقشه',
-  notAPosition: 'تکستور این موقعیت را نمی‌خواند. «35.6892, 51.3890» یا پیوند یک نقشه را امتحان کنید.',
+  notAPosition: 'کرو این موقعیت را نمی‌خواند. «35.6892, 51.3890» یا پیوند یک نقشه را امتحان کنید.',
   placeName: 'نام مکان (اختیاری)',
   sendHere: 'فرستادن موقعیت کنونی شما',
   sendPin: 'فرستادن این مکان',
@@ -118,7 +118,7 @@ const fa: typeof en = {
   for480: '۸ ساعت',
   forever: 'تا وقتی خاموشش کنم',
   liveHint:
-    'همهٔ این گفتگو، تا پایان زمان یا تا وقتی متوقفش کنید، جابه‌جایی شما را می‌بینند. تکستور فقط وقتی باز است آن را جابه‌جا می‌کند.',
+    'همهٔ این گفتگو، تا پایان زمان یا تا وقتی متوقفش کنید، جابه‌جایی شما را می‌بینند. کرو فقط وقتی باز است آن را جابه‌جا می‌کند.',
   tapHint: 'برای دیدن اطراف بکشید؛ برای جابه‌جا کردن سنجاق ضربه بزنید.',
   privacy:
     'رمزگذاری سرتاسری. نقشه تنها از روی خود موقعیت و روی همین دستگاه کشیده می‌شود، پس هیچ سرویس نقشه‌ای نمی‌فهمد کسی کجاست. مرورگرتان موقعیت شما را پیدا می‌کند و شاید برای آن از سرویس مکان‌یابی سازنده‌اش کمک بگیرد.',

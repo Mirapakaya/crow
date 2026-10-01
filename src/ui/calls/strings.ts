@@ -42,7 +42,7 @@ const en = {
   relayed: 'Relayed',
   relayedHint: 'Audio and video go through a TURN server, which sees only encrypted traffic.',
   notReached:
-    '{name} has not received the call yet. Calls ring only while Textor is open on their device — there are no push notifications.',
+    '{name} has not received the call yet. Calls ring only while Crow is open on their device — there are no push notifications.',
   endedHangup: 'Call ended',
   endedCancelled: 'Call cancelled',
   endedDeclined: '{name} declined the call',
@@ -65,7 +65,7 @@ const en = {
   checkTurn: 'Check TURN settings',
   mediaTitle: 'Could not start the call',
   mediaDenied:
-    'Textor is not allowed to use your microphone. Allow it in your browser’s settings for this site, then try again.',
+    'Crow is not allowed to use your microphone. Allow it in your browser’s settings for this site, then try again.',
   mediaMissing: 'No microphone was found.',
   mediaBusy: 'Your microphone or camera is being used by another app.',
   mediaFailed: 'Your microphone could not be started.',
@@ -108,7 +108,7 @@ const fa: Record<CallTextKey, string> = {
   relayed: 'رله‌شده',
   relayedHint: 'صدا و تصویر از یک سرور TURN عبور می‌کند که فقط ترافیک رمزنگاری‌شده را می‌بیند.',
   notReached:
-    'تماس هنوز به {name} نرسیده است. تماس فقط وقتی زنگ می‌خورد که تکستور روی دستگاه او باز باشد — اعلان فوری (push) وجود ندارد.',
+    'تماس هنوز به {name} نرسیده است. تماس فقط وقتی زنگ می‌خورد که کرو روی دستگاه او باز باشد — اعلان فوری (push) وجود ندارد.',
   endedHangup: 'تماس پایان یافت',
   endedCancelled: 'تماس لغو شد',
   endedDeclined: '{name} تماس را رد کرد',
@@ -131,7 +131,7 @@ const fa: Record<CallTextKey, string> = {
   checkTurn: 'بررسی تنظیمات TURN',
   mediaTitle: 'تماس آغاز نشد',
   mediaDenied:
-    'تکستور اجازهٔ استفاده از میکروفون شما را ندارد. در تنظیمات مرورگر برای این سایت اجازه دهید و دوباره تلاش کنید.',
+    'کرو اجازهٔ استفاده از میکروفون شما را ندارد. در تنظیمات مرورگر برای این سایت اجازه دهید و دوباره تلاش کنید.',
   mediaMissing: 'میکروفونی پیدا نشد.',
   mediaBusy: 'میکروفون یا دوربین شما در اختیار برنامهٔ دیگری است.',
   mediaFailed: 'میکروفون شما راه‌اندازی نشد.',

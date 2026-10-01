@@ -89,7 +89,7 @@ export class DirectSession {
     this.#setState('connecting')
     const pc = this.#ensurePeerConnection()
 
-    const channel = pc.createDataChannel('textor', { ordered: true })
+    const channel = pc.createDataChannel('crow', { ordered: true })
     this.#attachChannel(channel)
 
     try {

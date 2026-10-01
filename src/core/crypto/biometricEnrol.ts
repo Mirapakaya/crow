@@ -34,7 +34,7 @@ export function platformFamily(userAgent: string): PlatformFamily {
 }
 
 /**
- * What can guard Textor here:
+ * What can guard Crow here:
  *
  *   platform      this device's own authenticator:
  *                   yes           set up to verify the person
@@ -94,7 +94,7 @@ export async function biometricSupport(
  * What each authenticator is asked for. Both are non-discoverable where the
  * authenticator lets them be — nothing needs to find the credential without
  * its id, and a security key has few slots for ones that do. Windows Hello and
- * Apple's passkeys make a discoverable one anyway, and list it as "Textor".
+ * Apple's passkeys make a discoverable one anyway, and list it as "Crow".
  */
 const SELECTION: Record<GateAuthenticator, AuthenticatorSelectionCriteria> = {
   platform: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
@@ -125,9 +125,9 @@ const TRANSPORTS = new Set(['usb', 'nfc', 'ble', 'smart-card', 'hybrid', 'intern
 export async function enrolBiometric(authenticator: GateAuthenticator = 'platform'): Promise<Presence> {
   const credentials = webauthn()
   const publicKey: WithHints<PublicKeyCredentialCreationOptions> = {
-    rp: { name: 'Textor' },
+    rp: { name: 'Crow' },
     // A fixed, neutral name: some platforms list it with the person's passkeys.
-    user: { id: randomBytes(16) as Uint8Array<ArrayBuffer>, name: 'Textor', displayName: 'Textor' },
+    user: { id: randomBytes(16) as Uint8Array<ArrayBuffer>, name: 'Crow', displayName: 'Crow' },
     challenge: randomBytes(32) as Uint8Array<ArrayBuffer>,
     pubKeyCredParams: [
       { type: 'public-key', alg: -7 },

@@ -16,10 +16,10 @@ const en = {
   kindSecure: 'Forward-secret',
   secureTitle: 'Forward secrecy, and members who can change',
   secureBody:
-    'Messages are encrypted to the group with MLS. Its keys move on whenever someone joins or leaves, and at least weekly: a device taken later cannot read what was said before, and one that was compromised stops being able to read once its keys are refreshed. Up to {max} people, each with Textor and invitations turned on. Text, replies and reactions only.',
+    'Messages are encrypted to the group with MLS. Its keys move on whenever someone joins or leaves, and at least weekly: a device taken later cannot read what was said before, and one that was compromised stops being able to read once its keys are refreshed. Up to {max} people, each with Crow and invitations turned on. Text, replies and reactions only.',
   finding: 'Finding everyone’s keys…',
   noneReady:
-    'None of them can join yet. They need a version of Textor with forward-secret groups, with invitations turned on in Settings → Privacy.',
+    'None of them can join yet. They need a version of Crow with forward-secret groups, with invitations turned on in Settings → Privacy.',
   someMissing: 'Not added yet, because they have no invitation key published: {names}',
   failed: 'That did not work: {reason}',
   unreachable: 'the group’s relays could not be reached. Check your connection and try again.',
@@ -58,10 +58,10 @@ const fa: Record<SecureTextKey, string> = {
   kindSecure: 'رازداری پیش‌رو',
   secureTitle: 'رازداری پیش‌رو، و اعضایی که می‌توانند تغییر کنند',
   secureBody:
-    'پیام‌ها با MLS برای گروه رمزگذاری می‌شوند. کلیدهای گروه هر بار که کسی می‌پیوندد یا می‌رود، و دست‌کم هفته‌ای یک بار، عوض می‌شوند: دستگاهی که بعدها به دست کسی بیفتد نمی‌تواند گفته‌های پیشین را بخواند، و دستگاهی که نفوذ شده، پس از تازه شدن کلیدهایش دیگر نمی‌تواند بخواند. حداکثر {max} نفر، هر کدام با تکستور و دعوت‌های روشن. فقط متن، پاسخ و واکنش.',
+    'پیام‌ها با MLS برای گروه رمزگذاری می‌شوند. کلیدهای گروه هر بار که کسی می‌پیوندد یا می‌رود، و دست‌کم هفته‌ای یک بار، عوض می‌شوند: دستگاهی که بعدها به دست کسی بیفتد نمی‌تواند گفته‌های پیشین را بخواند، و دستگاهی که نفوذ شده، پس از تازه شدن کلیدهایش دیگر نمی‌تواند بخواند. حداکثر {max} نفر، هر کدام با کرو و دعوت‌های روشن. فقط متن، پاسخ و واکنش.',
   finding: 'در حال یافتن کلیدهای همه…',
   noneReady:
-    'هیچ‌کدام هنوز نمی‌توانند بپیوندند. نسخه‌ای از تکستور با گروه‌های رازداری پیش‌رو لازم است، و دعوت‌ها باید در تنظیمات ← حریم خصوصی روشن باشند.',
+    'هیچ‌کدام هنوز نمی‌توانند بپیوندند. نسخه‌ای از کرو با گروه‌های رازداری پیش‌رو لازم است، و دعوت‌ها باید در تنظیمات ← حریم خصوصی روشن باشند.',
   someMissing: 'هنوز اضافه نشدند، چون کلید دعوتی منتشر نکرده‌اند: {names}',
   failed: 'انجام نشد: {reason}',
   unreachable: 'به رله‌های گروه دسترسی نبود. اتصال خود را بررسی کنید و دوباره تلاش کنید.',
