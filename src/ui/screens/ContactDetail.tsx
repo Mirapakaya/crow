@@ -10,6 +10,9 @@ import { relayLabel } from '../../core/transport/relayUrl'
 import { formatDateTime } from '../format'
 import { displayName } from './ChatList'
 import { Input } from '../components/ui/input'
+import { Badge } from '../components/ui/badge'
+import { Textarea } from '../components/ui/textarea'
+import { Button } from '../components/ui/button'
 
 /**
  * One contact: their name and note, their key, verifying and blocking them.
@@ -61,9 +64,9 @@ export function ContactDetail({ peer }: { peer: string }) {
             </div>
             <h2 style={{ fontSize: 'var(--step-1)' }}>{label}</h2>
             {contact.about ? <p className="muted small">{contact.about}</p> : null}
-            <span className={`badge ${contact.verification === 'verified' ? 'badge-success' : ''}`}>
+            <Badge variant={contact.verification === 'verified' ? 'success' : 'default'}>
               {contact.verification === 'verified' ? t('contacts.verified') : t('contacts.unverified')}
-            </span>
+            </Badge>
           </div>
 
           <div className="row">
@@ -92,8 +95,7 @@ export function ContactDetail({ peer }: { peer: string }) {
               />
             </Field>
             <Field label={t('contacts.noteLabel')} hint={t('contacts.noteHint')}>
-              <textarea
-                className="textarea"
+              <Textarea
                 style={{ minHeight: '3.5rem' }}
                 value={note}
                 maxLength={500}

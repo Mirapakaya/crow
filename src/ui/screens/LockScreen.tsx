@@ -9,6 +9,7 @@ import { confirmDanger } from '../components/dialog'
 import { EntryLayout } from '../components/EntryLayout'
 import { LockIcon } from '../components/Icons'
 import { Button } from '../components/ui/button'
+import { Textarea } from '../components/ui/textarea'
 import { PatternPad } from '../components/PatternPad'
 import { gateName, unlockError } from '../biometric'
 
@@ -211,8 +212,8 @@ export function LockScreen() {
         >
           <Field label={way === 'recovery' ? t('lock.recoveryPhrase') : undefined} error={error ?? undefined}>
             {way === 'recovery' ? (
-              <textarea
-                className="textarea mono"
+              <Textarea
+                className="mono"
                 dir="ltr"
                 autoFocus
                 autoCapitalize="none"

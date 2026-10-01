@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { createLogger } from '../core/util/log'
 import { SOURCE_LABEL } from './meta'
+import { Button } from '../components/ui/button'
 
 const log = createLogger('boundary')
 
@@ -60,11 +61,11 @@ export class ErrorBoundary extends Component<Props, State> {
           {error.message || String(error)}
         </pre>
 
-        <button className="btn btn-primary btn-block" onClick={() => location.reload()}>
+        <Button block onClick={() => location.reload()}>
           Reload
-        </button>
-        <button
-          className="btn btn-outline btn-block"
+        </Button>
+        <Button
+          variant="outline" block
           onClick={() => {
             // Route straight to the backup screen: if the crash is reproducible,
             // getting the vault out matters more than getting back to the chat.
@@ -73,7 +74,7 @@ export class ErrorBoundary extends Component<Props, State> {
           }}
         >
           Open backup settings
-        </button>
+        </Button>
 
         <p className="hint">
           If this keeps happening, please report it with the message above at {SOURCE_LABEL}. Do not include

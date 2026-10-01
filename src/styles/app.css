@@ -186,6 +186,69 @@ time,
   max-height: 100dvh;
 }
 
+/* Branded splash — the first thing a visitor sees during boot.
+   Centered lock mark + wordmark above the spinner, with a slow
+   pulse that communicates "alive, not frozen". */
+.boot-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  animation: boot-in var(--duration-slow) var(--ease-out);
+}
+
+.boot-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.boot-mark {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--accent);
+  color: var(--accent-fg);
+  box-shadow: 0 0 0 8px var(--accent-soft);
+  animation: boot-pulse 2s var(--ease-in-out) infinite;
+}
+
+.boot-name {
+  font-size: var(--step-3);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+}
+
+@keyframes boot-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2));
+  }
+}
+
+@keyframes boot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 6px var(--accent-soft);
+  }
+  50% {
+    box-shadow: 0 0 0 12px var(--accent-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-mark {
+    animation: none;
+  }
+  .boot-screen {
+    animation: none;
+  }
+}
+
 .screen {
   flex: 1;
   min-height: 0;
@@ -312,6 +375,27 @@ time,
   font-size: var(--step-1);
   font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-snug);
+}
+
+/* A thin accent rule under the header — brand presence without a logo. */
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  inset-inline: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--accent) 0%,
+    color-mix(in srgb, var(--accent) 40%, transparent) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+.app-header {
+  position: relative;
 }
 
 /* ---------------------------------------------------------------- button -- */
@@ -519,13 +603,14 @@ time,
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-1-5);
 }
 
 .label {
   font-size: var(--step--1);
   font-weight: var(--weight-medium);
   color: var(--text-muted);
+  letter-spacing: var(--tracking-snug);
 }
 
 .input,
@@ -682,6 +767,7 @@ time,
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
 }
 
 .card-section {
@@ -689,6 +775,7 @@ time,
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 /* Hairlines between rows, but never one hanging under the last row. */
@@ -1194,14 +1281,26 @@ time,
 .empty {
   display: grid;
   place-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   padding: var(--space-7) var(--space-4);
   text-align: center;
   color: var(--text-muted);
 }
 
+.empty::before {
+  content: '';
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-3);
+  border: var(--border-width) solid var(--border);
+  display: grid;
+  place-items: center;
+}
+
 .empty h3 {
   color: var(--text);
+  font-size: var(--step-1);
 }
 
 /* ------------------------------------------------------------------ tabs -- */
@@ -1227,12 +1326,15 @@ time,
   color: var(--text-muted);
   font-size: var(--step--2);
   font-weight: var(--weight-medium);
-  transition: color var(--transition);
+  transition:
+    color var(--transition),
+    background var(--transition);
   position: relative;
 }
 
 .tabbar button:hover {
   color: var(--text);
+  background: var(--surface-hover);
 }
 
 .tabbar button[aria-current='page'] {
@@ -1341,6 +1443,7 @@ time,
   background: var(--accent);
   color: var(--accent-fg);
   flex-shrink: 0;
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 /* A short rule under the eyebrow, the one decorative element in the app. */
@@ -1371,6 +1474,7 @@ time,
   background: var(--accent-soft);
   border: var(--border-width) solid var(--accent-border);
   color: var(--accent-text);
+  box-shadow: 0 0 0 5px var(--accent-soft);
 }
 
 /* The lock screen is a returning user's most frequent view; its title sits a
@@ -1479,6 +1583,7 @@ time,
   height: 1.75rem;
   border-radius: var(--radius-sm);
   background: var(--accent-soft);
+  border: var(--border-width) solid var(--accent-border);
   color: var(--accent-text);
   flex-shrink: 0;
 }
