@@ -1,4 +1,4 @@
-import { useApp } from '../../app/store'
+import { useApp } from '../../crow/store'
 import { useI18n, type TranslationKey } from '../../i18n'
 import { Modal } from '../components/primitives'
 import { formatDateTime } from '../format'

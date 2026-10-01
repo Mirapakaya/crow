@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getRepo, getVault, useApp } from '../../app/store'
+import { getRepo, getVault, useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { Banner, Field, Modal, Spinner, Toggle } from '../components/primitives'
 import { PatternPad } from '../components/PatternPad'

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useApp } from '../../app/store'
+import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { bearingDeg, compassPoint, distanceM, type LatLon } from '../../core/location/geo'
 import { browserPositions } from '../../core/location/position'

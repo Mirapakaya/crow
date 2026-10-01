@@ -1,5 +1,5 @@
-import { useApp } from '../../app/store'
-import { useNavigate } from '../../app/router'
+import { useApp } from '../../crow/store'
+import { useNavigate } from '../../crow/router'
 import { useI18n } from '../../i18n'
 import { isGroupAddress } from '../../core/models/types'
 import { conversationTitle, displayName } from '../screens/ChatList'

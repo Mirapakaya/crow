@@ -1,6 +1,6 @@
-import { useApp } from '../../app/store'
+import { useApp } from '../../crow/store'
 import { useI18n, LOCALE_NAMES } from '../../i18n'
-import { useNavigate, useRoute, type Route } from '../../app/router'
+import { useNavigate, useRoute, type Route } from '../../crow/router'
 import { Skeleton } from '../components/Skeleton'
 import { Avatar, Banner, Field, Toggle } from '../components/primitives'
 import {
@@ -17,7 +17,7 @@ import {
 import { SegmentedControl } from '../components/SegmentedControl'
 import { SettingsPage } from './SettingsPage'
 import type { LocaleCode, ThemePreference } from '../../core/models/types'
-import { APP_VERSION, SOURCE_URL } from '../../app/meta'
+import { APP_VERSION, SOURCE_URL } from '../../crow/meta'
 import { useAboutText } from './aboutText'
 
 export function SettingsHome() {

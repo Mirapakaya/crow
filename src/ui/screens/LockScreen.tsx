@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useApp } from '../../app/store'
+import { useApp } from '../../crow/store'
 import { useT } from '../../i18n'
 import { type KeyslotType, type SlotSecret } from '../../core/vault/vault'
 import { isGuarded, isValidPin } from '../../core/vault/keyslots'

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useApp } from '../../app/store'
-import { useNavigate } from '../../app/router'
+import { useApp } from '../../crow/store'
+import { useNavigate } from '../../crow/router'
 import { useT, type TranslateFn } from '../../i18n'
 import { connectionStatus, connectionTone, type ConnectionStatus } from '../../core/engine/connectionStatus'
 

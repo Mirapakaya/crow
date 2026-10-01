@@ -1,7 +1,7 @@
 import { useI18n } from '../../i18n'
 import { SettingsPage } from './SettingsPage'
-import { APP_VERSION, BUILD_TIME, SOURCE_URL } from '../../app/meta'
-import { useApp } from '../../app/store'
+import { APP_VERSION, BUILD_TIME, SOURCE_URL } from '../../crow/meta'
+import { useApp } from '../../crow/store'
 import { relayLabel } from '../../core/transport/relayUrl'
 import { useAboutText } from './aboutText'
 
