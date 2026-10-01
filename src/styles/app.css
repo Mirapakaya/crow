@@ -497,14 +497,16 @@ time,
 
 /* The selected segment lifts off the sunken track with a hairline and the app's
    smallest shadow — enough to read as raised, not enough to shout. */
-.segmented > button[aria-checked='true'] {
+.segmented > button[aria-checked='true'],
+.segmented > button[aria-selected='true'] {
   background: var(--surface);
   color: var(--text);
   border-color: var(--border);
   box-shadow: var(--shadow-sm);
 }
 
-.segmented > button[aria-checked='true']:hover {
+.segmented > button[aria-checked='true']:hover,
+.segmented > button[aria-selected='true']:hover {
   background: var(--surface);
 }
 

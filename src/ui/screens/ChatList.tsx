@@ -112,7 +112,7 @@ export function ChatList() {
         ? `${displayName(contacts.get(preview.authorPubkey), preview.authorPubkey)}: `
         : null
     return (
-      <div key={conversation.id} className="convo-row-wrap">
+      <div key={conversation.id} className="convo-row-wrap" role="listitem">
         <button
           className="convo-row"
           aria-current={open === (group ? conversation.id : conversation.peerPubkey) || undefined}
@@ -206,7 +206,7 @@ export function ChatList() {
         <ConnectionBadge />
         <button
           className="btn btn-icon"
-          aria-label={t('chats.searchPlaceholder')}
+          aria-label={t('chats.filterLabel')}
           title={t('chats.searchPlaceholder')}
           onClick={() => navigate({ name: 'search' })}
         >
@@ -239,10 +239,10 @@ export function ChatList() {
       ) : null}
 
       {conversations.length > 2 ? (
-        <div className="segmented" style={{ margin: 'var(--space-2) var(--space-3)' }} role="radiogroup" aria-label="Filter conversations">
-          <button aria-checked={filter === 'all'} onClick={() => setFilter('all')}>{t('chats.filterAll')}</button>
-          <button aria-checked={filter === 'unread'} onClick={() => setFilter('unread')}>{t('chats.filterUnread')}</button>
-          <button aria-checked={filter === 'groups'} onClick={() => setFilter('groups')}>{t('chats.filterGroups')}</button>
+        <div className="segmented" style={{ margin: 'var(--space-2) var(--space-3)' }} role="tablist" aria-label={t('chats.filterLabel')}>
+          <button role="tab" aria-selected={filter === 'all'} onClick={() => setFilter('all')}>{t('chats.filterAll')}</button>
+          <button role="tab" aria-selected={filter === 'unread'} onClick={() => setFilter('unread')}>{t('chats.filterUnread')}</button>
+          <button role="tab" aria-selected={filter === 'groups'} onClick={() => setFilter('groups')}>{t('chats.filterGroups')}</button>
         </div>
       ) : null}
 
@@ -258,7 +258,7 @@ export function ChatList() {
         </div>
       ) : null}
 
-      <div className="screen-scroll">
+      <div className="screen-scroll" role="list" aria-label={t('chats.title')}>
         {!conversationsLoaded ? (
           <ChatListSkeleton />
         ) : conversations.length === 0 ? (
