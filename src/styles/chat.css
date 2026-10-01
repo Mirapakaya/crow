@@ -610,6 +610,12 @@ button.call-bubble-back:active {
   background: var(--surface-2);
 }
 
+.convo-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
 /* The conversation open beside the list, on a wide window. */
 .convo-row[aria-current='true'] {
   background: var(--accent-soft);

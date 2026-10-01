@@ -108,6 +108,7 @@ export const en = {
     filterAll: 'All',
     filterUnread: 'Unread',
     filterGroups: 'Groups',
+    filterLabel: 'Filter conversations'
     pin: 'Pin',
     unpin: 'Unpin',
     pinned: 'Pinned',

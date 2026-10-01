@@ -321,10 +321,12 @@ function TabBar({ section }: { section: Section | null }) {
   ]
 
   return (
-    <nav className="tabbar" aria-label={t('nav.chats')}>
+    <nav className="tabbar" role="tablist" aria-label={t('nav.chats')}>
       {tabs.map((tab) => (
         <button
           key={tab.route.name}
+          role="tab"
+          aria-selected={tab.route.name === section}
           aria-current={tab.route.name === section ? 'page' : undefined}
           onClick={() => navigate(tab.route)}
         >
