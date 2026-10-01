@@ -873,7 +873,7 @@ function dedupe(urls: string[]): string[] {
  * The relay is up and talking, but declined to serve this subscription.
  *
  * Overwhelmingly NIP-42 (`auth-required: ...`), which several large relays have
- * begun demanding for gift-wrap inbox reads. Textor is anonymous by design and
+ * begun demanding for gift-wrap inbox reads. Crow is anonymous by design and
  * does not authenticate to relays, so such a relay can never deliver mail — the
  * user needs to see that rather than a green tick.
  */

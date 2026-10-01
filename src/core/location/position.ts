@@ -5,7 +5,7 @@ import { MAX_ACCURACY_M, MAX_SPEED_MS, readFix, type GeoFix } from '../models/lo
  *
  * The browser decides how to find out — satellites, or nearby networks looked
  * up with its maker's location service — and asks the person before it tells
- * the app anything. Textor cannot change either, and the threat model says so.
+ * the app anything. Crow cannot change either, and the threat model says so.
  */
 
 export type PositionFailure = 'denied' | 'unavailable' | 'unsupported'

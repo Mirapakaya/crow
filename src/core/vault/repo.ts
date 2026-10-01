@@ -53,6 +53,7 @@ const BLOB_STORE_ID = 'blobstore'
  */
 const SWEEP_GRACE_MS = HOUR
 
+// Legacy AAD template; changing it would break existing sealed rows.
 const aad = (table: string, id: string): string => `textor/${table}/${id}`
 
 /**

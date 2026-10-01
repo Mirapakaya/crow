@@ -1,5 +1,5 @@
 /**
- * Textor's wire protocol: what goes *inside* a NIP-59 gift wrap.
+ * Crow's wire protocol: what goes *inside* a NIP-59 gift wrap.
  *
  * Three rumor kinds only:
  *
@@ -14,7 +14,7 @@
  *                every relay — which is the conversation graph NIP-17 exists to
  *                hide. Sealed, it costs one wrap and leaks nothing.
  *
- *   kind 20014 - a Textor control frame (receipts, typing, presence, WebRTC
+ *   kind 20014 - a Crow control frame (receipts, typing, presence, WebRTC
  *                signalling for the direct channel and for calls, profile
  *                push, poll votes, checklist changes, live locations
  *                moving on).
@@ -781,6 +781,7 @@ export function threadTags(rootId: string, replyTo: string): string[][] {
  * The descriptor carries the key that decrypts the payload, so it is only ever
  * read from inside an already-decrypted rumor.
  */
+/** Legacy tag value; changing it would break attachment discovery on relays. */
 export const ATTACHMENT_TAG = 'textor-attachment'
 
 /** Cap the tag: it travels in every copy of the message, on every relay. */
@@ -812,7 +813,7 @@ export function attachmentFromTags(tags: readonly string[][]): unknown | null {
  * Reaction payloads.
  *
  * NIP-25 puts arbitrary user-generated content in a reaction, including custom
- * emoji shortcodes that resolve to remote image URLs. Textor accepts neither:
+ * emoji shortcodes that resolve to remote image URLs. Crow accepts neither:
  * the content must be a short literal emoji (or NIP-25's `+`/`-`), because a
  * shortcode would either render as meaningless text or invite a remote fetch,
  * and the Content-Security-Policy forbids the fetch outright.

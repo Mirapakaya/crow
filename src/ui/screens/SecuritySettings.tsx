@@ -35,7 +35,7 @@ type Adding = 'biometric' | 'security-key' | 'pin' | 'pattern' | 'passphrase' | 
 type Flow = { kind: Adding | 'reveal' } | { kind: 'remove'; slot: KeyslotSummary }
 
 /**
- * Whether a change must first be confirmed by opening Textor again. A device
+ * Whether a change must first be confirmed by opening Crow again. A device
  * that opens instantly has nothing to confirm with, and does not pretend to;
  * one that only the recovery phrase opens is confirmed with the phrase.
  */
@@ -43,13 +43,13 @@ const canConfirm = (keyslots: KeyslotSummary[]): boolean =>
   keyslots.length > 0 && !keyslots.some((slot) => slot.type === 'device')
 
 /**
- * How this device opens Textor, and how long it stays open (ADR-054, ADR-058,
+ * How this device opens Crow, and how long it stays open (ADR-054, ADR-058,
  * ADR-059).
  *
  * Every way in is listed with what it protects against, and the level shown is
  * the weakest one's, because that is the level the vault has. Adding or
  * removing a way in, and showing the recovery phrase, first ask the person to
- * open Textor again — each would otherwise be one tap away for anyone holding
+ * open Crow again — each would otherwise be one tap away for anyone holding
  * the unlocked device. Opening instantly is offered only while nothing else
  * guards the device, and setting anything else up turns it off.
  */
@@ -518,7 +518,7 @@ function MethodFlow({
 type Way = 'biometric' | 'pin' | 'passphrase' | 'recovery'
 
 /**
- * Open Textor again, without locking it: biometrics or a security key, the PIN
+ * Open Crow again, without locking it: biometrics or a security key, the PIN
  * or pattern, the passphrase, or the recovery phrase, checked against the vault that is
  * already open. A wrong PIN here counts towards erasing it, as on the lock
  * screen.

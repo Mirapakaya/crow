@@ -27,7 +27,7 @@ import { spendPresence, type GateAuthenticator, type Presence } from '../crypto/
  *
  * A vault is as strong as its weakest slot, and the interface says so. The
  * biometric slot and the device slot keep their key in the same place: what
- * differs is what Textor asks before using it, not what a copy of the
+ * differs is what Crow asks before using it, not what a copy of the
  * browser's data needs. So the device slot never sits beside one that asks
  * for something (ADR-059): it would make that one pointless.
  */
@@ -170,7 +170,7 @@ export class WrongPinError extends WrongSecretError {
 }
 
 /**
- * Wrong tries before a PIN slot is erased, and the person must open Textor
+ * Wrong tries before a PIN slot is erased, and the person must open Crow
  * another way. A PIN's protection is this limit: its derivation stops nobody
  * who has a copy of the browser's data, and six digits fall to them in
  * minutes (ADR-058).
@@ -209,6 +209,7 @@ export const isValidPin = (style: PinStyle, code: string): boolean =>
  * first time it opens.
  */
 export const LEGACY_SLOT_ID = 'legacy'
+// Legacy AAD labels; changing them would break opening existing vaults.
 const LEGACY_AAD = 'textor/meta/dataKey'
 
 const INFO_RECOVERY = {
@@ -217,6 +218,7 @@ const INFO_RECOVERY = {
 }
 
 const aadOf = (slot: Pick<Keyslot, 'id' | 'type'>): string =>
+  // Legacy AAD template; changing it would break opening existing vaults.
   slot.id === LEGACY_SLOT_ID ? LEGACY_AAD : `textor/keyslot/v1|${slot.type}|${slot.id}`
 
 /**

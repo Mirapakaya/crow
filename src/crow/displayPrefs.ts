@@ -14,7 +14,9 @@ import { LOCALE_DIRECTION } from '../i18n'
  * information is ever written here, and the encrypted settings record remains
  * the authority once the vault is open.
  */
-const KEY = 'textor:display'
+const KEY = 'crow:display'
+/** Legacy key; read once more so existing users keep their language and theme. */
+const LEGACY_KEY = 'textor:display'
 
 export interface DisplayPrefs {
   locale: LocaleCode
@@ -27,7 +29,7 @@ const isTheme = (value: unknown): value is ThemePreference =>
 
 export function loadDisplayPrefs(): Partial<DisplayPrefs> {
   try {
-    const raw = globalThis.localStorage?.getItem(KEY)
+    const raw = globalThis.localStorage?.getItem(KEY) ?? globalThis.localStorage?.getItem(LEGACY_KEY)
     if (!raw) return {}
     const parsed: unknown = JSON.parse(raw)
     if (typeof parsed !== 'object' || parsed === null) return {}

@@ -92,6 +92,7 @@ function nonceFor(salt: Uint8Array, index: number): Uint8Array {
  * rather than a silently corrupt file.
  */
 const aadFor = (id: string, index: number, total: number): Uint8Array =>
+  // Legacy AAD prefix; changing it would break opening existing attachments.
   utf8ToBytes(`textor/blob/v${BLOB_CRYPTO_VERSION}|${id}|${index}|${total}`)
 
 export const blobId = (plaintext: Uint8Array): string => bytesToHex(sha256(plaintext))
@@ -111,6 +112,7 @@ export interface BlobRef {
   copy: string
 }
 
+// Legacy AAD label; changing it would break opening existing attachments.
 const COPY_LABEL = utf8ToBytes('textor/blob/copy|')
 
 /**

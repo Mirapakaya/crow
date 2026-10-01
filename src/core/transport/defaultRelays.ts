@@ -13,7 +13,7 @@
  *
  * Relay policy drifts, and defaults go stale. `nos.lol` and `nostr.mom` were
  * defaults until they began demanding NIP-42 AUTH for gift-wrap inbox reads;
- * Textor is anonymous and does not authenticate to relays, so they could no
+ * Crow is anonymous and does not authenticate to relays, so they could no
  * longer deliver mail. Re-run the probe before trusting this list, and note
  * that the app now marks a relay that refuses our subscription as degraded
  * rather than letting it look healthy.

@@ -4,7 +4,7 @@ import { looksSymmetric, summarizeCandidates, type CandidateSummary } from '../m
  * Why a call could not connect, worked out from the ICE candidates each side
  * gathered — so the screen can say something more useful than "failed".
  *
- * Textor runs no TURN server (ADR-008), so a call connects only when the two
+ * Crow runs no TURN server (ADR-008), so a call connects only when the two
  * devices can reach each other directly or through a TURN server the user has
  * added. When neither works, the candidates say which side's network was in
  * the way, and whether a relay would have got through:

@@ -34,6 +34,7 @@ export interface VaultKeys {
   readonly identityKey: Uint8Array
 }
 
+/** Legacy HKDF info strings; changing them would break existing vaults. */
 const INFO = {
   record: 'textor/vault/record/v1',
   index: 'textor/vault/index/v1',
