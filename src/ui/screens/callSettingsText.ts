@@ -89,7 +89,7 @@ const fa: Record<CallSettingsTextKey, string> = {
   iceUnsupported: 'این مرورگر نمی‌تواند تماس برقرار کند.',
 }
 
-export const CALL_SETTINGS_TEXT: Record<LocaleCode, Record<CallSettingsTextKey, string>> = { en, fa }
+export const CALL_SETTINGS_TEXT: Record<LocaleCode, Record<CallSettingsTextKey, string>> = { en, fa, ar: en, ur: en, hi: en, bn: en, te: en, ta: en, kn: en, ml: en, mr: en, gu: en, pa: en, zh: en, ja: en, ko: en, th: en, vi: en, id: en, ms: en, es: en, pt: en, fr: en, de: en, it: en, nl: en, pl: en, uk: en, ru: en, tr: en }
 
 export type CallSettingsTextFn = (key: CallSettingsTextKey, values?: Interpolations) => string
 

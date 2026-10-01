@@ -363,7 +363,11 @@ export const emptyHealth = (): RelayHealth => ({
 
 export type RetentionPolicy = 'forever' | '90d' | '30d' | '7d' | 'session'
 export type ThemePreference = 'system' | 'light' | 'dark'
-export type LocaleCode = 'en' | 'fa'
+export type LocaleCode =
+  | 'en' | 'fa' | 'ar' | 'ur'
+  | 'hi' | 'bn' | 'te' | 'ta' | 'kn' | 'ml' | 'mr' | 'gu' | 'pa'
+  | 'zh' | 'ja' | 'ko' | 'th' | 'vi' | 'id' | 'ms'
+  | 'es' | 'pt' | 'fr' | 'de' | 'it' | 'nl' | 'pl' | 'uk' | 'ru' | 'tr'
 
 export interface AppSettings {
   locale: LocaleCode

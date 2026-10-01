@@ -1,5 +1,5 @@
 import type { LocaleCode, ThemePreference } from '../core/models/types'
-import { LOCALE_DIRECTION } from '../i18n'
+import { LOCALE_DIRECTION, LOCALE_CODES } from '../i18n'
 
 /**
  * Language and theme, cached outside the vault.
@@ -23,7 +23,8 @@ export interface DisplayPrefs {
   theme: ThemePreference
 }
 
-const isLocale = (value: unknown): value is LocaleCode => value === 'en' || value === 'fa'
+const LOCALE_SET = new Set<string>(LOCALE_CODES)
+const isLocale = (value: unknown): value is LocaleCode => typeof value === 'string' && LOCALE_SET.has(value)
 const isTheme = (value: unknown): value is ThemePreference =>
   value === 'system' || value === 'light' || value === 'dark'
 

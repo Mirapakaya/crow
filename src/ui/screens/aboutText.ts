@@ -66,7 +66,7 @@ const fa: typeof en = {
     'یک نقص اسکریپت‌نویسی میان‌سایتی در این برنامه همه موارد بالا را بی‌اثر می‌کند. هیچ اسکریپت درون‌خطی، هیچ eval و هیچ کد شخص ثالثی وجود ندارد و سیاست امنیتی محتوا سخت‌گیرانه است.',
 }
 
-const ABOUT_TEXT: Record<LocaleCode, typeof en> = { en, fa }
+const ABOUT_TEXT: Record<LocaleCode, typeof en> = { en, fa, ar: en, ur: en, hi: en, bn: en, te: en, ta: en, kn: en, ml: en, mr: en, gu: en, pa: en, zh: en, ja: en, ko: en, th: en, vi: en, id: en, ms: en, es: en, pt: en, fr: en, de: en, it: en, nl: en, pl: en, uk: en, ru: en, tr: en }
 
 export type AboutTextKey = keyof typeof en
 

@@ -92,7 +92,7 @@ const fa: Record<SecureTextKey, string> = {
   deleteConfirm: 'تاریخچهٔ این گروه از این دستگاه حذف شود؟',
 }
 
-export const SECURE_TEXT: Record<LocaleCode, Record<SecureTextKey, string>> = { en, fa }
+export const SECURE_TEXT: Record<LocaleCode, Record<SecureTextKey, string>> = { en, fa, ar: en, ur: en, hi: en, bn: en, te: en, ta: en, kn: en, ml: en, mr: en, gu: en, pa: en, zh: en, ja: en, ko: en, th: en, vi: en, id: en, ms: en, es: en, pt: en, fr: en, de: en, it: en, nl: en, pl: en, uk: en, ru: en, tr: en }
 
 export type SecureTextFn = (key: SecureTextKey, values?: Interpolations) => string
 
