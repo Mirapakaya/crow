@@ -3,6 +3,7 @@ import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../crow/router'
 import { Avatar, EmptyState } from '../components/primitives'
+import { Badge } from '../components/ui/badge'
 import { PlusIcon, ShieldCheckIcon } from '../components/Icons'
 import { Skeleton } from '../components/Skeleton'
 import { displayName } from './ChatList'
@@ -83,7 +84,7 @@ export function ContactsList() {
               {contact.verification === 'verified' ? (
                 <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
               ) : null}
-              {contact.blocked ? <span className="badge badge-danger">{t('chat.block')}</span> : null}
+              {contact.blocked ? <Badge variant="danger">{t('chat.block')}</Badge> : null}
             </button>
           ))
         )}

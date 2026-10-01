@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { getRepo, useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { Banner, Field } from '../components/primitives'
+import { Badge } from '../components/ui/badge'
 import { PlusIcon, RefreshIcon, TrashIcon } from '../components/Icons'
 import { SettingsPage } from './SettingsPage'
 import { normalizeRelayUrl, relayLabel } from '../../core/transport/relayUrl'
@@ -71,14 +72,14 @@ export function RelaySettings() {
         {entries.map((entry) => {
           const status = statusByUrl.get(entry.url)
           const verdict = verdictFor(status)
-          const badgeClass =
+          const badgeVariant =
             verdict === 'healthy'
-              ? 'badge badge-success'
+              ? 'success'
               : verdict === 'degraded'
-                ? 'badge badge-warning'
+                ? 'warning'
                 : verdict === 'offline'
-                  ? 'badge badge-danger'
-                  : 'badge'
+                  ? 'danger'
+                  : 'default'
           const badgeLabel =
             verdict === 'healthy'
               ? t('settings.relayHealthy')
@@ -94,7 +95,7 @@ export function RelaySettings() {
                 <span className="grow truncate" style={{ fontWeight: 550 }}>
                   {relayLabel(entry.url)}
                 </span>
-                <span className={badgeClass}>{badgeLabel}</span>
+                <Badge variant={badgeVariant}>{badgeLabel}</Badge>
                 <button
                   className="btn btn-icon"
                   aria-label={t('settings.relayRemove')} title={t('settings.relayRemove')}

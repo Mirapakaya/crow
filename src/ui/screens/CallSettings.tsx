@@ -5,6 +5,7 @@ import { useCallSettingsText, type CallSettingsTextFn, type CallSettingsTextKey 
 import { Banner, Field, Toggle } from '../components/primitives'
 import { GlobeIcon, PlusIcon, RefreshIcon, TrashIcon } from '../components/Icons'
 import { SettingsPage } from './SettingsPage'
+import { Badge } from '../components/ui/badge'
 import { hasTurnServer } from '../../core/models/call'
 import { alreadyListed, parseIceServer, serverUrls } from '../../core/calls/iceServers'
 import { probeIce, type IceProbeResult, type IceVerdict } from '../../core/calls/iceProbe'
@@ -226,12 +227,12 @@ export function CallSettings() {
 }
 
 function ProbeRow({ label, ok, st }: { label: string; ok: boolean | null; st: CallSettingsTextFn }) {
-  const badge = ok === null ? 'badge' : ok ? 'badge badge-success' : 'badge badge-danger'
+  const variant = ok === null ? 'default' as const : ok ? 'success' as const : 'danger' as const
   const text = st(ok === null ? 'iceNotSet' : ok ? 'iceWorking' : 'iceNotReachable')
   return (
     <div className="row-between small">
       <span>{label}</span>
-      <span className={badge}>{text}</span>
+      <Badge variant={variant}>{text}</Badge>
     </div>
   )
 }
