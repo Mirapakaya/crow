@@ -3,7 +3,8 @@ import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../crow/router'
 import { Avatar, Banner, EmptyState, GroupAvatar } from '../components/primitives'
-import { ContactsIcon, PlusIcon, SearchIcon, ShieldCheckIcon } from '../components/Icons'
+import { ContactsIcon, MoreIcon, PinIcon, PlusIcon, SearchIcon, ShieldCheckIcon } from '../components/Icons'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu'
 import { formatListTimestamp } from '../format'
 import { shortNpub, toNpub } from '../../core/identity/keys'
 import type { Contact, Conversation } from '../../core/models/types'
@@ -63,6 +64,7 @@ export function ChatList() {
   const typingPeers = useApp((s) => s.typingPeers)
   const previews = useApp((s) => s.previews)
   const sharing = useApp((s) => s.liveShares.length > 0)
+  const togglePin = useApp((s) => s.togglePin)
   const [filter, setFilter] = useState<'all' | 'unread' | 'groups'>('all')
   const [query, setQuery] = useState('')
   // The conversation open beside this list, on a wide window.
@@ -94,6 +96,9 @@ export function ChatList() {
     }
   }, [conversations, contacts, query, locale, filter])
 
+  const pinned = accepted.filter((c) => c.pinned)
+  const unpinned = accepted.filter((c) => !c.pinned)
+
   const renderRow = (conversation: Conversation) => {
     const group = conversation.kind === 'group'
     const contact = group ? undefined : contacts.get(conversation.peerPubkey)
@@ -107,16 +112,16 @@ export function ChatList() {
         ? `${displayName(contacts.get(preview.authorPubkey), preview.authorPubkey)}: `
         : null
     return (
-      <button
-        key={conversation.id}
-        className="convo-row"
-        aria-current={open === (group ? conversation.id : conversation.peerPubkey) || undefined}
-        onClick={() =>
-          navigate(
-            group ? { name: 'group', id: conversation.id } : { name: 'chat', peer: conversation.peerPubkey },
-          )
-        }
-      >
+      <div key={conversation.id} className="convo-row-wrap">
+        <button
+          className="convo-row"
+          aria-current={open === (group ? conversation.id : conversation.peerPubkey) || undefined}
+          onClick={() =>
+            navigate(
+              group ? { name: 'group', id: conversation.id } : { name: 'chat', peer: conversation.peerPubkey },
+            )
+          }
+        >
         {group ? (
           <GroupAvatar seed={conversation.id} />
         ) : (
@@ -126,6 +131,12 @@ export function ChatList() {
           <span className="convo-top">
             <span className="convo-name" dir="auto">
               {name}
+              {conversation.pinned ? (
+                <PinIcon
+                  size={13}
+                  style={{ display: 'inline', marginInlineStart: 4, color: 'var(--text-faint)' }}
+                />
+              ) : null}
               {contact?.verification === 'verified' ? (
                 <ShieldCheckIcon
                   size={14}
@@ -171,6 +182,20 @@ export function ChatList() {
           </span>
         </span>
       </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="btn btn-icon convo-row-more" aria-label={t('chats.messageActions')} title={t('chats.messageActions')}>
+            <MoreIcon size={16} />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => togglePin(conversation.id)}>
+            <PinIcon size={16} />
+            {conversation.pinned ? t('chats.unpin') : t('chats.pin')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
     )
   }
 
@@ -248,6 +273,14 @@ export function ChatList() {
           />
         ) : (
           <>
+            {pinned.length > 0 ? (
+              <>
+                <div className="stack-sm" style={{ padding: 'var(--space-3) var(--space-4) var(--space-1)' }}>
+                  <span className="section-title">{t('chats.pinned')}</span>
+                </div>
+                {pinned.map(renderRow)}
+              </>
+            ) : null}
             {requests.length > 0 ? (
               <>
                 <div className="stack-sm" style={{ padding: 'var(--space-3) var(--space-4) var(--space-1)' }}>
@@ -257,7 +290,7 @@ export function ChatList() {
                 {requests.map(renderRow)}
               </>
             ) : null}
-            {accepted.map(renderRow)}
+            {unpinned.map(renderRow)}
           </>
         )}
       </div>

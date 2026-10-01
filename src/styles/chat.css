@@ -615,6 +615,32 @@ button.call-bubble-back:active {
   background: var(--accent-soft);
 }
 
+.convo-row-wrap {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.convo-row-wrap > .convo-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.convo-row-more {
+  opacity: 0;
+  position: absolute;
+  inset-inline-end: var(--space-1);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.convo-row-wrap:hover .convo-row-more,
+.convo-row-more:focus-visible,
+.convo-row-wrap:focus-within .convo-row-more {
+  opacity: 1;
+}
+
 .convo-main {
   flex: 1;
   min-width: 0;

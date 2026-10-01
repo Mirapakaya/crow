@@ -105,6 +105,12 @@ export const en = {
     noMessages: 'No messages yet',
     searchPlaceholder: 'Search conversations',
     liveLocation: '📡 Live location',
+    filterAll: 'All',
+    filterUnread: 'Unread',
+    filterGroups: 'Groups',
+    pin: 'Pin',
+    unpin: 'Unpin',
+    pinned: 'Pinned',
   },
 
   groups: {

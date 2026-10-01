@@ -264,6 +264,8 @@ interface AppState {
   acceptGroup: (id: string) => Promise<void>
   /** Remove a conversation and its history from this device. */
   deleteConversation: (id: string) => Promise<void>
+  /** Pin or unpin a conversation. */
+  togglePin: (id: string) => Promise<void>
   sendPoll: (poll: PollSpec) => Promise<boolean>
   sendChecklist: (checklist: ChecklistSpec) => Promise<boolean>
   vote: (pollId: string, choices: string[]) => Promise<void>
@@ -793,6 +795,13 @@ export const useApp = create<AppState>((set, get) => ({
     // keep encrypting to keys this device no longer holds.
     await messenger?.leaveGroup(id).catch(() => undefined)
     await repo.deleteConversation(id)
+    await get().refreshConversations()
+  },
+
+  async togglePin(id) {
+    const conversation = get().conversations.find((c) => c.id === id)
+    if (!conversation) return
+    await repo.updateConversation(id, { pinned: !conversation.pinned })
     await get().refreshConversations()
   },
 
