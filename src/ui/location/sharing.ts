@@ -1,4 +1,4 @@
-import { getMessenger, getRepo, useApp } from '../../app/store'
+import { getMessenger, getRepo, useApp } from '../../crow/store'
 import { LiveSharer, type LiveShare } from '../../core/location/sharer'
 import { browserPositions } from '../../core/location/position'
 import { LIVE_SHARES } from '../../core/models/location'

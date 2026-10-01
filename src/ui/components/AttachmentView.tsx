@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { useApp } from '../../app/store'
+import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { formatDuration } from '../format'
 import type { Attachment } from '../../core/models/attachment'

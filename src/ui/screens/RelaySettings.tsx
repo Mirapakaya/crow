@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { getRepo, useApp } from '../../app/store'
+import { getRepo, useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { Banner, Field } from '../components/primitives'
 import { PlusIcon, RefreshIcon, TrashIcon } from '../components/Icons'

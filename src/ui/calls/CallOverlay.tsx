@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { isCallLive, useApp } from '../../app/store'
-import { navigate } from '../../app/router'
+import { isCallLive, useApp } from '../../crow/store'
+import { navigate } from '../../crow/router'
 import { Avatar } from '../components/primitives'
 import { LockIcon, PhoneIcon, VideoIcon } from '../components/Icons'
 import { displayName } from '../screens/ChatList'

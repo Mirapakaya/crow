@@ -1,4 +1,4 @@
-import { useApp } from '../../app/store'
+import { useApp } from '../../crow/store'
 import { LOCALE_CODES, LOCALE_NAMES, LOCALE_SHORT_NAMES, useT } from '../../i18n'
 import type { LocaleCode, ThemePreference } from '../../core/models/types'
 import { SegmentedControl, type Segment } from './SegmentedControl'

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useI18n } from '../../i18n'
-import { goBack } from '../../app/router'
+import { goBack } from '../../crow/router'
 import { BackIcon } from '../components/Icons'
 
 /**
