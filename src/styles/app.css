@@ -1489,6 +1489,20 @@ time,
   border: var(--border-width) solid var(--accent-border);
   color: var(--accent-text);
   box-shadow: 0 0 0 5px var(--accent-soft);
+  animation: lock-in var(--duration-slow) var(--ease-out);
+}
+
+@keyframes lock-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lock-mark {
+    animation: none;
+  }
 }
 
 /* The lock screen is a returning user's most frequent view; its title sits a
