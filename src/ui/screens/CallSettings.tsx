@@ -22,7 +22,7 @@ const VERDICT: Record<IceVerdict, CallSettingsTextKey> = {
 /**
  * Calls: the servers a call may use, and whether it must be relayed.
  *
- * Textor runs no TURN server (ADR-008), so the one a user adds here is the
+ * Crow runs no TURN server (ADR-008), so the one a user adds here is the
  * only thing that gets a call through symmetric NAT or a strict firewall —
  * and the only thing that can keep their IP address from the person they
  * call. Both are said plainly, and the test shows which of them this network

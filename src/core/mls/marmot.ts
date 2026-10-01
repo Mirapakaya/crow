@@ -28,7 +28,7 @@ import { CIPHERSUITE_ID, SIGNATURE_SCHEME, SUITE } from './suite'
  * Marmot, as far as this app speaks it: the event shapes that carry MLS over
  * Nostr, and the application components that make an MLS group a Marmot one.
  *
- * Followed byte for byte where Textor implements the feature — the kind 30443
+ * Followed byte for byte where Crow implements the feature — the kind 30443
  * KeyPackage, kind 444 Welcome and kind 445 group message envelopes, the
  * account identity proof on every leaf, and the routing, profile and admin
  * components of group state. Where it does not, it says so in

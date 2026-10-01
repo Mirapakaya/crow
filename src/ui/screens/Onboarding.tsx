@@ -12,7 +12,7 @@ import { RestoreBackup } from './RestoreBackup'
 type Step = 'welcome' | 'restore' | 'restore-file' | 'name' | 'protect'
 
 /**
- * First run: an identity, a name, and how this device opens Textor.
+ * First run: an identity, a name, and how this device opens Crow.
  *
  * There is no passphrase step. The last question is asked in outcomes — the
  * device's biometrics, a PIN, a pattern, a passphrase, or opening instantly —

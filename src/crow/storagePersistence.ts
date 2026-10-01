@@ -9,7 +9,7 @@ const log = createLogger('storage')
  * pressure, and Safari's Intelligent Tracking Prevention deletes all script-
  * writable storage after seven days without user interaction with the site.
  *
- * For an ordinary web app that means a lost cache. For Textor it means the
+ * For an ordinary web app that means a lost cache. For Crow it means the
  * user's identity, contacts, and entire message history are gone — with no
  * server-side copy to restore from, because there is no server. Requesting
  * persistence is therefore not an optimisation; it is the difference between

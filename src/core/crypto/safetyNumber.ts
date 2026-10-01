@@ -28,7 +28,8 @@ const EMOJI = [
 function digest(pubkeyA: string, pubkeyB: string): Uint8Array {
   const [first, second] = [pubkeyA, pubkeyB].sort() as [string, string]
   // Domain separation stops this digest from ever colliding with another
-  // protocol hash computed over the same two keys.
+  // protocol hash computed over the same two keys. The prefix is legacy and
+  // must stay so existing safety numbers remain stable.
   return sha256(concatBytes(utf8ToBytes('textor/safety-number/v1'), hexToBytes(first), hexToBytes(second)))
 }
 

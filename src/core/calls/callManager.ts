@@ -28,7 +28,7 @@ export const RING_TIMEOUT_MS = 45_000
 /** An incoming call stops ringing a little after the caller would have given up. */
 export const INCOMING_TIMEOUT_MS = 50_000
 /**
- * With no push notifications a call rings only where Textor is open (ADR-007),
+ * With no push notifications a call rings only where Crow is open (ADR-007),
  * so silence from the other device is common and says something. After this
  * long without it confirming that it is ringing, the screen says so.
  */

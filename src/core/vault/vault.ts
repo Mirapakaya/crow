@@ -13,7 +13,7 @@ import {
   wipeVaultKeys,
   type VaultKeys,
 } from '../crypto/vaultCrypto'
-import { getDb, META_KEYS, type TextorDatabase } from './db'
+import { getDb, META_KEYS, type CrowDatabase } from './db'
 import {
   isGuarded,
   isRetiredSlot,
@@ -110,7 +110,7 @@ const exclusive = (slots: Keyslot[]): Keyslot[] =>
  */
 export class Vault {
   readonly events = new Emitter<VaultEvents>()
-  readonly db: TextorDatabase
+  readonly db: CrowDatabase
 
   #keys: VaultKeys | null = null
   #status: VaultStatus = 'locked'
@@ -118,7 +118,7 @@ export class Vault {
   #autoLockMs = 15 * MINUTE
   #writeLock = new Mutex()
 
-  constructor(db: TextorDatabase = getDb()) {
+  constructor(db: CrowDatabase = getDb()) {
     this.db = db
   }
 

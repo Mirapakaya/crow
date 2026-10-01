@@ -6,7 +6,7 @@ import type { LiveFrame } from './protocol'
  *
  * A location is an ordinary NIP-17 kind 14 message. Its coordinates ride in
  * tags inside the gift wrap, and its content is a `geo:` URI (RFC 5870), so a
- * client that has never heard of Textor's tags still shows something a map
+ * client that has never heard of Crow's tags still shows something a map
  * application opens — the contract polls and attachments keep.
  *
  *   ["location", "<lat>", "<lon>", "<accuracy m>"?]   decimal degrees, WGS 84

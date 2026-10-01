@@ -178,7 +178,7 @@ export interface UpdateRow extends EncryptedRow {
  */
 export type MlsRow = EncryptedRow
 
-export class TextorDatabase extends Dexie {
+export class CrowDatabase extends Dexie {
   meta!: EntityTable<MetaRow, 'k'>
   identity!: EntityTable<EncryptedRow, 'id'>
   contacts!: EntityTable<ContactRow, 'id'>
@@ -197,6 +197,7 @@ export class TextorDatabase extends Dexie {
   mlsKeys!: EntityTable<MlsRow, 'id'>
 
   constructor(name = 'textor') {
+    // Legacy IndexedDB name; changing it would orphan existing vaults.
     super(name)
     this.version(1).stores({
       meta: 'k',
@@ -253,10 +254,10 @@ export const META_KEYS = {
   keyEpoch: 'keyEpoch',
 } as const
 
-let instance: TextorDatabase | null = null
+let instance: CrowDatabase | null = null
 
-export function getDb(): TextorDatabase {
-  if (!instance) instance = new TextorDatabase()
+export function getDb(): CrowDatabase {
+  if (!instance) instance = new CrowDatabase()
   return instance
 }
 
@@ -267,6 +268,6 @@ export async function resetDb(): Promise<void> {
   instance = null
 }
 
-export function setDbForTesting(db: TextorDatabase | null): void {
+export function setDbForTesting(db: CrowDatabase | null): void {
   instance = db
 }

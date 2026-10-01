@@ -124,7 +124,7 @@ function StrengthMeter({ score, label, caption }: { score: 0 | 1 | 2 | 3; label:
   )
 }
 
-/** Whether biometrics can guard Textor here. Resolves once, after mount. */
+/** Whether biometrics can guard Crow here. Resolves once, after mount. */
 export function useBiometricSupport(): BiometricSupport | null {
   const [support, setSupport] = useState<BiometricSupport | null>(null)
   useEffect(() => {
@@ -166,7 +166,7 @@ export function useBiometricEnrolment(): (
   }
 }
 
-/** Why this device's own authenticator cannot guard Textor here, before anyone is asked — or null if it can. */
+/** Why this device's own authenticator cannot guard Crow here, before anyone is asked — or null if it can. */
 export function biometricBlocked(
   support: BiometricSupport | null,
   text: AccessTextFn,
@@ -313,7 +313,7 @@ export function PatternSetup({
 type Choice = 'biometric' | 'security-key' | 'pin' | 'pattern' | 'passphrase' | 'instant'
 
 /**
- * "How should this device open Textor?", asked in outcomes rather than
+ * "How should this device open Crow?", asked in outcomes rather than
  * mechanisms (ADR-054, ADR-058, ADR-059): the device's biometrics, a PIN, a
  * pattern, a passphrase, or opening instantly — and, where the device has no
  * authenticator of its own to use, a security key. Each says plainly what it

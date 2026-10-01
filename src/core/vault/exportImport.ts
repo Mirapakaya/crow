@@ -21,9 +21,11 @@ import type { VaultRepo } from './repo'
 
 const log = createLogger('export')
 
+/** Legacy format identifier; kept for compatibility with existing backups. */
 export const EXPORT_FORMAT = 'textor-vault-export'
 export const EXPORT_VERSION = 2
 
+/** Legacy AAD labels; changing them would invalidate older backups. */
 const AAD_EXPORT_V1 = 'textor/export/v1'
 const AAD_EXPORT_V2 = 'textor/export/v2'
 const slotAad = (type: ExportSlot['type']): string => `${AAD_EXPORT_V2}|${type}`
@@ -196,11 +198,11 @@ export function parseEnvelope(text: string): ExportEnvelope {
   try {
     value = JSON.parse(text)
   } catch {
-    throw new ImportError('this file is not a Textor backup')
+    throw new ImportError('this file is not a Crow backup')
   }
-  if (typeof value !== 'object' || value === null) throw new ImportError('this file is not a Textor backup')
+  if (typeof value !== 'object' || value === null) throw new ImportError('this file is not a Crow backup')
   const envelope = value as Partial<ExportEnvelope>
-  if (envelope.format !== EXPORT_FORMAT) throw new ImportError('this file is not a Textor backup')
+  if (envelope.format !== EXPORT_FORMAT) throw new ImportError('this file is not a Crow backup')
   if (envelope.version !== 1 && envelope.version !== 2) {
     throw new ImportError(`backup version ${String(envelope.version)} is not supported by this build`)
   }
@@ -419,4 +421,4 @@ export async function importVault(
 
 /** Suggested filename; the date makes successive backups sort naturally. */
 export const exportFilename = (date = new Date()): string =>
-  `textor-backup-${date.toISOString().slice(0, 10)}.textor.json`
+  `crow-backup-${date.toISOString().slice(0, 10)}.crow.json`

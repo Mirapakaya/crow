@@ -1,5 +1,5 @@
 /**
- * Setting up and managing how this device opens Textor, as one lazy chunk:
+ * Setting up and managing how this device opens Crow, as one lazy chunk:
  * onboarding, restoring a backup, and Settings → Security (ADR-054).
  *
  * One chunk because they share the protection chooser, the passphrase, PIN and

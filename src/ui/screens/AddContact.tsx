@@ -22,7 +22,7 @@ type Mode = 'share' | 'scan' | 'paste'
  *
  * Three routes to the same place: show a QR in person, send a link over a
  * channel you already trust, or paste a key. The QR encodes the full invite
- * link so a generic camera app opens Textor directly.
+ * link so a generic camera app opens Crow directly.
  */
 export function AddContact() {
   const t = useT()

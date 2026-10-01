@@ -6,11 +6,11 @@ import { b64urlToBytes, bytesToB64url, randomBytes } from '../util/bytes'
  * front of a key kept on this device (ADR-058, ADR-059).
  *
  * WebAuthn is used for one thing: user verification. A credential is made on
- * the authenticator, and each time Textor opens it must answer a fresh
+ * the authenticator, and each time Crow opens it must answer a fresh
  * challenge with the person verified. No key comes out of it — no PRF, nothing
  * that depends on which authenticator answers or where it keeps its passkeys —
  * so wherever the platform keeps the credential, syncing it included, nothing
- * of Textor's goes with it. The vault key is sealed under a non-extractable
+ * of Crow's goes with it. The vault key is sealed under a non-extractable
  * WebCrypto key kept beside the vault (`keyslots.ts`), and the vault opens that
  * slot only with a `Presence` made here.
  *

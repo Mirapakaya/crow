@@ -725,7 +725,7 @@ export class RelaySocket {
         }
         return
       default:
-        // AUTH challenges included: Textor is anonymous and never authenticates.
+        // AUTH challenges included: Crow is anonymous and never authenticates.
         return
     }
   }

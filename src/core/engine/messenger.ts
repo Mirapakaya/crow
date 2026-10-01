@@ -1056,7 +1056,7 @@ export class Messenger {
         break
 
       case 'presence':
-        // v1 never emits these, but other clients (or a later Textor) may.
+        // v1 never emits these, but other clients (or a later Crow) may.
         // Recording last-seen is the useful, harmless interpretation.
         if (frame.online) await this.#repo.upsertContact(peerPubkey, { lastSeenAt: Date.now() })
         break

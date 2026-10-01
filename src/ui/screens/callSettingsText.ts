@@ -9,7 +9,7 @@ import type { LocaleCode } from '../../core/models/types'
  */
 const en = {
   callsBody:
-    'A call connects your device straight to the other person’s, encrypted end to end. Textor runs no servers of its own: the servers below are the only ones a call touches, and without a TURN server each of you can see the other’s IP address.',
+    'A call connects your device straight to the other person’s, encrypted end to end. Crow runs no servers of its own: the servers below are the only ones a call touches, and without a TURN server each of you can see the other’s IP address.',
   relayCalls: 'Always relay calls',
   relayCallsBody:
     'Send every call through your TURN server, so the other person sees the server’s address instead of yours. Adds a little delay.',
@@ -51,7 +51,7 @@ export type CallSettingsTextKey = keyof typeof en
 
 const fa: Record<CallSettingsTextKey, string> = {
   callsBody:
-    'تماس، دستگاه شما را مستقیماً و با رمزنگاری سرتاسری به دستگاه طرف مقابل وصل می‌کند. تکستور هیچ سروری از خود ندارد: تنها سرورهایی که یک تماس با آن‌ها سروکار دارد همین‌هایی است که در زیر آمده، و بدون سرور TURN هر یک از شما نشانی IP دیگری را می‌بیند.',
+    'تماس، دستگاه شما را مستقیماً و با رمزنگاری سرتاسری به دستگاه طرف مقابل وصل می‌کند. کرو هیچ سروری از خود ندارد: تنها سرورهایی که یک تماس با آن‌ها سروکار دارد همین‌هایی است که در زیر آمده، و بدون سرور TURN هر یک از شما نشانی IP دیگری را می‌بیند.',
   relayCalls: 'همیشه تماس‌ها را رله کن',
   relayCallsBody:
     'همهٔ تماس‌ها از سرور TURN شما عبور می‌کند تا طرف مقابل به جای نشانی شما نشانی سرور را ببیند. کمی تأخیر اضافه می‌کند.',
