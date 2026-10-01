@@ -105,7 +105,9 @@ export const hi: Dictionary = {
     you: 'आप: ',
     noMessages: 'अभी कोई संदेश नहीं',
     searchPlaceholder: 'वार्तालाप खोजें',
-    liveLocation: '📡 लाइव स्थान', filterAll: 'सभी', filterUnread: 'अपठित', filterGroups: 'समूह', pin: 'पिन', unpin: 'अनपिन', pinned: 'पिन किए गए',
+    liveLocation: '📡 लाइव स्थान', filterAll: 'सभी', filterUnread: 'अपठित', filterGroups: 'समूह', 
+    filterLabel: 'Filter conversations',
+    pin: 'पिन', unpin: 'अनपिन', pinned: 'पिन किए गए',
   },
 
   groups: {
@@ -439,6 +441,14 @@ export const hi: Dictionary = {
       'यह ब्राउज़र लोकल स्टोरेज ब्लॉक कर रहा है, जो Crow को आपका वॉल्ट रखने के लिए चाहिए। गुप्त ब्राउज़िंग कभी-कभी ऐसा करती है।',
     unsupported: 'इस ब्राउज़र में Crow के लिए आवश्यक सुविधाएँ नहीं हैं',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: { available: 'एक नया संस्करण तैयार है', reload: 'रीलोड करें' },
 }

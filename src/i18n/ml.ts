@@ -105,7 +105,9 @@ export const ml: Dictionary = {
     you: 'നിങ്ങൾ: ',
     noMessages: 'സന്ദേശങ്ങൾ ഇതുവരെ ഇല്ല',
     searchPlaceholder: 'സംഭാഷണങ്ങൾ തിരയുക',
-    liveLocation: '📡 തത്സമയ ലൊക്കേഷൻ', filterAll: 'എല്ലാം', filterUnread: 'വായിക്കാത്തത്', filterGroups: 'ഗ്രൂപ്പുകൾ', pin: 'പിൻ', unpin: 'അൺപിൻ', pinned: 'പിൻ ചെയ്തത്',
+    liveLocation: '📡 തത്സമയ ലൊക്കേഷൻ', filterAll: 'എല്ലാം', filterUnread: 'വായിക്കാത്തത്', filterGroups: 'ഗ്രൂപ്പുകൾ', 
+    filterLabel: 'Filter conversations',
+    pin: 'പിൻ', unpin: 'അൺപിൻ', pinned: 'പിൻ ചെയ്തത്',
   },
 
   groups: {
@@ -440,6 +442,14 @@ export const ml: Dictionary = {
       'ഈ ബ്രൗസർ ലോക്കൽ സ്റ്റോറേജ് തടയുന്നു, Crow-ന് നിങ്ങളുടെ വാൾട്ട് സൂക്ഷിക്കാൻ ഇത് ആവശ്യമാണ്. പ്രൈവറ്റ് ബ്രൗസിംഗ് ചിലപ്പോൾ ഇത് കാരണമാകാം.',
     unsupported: 'ഈ ബ്രൗസറിൽ Crow-ന് ആവശ്യമായ സവിശേഷതകൾ ഇല്ല',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: { available: 'പുതിയ പതിപ്പ് തയ്യാർ', reload: 'റീലോഡ്' },
 }

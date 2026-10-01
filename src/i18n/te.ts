@@ -105,7 +105,9 @@ export const te: Dictionary = {
     you: 'మీరు: ',
     noMessages: 'ఇంకా సందేశాలు లేవు',
     searchPlaceholder: 'సంభాషణలను వెతకండి',
-    liveLocation: '📡 ప్రత్యక్ష స్థానం', filterAll: 'అన్నీ', filterUnread: 'చదవని', filterGroups: 'సమూహాలు', pin: 'పిన్', unpin: 'అన్‌పిన్', pinned: 'పిన్ చేసినవి',
+    liveLocation: '📡 ప్రత్యక్ష స్థానం', filterAll: 'అన్నీ', filterUnread: 'చదవని', filterGroups: 'సమూహాలు', 
+    filterLabel: 'Filter conversations',
+    pin: 'పిన్', unpin: 'అన్‌పిన్', pinned: 'పిన్ చేసినవి',
   },
 
   groups: {
@@ -440,6 +442,14 @@ export const te: Dictionary = {
       'ఈ బ్రౌజర్ లోకల్ స్టోరేజ్‌ను బ్లాక్ చేస్తోంది, దేనిని Crow మీ వాల్ట్‌ను ఉంచడానికి అవసరం. ప్రైవేట్ బ్రౌజింగ్ కొన్నిసార్లు దీనికి కారణమవుతుంది.',
     unsupported: 'ఈ బ్రౌజర్‌లో Crowకు అవసరమైన ఫీచర్లు లేవు',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: {
     available: 'కొత్త వెర్షన్ సిద్ధంగా ఉంది',

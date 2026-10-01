@@ -105,7 +105,9 @@ export const kn: Dictionary = {
     you: 'ನೀವು: ',
     noMessages: 'ಇನ್ನೂ ಸಂದೇಶಗಳಿಲ್ಲ',
     searchPlaceholder: 'ಸಂಭಾಷಣೆಗಳನ್ನು ಹುಡುಕು',
-    liveLocation: '📡 ಲೈವ್ ಸ್ಥಾನ', filterAll: 'ಎಲ್ಲಾ', filterUnread: 'ಓದದ', filterGroups: 'ಗುಂಪುಗಳು', pin: 'ಪಿನ್', unpin: 'ಅನ್‌ಪಿನ್', pinned: 'ಪಿನ್ ಮಾಡಲಾದ',
+    liveLocation: '📡 ಲೈವ್ ಸ್ಥಾನ', filterAll: 'ಎಲ್ಲಾ', filterUnread: 'ಓದದ', filterGroups: 'ಗುಂಪುಗಳು', 
+    filterLabel: 'Filter conversations',
+    pin: 'ಪಿನ್', unpin: 'ಅನ್‌ಪಿನ್', pinned: 'ಪಿನ್ ಮಾಡಲಾದ',
   },
 
   groups: {
@@ -440,6 +442,14 @@ export const kn: Dictionary = {
       'ಈ ಬ್ರೌಸರ್ ಲೋಕಲ್ ಸ್ಟೋರೇಜ್ ಅನ್ನು ನಿರ್ಬಂಧಿಸುತ್ತಿದೆ, ಅದು Crow ಗೆ ನಿಮ್ಮ ವಾಲ್ಟ್ ಅನ್ನು ಇರಿಸಲು ಬೇಕು. ಖಾಸಗಿ ಬ್ರೌಸಿಂಗ್ ಕೆಲವೊಮ್ಮೆ ಇದಕ್ಕೆ ಕಾರಣವಾಗಬಹುದು.',
     unsupported: 'ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ Crow ಗೆ ಬೇಕಾದ ವೈಶಿಷ್ಟ್ಯಗಳು ಇಲ್ಲ',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: {
     available: 'ಹೊಸ ವೆರ್ಷನ್ ಸಿದ್ಧವಾಗಿದೆ',

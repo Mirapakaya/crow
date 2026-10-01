@@ -105,7 +105,9 @@ export const ru: Dictionary = {
     you: 'Вы: ',
     noMessages: 'Пока нет сообщений',
     searchPlaceholder: 'Поиск разговоров',
-    liveLocation: '📡 Трансляция местоположения', filterAll: 'Все', filterUnread: 'Непрочитанные', filterGroups: 'Группы', pin: 'Закрепить', unpin: 'Открепить', pinned: 'Закреплённые',
+    liveLocation: '📡 Трансляция местоположения', filterAll: 'Все', filterUnread: 'Непрочитанные', filterGroups: 'Группы', 
+    filterLabel: 'Filter conversations',
+    pin: 'Закрепить', unpin: 'Открепить', pinned: 'Закреплённые',
   },
 
   groups: {
@@ -439,6 +441,14 @@ export const ru: Dictionary = {
       'Этот браузер блокирует локальное хранилище, которое Crow использует для хранения хранилища. Иногда это происходит в режиме приватного просмотра.',
     unsupported: 'В этом браузере отсутствуют функции, необходимые для работы Crow',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: { available: 'Доступна новая версия', reload: 'Обновить' },
 }

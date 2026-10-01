@@ -41,7 +41,9 @@ export const ja: Dictionary = {
   chats: {
     title: 'チャット', empty: '会話がありません', emptyBody: '連絡先を追加して最初の暗号化会話を始めましょう。',
     addContact: '連絡先を追加', requests: 'メッセージリクエスト', requestsBody: '連絡先以外からのメッセージ。',
-    draft: '下書き', you: 'あなた：', noMessages: 'メッセージはまだありません', searchPlaceholder: '会話を検索', liveLocation: '📡 現在位置', filterAll: 'すべて', filterUnread: '未読', filterGroups: 'グループ', pin: 'ピン留め', unpin: 'ピン留め解除', pinned: 'ピン留め',
+    draft: '下書き', you: 'あなた：', noMessages: 'メッセージはまだありません', searchPlaceholder: '会話を検索', liveLocation: '📡 現在位置', filterAll: 'すべて', filterUnread: '未読', filterGroups: 'グループ', 
+    filterLabel: 'Filter conversations',
+    pin: 'ピン留め', unpin: 'ピン留め解除', pinned: 'ピン留め',
   },
   groups: {
     newGroup: '新しいグループ', name: 'グループ名', namePlaceholder: '任意 — メンバーに表示されます',
@@ -162,5 +164,12 @@ export const ja: Dictionary = {
     deviceBody: '鍵、連絡先、メッセージはブラウザに暗号化されて保存され、設定→セキュリティで選んだ方法でのみ開けます。インデックス鍵はブラインドされているため、データベース構造から誰と話しているかは分かりません。',
   },
   errors: { generic: '問題が発生しました', storageBlocked: 'このブラウザはローカルストレージをブロックしています。Crow は保管庫の保存にそれを必要とします。プライベートブラウジングが原因のことがあります。', unsupported: 'このブラウザは Crow に必要な機能を備えていません' },
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
   update: { available: '新しいバージョンが利用可能です', reload: '再読み込み' },
 }
