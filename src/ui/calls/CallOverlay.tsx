@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { isCallLive, useApp } from '../../crow/store'
 import { navigate } from '../../crow/router'
 import { Avatar } from '../components/primitives'
+import { Button } from '../components/ui/button'
 import { LockIcon, PhoneIcon, VideoIcon } from '../components/Icons'
 import { displayName } from '../screens/ChatList'
 import { formatCallDuration } from '../format'
@@ -77,14 +78,14 @@ function CallLayer({ call }: { call: CallView }) {
           onMinimize={live ? () => setMinimized(true) : undefined}
         />
       ) : (
-        <button className="call-bar" onClick={() => setMinimized(false)}>
+        <Button className="call-bar" onClick={() => setMinimized(false)}>
           <span className="call-bar-dot" aria-hidden="true" />
           <bdi className="call-bar-name">{name}</bdi>
           <span className="call-bar-status">
             <CallStatus call={call} name={name} ct={ct} />
           </span>
           <span className="call-bar-hint">{ct('expand')}</span>
-        </button>
+        </Button>
       )}
     </div>
   )
@@ -164,9 +165,9 @@ function IncomingCall({
           />
         </div>
         {video ? (
-          <button className="btn btn-ghost small" onClick={() => control({ type: 'accept', media: 'audio' })}>
+          <Button variant="ghost" size="sm" onClick={() => control({ type: 'accept', media: 'audio' })}>
             {ct('acceptVoice')}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>
@@ -235,14 +236,14 @@ function CallScreen({
 
       <div className="call-top">
         {onMinimize ? (
-          <button
+          <Button
             className="call-icon-button"
             aria-label={ct('minimize')}
             title={ct('minimize')}
             onClick={onMinimize}
           >
             <MinimizeIcon size={18} />
-          </button>
+          </Button>
         ) : null}
         <div className="call-heading">
           <bdi className="call-name">{name}</bdi>
@@ -387,23 +388,23 @@ function CallEnding({
       <p className="call-ending-body">{body}</p>
       <div className="call-ending-actions">
         {turn ? (
-          <button
-            className="btn btn-primary"
+          <Button
+            
             onClick={() => {
               control({ type: 'dismiss' })
               navigate({ name: 'settings-calls' })
             }}
           >
             {ct(turn)}
-          </button>
+          </Button>
         ) : null}
-        <button
+        <Button
           ref={primary}
-          className="btn btn-outline call-ending-close"
+          variant="outline" className="call-ending-close"
           onClick={() => control({ type: 'dismiss' })}
         >
           {ct('close')}
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -468,7 +469,7 @@ function CallButton({
 }) {
   const className = `call-button${tone ? ` call-button-${tone}` : ''}`
   const button = (
-    <button
+    <Button
       ref={ref}
       className={className}
       aria-label={label}
@@ -477,7 +478,7 @@ function CallButton({
       onClick={onClick}
     >
       {icon}
-    </button>
+    </Button>
   )
   if (!showLabel) return button
   return (

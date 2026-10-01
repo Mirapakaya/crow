@@ -56,7 +56,7 @@ export function LiveBanner({ address }: { address?: string }) {
       )}
       <button
         type="button"
-        className="btn btn-ghost small danger-text"
+        variant="ghost" size="sm" className="danger-text"
         onClick={() => {
           for (const share of here) void stopSharing(share.id)
         }}

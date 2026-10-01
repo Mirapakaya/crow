@@ -11,6 +11,7 @@ import { Popover } from './Popover'
 import { LazyPicker } from './LazyPicker'
 import { QUICK_REACTIONS } from './quickReactions'
 import { usePress } from './hold'
+import { Button } from '../components/ui/button'
 
 /**
  * Delivery state, rendered the way Telegram's readers already read it
@@ -203,7 +204,7 @@ export const MessageBubble = memo(function MessageBubble({
   const quick = (
     <div className="quick-reactions">
       {QUICK_REACTIONS.map((emoji) => (
-        <button
+        <Button
           key={emoji}
           type="button"
           role="menuitem"
@@ -211,7 +212,7 @@ export const MessageBubble = memo(function MessageBubble({
           onClick={() => react(emoji)}
         >
           <span>{emoji}</span>
-        </button>
+        </Button>
       ))}
     </div>
   )
@@ -294,7 +295,7 @@ export const MessageBubble = memo(function MessageBubble({
         {grouped.length > 0 ? (
           <div className="reaction-bar" role="group" aria-label={t('emoji.reactions')}>
             {grouped.map((entry) => (
-              <button
+              <Button
                 key={entry.emoji}
                 type="button"
                 className={entry.mine ? 'reaction reaction-mine' : 'reaction'}
@@ -309,13 +310,13 @@ export const MessageBubble = memo(function MessageBubble({
                     here. Hiding it left the button nameless. */}
                 <span>{entry.emoji}</span>
                 {entry.count > 1 ? <span className="reaction-count">{entry.count}</span> : null}
-              </button>
+              </Button>
             ))}
           </div>
         ) : null}
 
         <div className="bubble-actions">
-          <button
+          <Button
             type="button"
             className="bubble-action"
             aria-haspopup="menu"
@@ -327,8 +328,8 @@ export const MessageBubble = memo(function MessageBubble({
             <span aria-hidden="true" className="bubble-action-emoji">
               ☺
             </span>
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             className="bubble-action"
             aria-label={t('chat.reply')}
@@ -336,8 +337,8 @@ export const MessageBubble = memo(function MessageBubble({
             onClick={() => onReply(message)}
           >
             <ReplyIcon size={13} />
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             className="bubble-action"
             aria-haspopup="menu"
@@ -347,13 +348,13 @@ export const MessageBubble = memo(function MessageBubble({
             onClick={(event) => setMenuAt(menuAt ? null : event.currentTarget)}
           >
             <MoreIcon size={13} />
-          </button>
+          </Button>
         </div>
 
         {reactAt ? (
           <Popover anchor={reactAt} onClose={() => setReactAt(null)} label={t('emoji.react')}>
             {quick}
-            <button
+            <Button
               type="button"
               role="menuitem"
               onClick={() => {
@@ -362,7 +363,7 @@ export const MessageBubble = memo(function MessageBubble({
               }}
             >
               {t('emoji.more')}
-            </button>
+            </Button>
           </Popover>
         ) : null}
 
@@ -401,9 +402,9 @@ export const MessageBubble = memo(function MessageBubble({
       {message.status === 'failed' ? (
         <div className="bubble-failed">
           <span className="danger-text small">{t('chat.failed')}</span>
-          <button type="button" className="btn btn-ghost small" onClick={() => onRetry(message)}>
+          <Button type="button" variant="ghost" size="sm" onClick={() => onRetry(message)}>
             {t('chat.retrySend')}
-          </button>
+          </Button>
         </div>
       ) : null}
     </EntryRow>

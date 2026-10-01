@@ -4,6 +4,7 @@ import { frameLoop, frontalCamera, QRCanvas } from 'qr/dom.js'
 import { useT } from '../../i18n'
 import { Banner } from './primitives'
 import { createLogger } from '../../core/util/log'
+import { Button } from '../components/ui/button'
 
 const log = createLogger('qr')
 
@@ -124,9 +125,9 @@ export function QrScanner({
       {state === 'denied' ? <Banner tone="warning">{t('contacts.cameraDenied')}</Banner> : null}
       {state === 'unavailable' ? <Banner tone="warning">{t('contacts.cameraUnavailable')}</Banner> : null}
       {state === 'starting' ? <p className="muted center small">{t('common.loading')}…</p> : null}
-      <button type="button" className="btn btn-outline btn-block" onClick={onCancel}>
+      <Button type="button" variant="outline" block onClick={onCancel}>
         {t('common.cancel')}
-      </button>
+      </Button>
     </div>
   )
 }

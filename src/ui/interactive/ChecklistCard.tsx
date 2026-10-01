@@ -3,6 +3,7 @@ import { foldChecklist, type ChecklistSpec, type InteractiveUpdate } from '../..
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS } from '../../core/models/protocol'
 import { PlusIcon } from '../components/Icons'
 import { useInteractiveText } from './interactiveText'
+import { Button } from '../components/ui/button'
 
 export interface ChecklistCardProps {
   checklist: ChecklistSpec
@@ -84,14 +85,14 @@ export function ChecklistCard({
             aria-label={text('addItem')}
             onChange={(event) => setDraft(event.target.value)}
           />
-          <button
+          <Button
             type="submit"
-            className="btn btn-icon"
+            size="icon" variant="ghost"
             aria-label={text('addItem')} title={text('addItem')}
             disabled={!draft.trim()}
           >
             <PlusIcon size={16} />
-          </button>
+          </Button>
         </form>
       ) : null}
     </div>

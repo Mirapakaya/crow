@@ -339,7 +339,7 @@ function FileAttachment({ attachment }: { attachment: Attachment }) {
         <span className="faint">{formatBytes(attachment.size, locale)}</span>
       </span>
       {url ? (
-        <a className="btn btn-outline small" href={url} download={name}>
+        <a variant="outline" size="sm" href={url} download={name}>
           {t('attachment.save')}
         </a>
       ) : (

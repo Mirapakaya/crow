@@ -6,6 +6,7 @@ import { MAX_QUESTION_CHARS } from '../../core/models/interactive'
 import { makeChecklist, makePoll } from '../../core/models/interactiveForms'
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS, MAX_POLL_OPTIONS } from '../../core/models/protocol'
 import { useInteractiveText } from './interactiveText'
+import { Button } from '../components/ui/button'
 
 /**
  * Write a poll or a checklist and send it to the open conversation.
@@ -49,22 +50,22 @@ function Lines({
             onChange={(event) => onChange(values.map((v, i) => (i === index ? event.target.value : v)))}
           />
           {values.length > min ? (
-            <button
+            <Button
               type="button"
-              className="btn btn-icon"
+              size="icon" variant="ghost"
               aria-label={text('removeRow')} title={text('removeRow')}
               onClick={() => onChange(values.filter((_, i) => i !== index))}
             >
               <CloseIcon size={16} />
-            </button>
+            </Button>
           ) : null}
         </div>
       ))}
       {values.length < max ? (
-        <button type="button" className="btn btn-ghost small" onClick={() => onChange([...values, ''])}>
+        <Button type="button" variant="ghost" size="sm" onClick={() => onChange([...values, ''])}>
           <PlusIcon size={15} />
           {addLabel}
-        </button>
+        </Button>
       ) : null}
     </fieldset>
   )
@@ -132,9 +133,9 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
           addLabel={text('addOption')}
         />
         <Toggle label={text('multi')} checked={multi} onChange={setMulti} />
-        <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
+        <Button type="submit"  disabled={busy}>
           {text('send')}
-        </button>
+        </Button>
       </form>
     </Modal>
   )
@@ -198,9 +199,9 @@ export function ChecklistComposer({ onClose }: { onClose: () => void }) {
           placeholder={(n) => text('item', { n })}
           addLabel={text('addItem')}
         />
-        <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
+        <Button type="submit"  disabled={busy}>
           {text('send')}
-        </button>
+        </Button>
       </form>
     </Modal>
   )

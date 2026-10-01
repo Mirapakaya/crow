@@ -8,6 +8,7 @@ import { Field, Modal, Spinner } from '../components/primitives'
 import { formatCoordinates, formatDistance } from './format'
 import { useLocationText, type LocationTextKey } from './locationText'
 import { MapView, type MapMarker } from './MapView'
+import { Button } from '../components/ui/button'
 
 /** Telegram's choices, and the one it added later. */
 const DURATIONS: [seconds: number, label: LocationTextKey][] = [
@@ -112,7 +113,7 @@ export function LocationPicker({ onClose }: { onClose: () => void }) {
           {pin && here ? (
             <>
               {' '}
-              <button
+              <Button
                 type="button"
                 className="link-button"
                 onClick={() => {
@@ -122,7 +123,7 @@ export function LocationPicker({ onClose }: { onClose: () => void }) {
                 }}
               >
                 {text('sendHere')}
-              </button>
+              </Button>
             </>
           ) : null}
         </p>
@@ -157,9 +158,9 @@ export function LocationPicker({ onClose }: { onClose: () => void }) {
             onChange={(event) => setPlace(event.target.value)}
           />
         </Field>
-        <button
+        <Button
           type="button"
-          className="btn btn-primary btn-block"
+          
           disabled={busy || !target}
           onClick={() => {
             if (!target) return
@@ -173,16 +174,16 @@ export function LocationPicker({ onClose }: { onClose: () => void }) {
           }}
         >
           {pin ? text('sendPin') : text('sendHere')}
-        </button>
+        </Button>
 
         <fieldset className="location-live-choices">
           <legend className="label">{text('shareLive')}</legend>
           <div className="location-durations">
             {DURATIONS.map(([seconds, label]) => (
-              <button
+              <Button
                 key={seconds}
                 type="button"
-                className="btn btn-outline"
+                variant="outline"
                 disabled={busy || !here}
                 onClick={() => {
                   if (!here) return
@@ -195,7 +196,7 @@ export function LocationPicker({ onClose }: { onClose: () => void }) {
                 }}
               >
                 {text(label)}
-              </button>
+              </Button>
             ))}
           </div>
           <p className="hint">{text('liveHint')}</p>

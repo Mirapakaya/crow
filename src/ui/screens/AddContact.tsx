@@ -14,6 +14,7 @@ import {
   type Invite,
 } from '../../core/identity/invite'
 import { parseProfilePointer } from '../../core/identity/keys'
+import { Button } from '../components/ui/button'
 
 type Mode = 'share' | 'scan' | 'paste'
 
@@ -98,9 +99,9 @@ export function AddContact() {
   return (
     <div className="screen">
       <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
+        <Button size="icon" variant="ghost" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </button>
+        </Button>
         <h1 className="grow">{t('contacts.addTitle')}</h1>
       </header>
 
@@ -109,7 +110,7 @@ export function AddContact() {
           <p className="muted">{t('contacts.addBody')}</p>
 
           <div className="row" role="tablist" style={{ gap: 'var(--space-2)' }}>
-            <button
+            <Button
               role="tab"
               aria-selected={mode === 'share'}
               className={`btn grow ${mode === 'share' ? 'btn-primary' : 'btn-outline'}`}
@@ -117,8 +118,8 @@ export function AddContact() {
             >
               <QrIcon size={16} />
               {t('contacts.myInvite')}
-            </button>
-            <button
+            </Button>
+            <Button
               role="tab"
               aria-selected={mode === 'scan'}
               className={`btn grow ${mode === 'scan' ? 'btn-primary' : 'btn-outline'}`}
@@ -126,7 +127,7 @@ export function AddContact() {
             >
               <CameraIcon size={16} />
               {t('contacts.scan')}
-            </button>
+            </Button>
           </div>
 
           {mode === 'share' && invite ? (
@@ -140,16 +141,16 @@ export function AddContact() {
                   {link}
                 </code>
                 <div className="row">
-                  <CopyButton value={link} className="btn btn-outline grow" />
+                  <CopyButton value={link} variant="outline" className="grow" />
                   {typeof navigator !== 'undefined' && 'share' in navigator ? (
-                    <button
-                      className="btn btn-outline grow"
+                    <Button
+                      variant="outline" className="grow"
                       onClick={() => {
                         void navigator.share({ title: 'Crow', text: link }).catch(() => undefined)
                       }}
                     >
                       {t('common.add')}
-                    </button>
+                    </Button>
                   ) : null}
                 </div>
               </div>
@@ -180,13 +181,13 @@ export function AddContact() {
                 }}
               />
             </Field>
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              
               disabled={!pasted.trim()}
               onClick={() => void accept(pasted)}
             >
               {t('common.add')}
-            </button>
+            </Button>
           </div>
 
           <Banner tone="accent">

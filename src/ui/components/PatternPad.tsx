@@ -1,5 +1,6 @@
 import { useRef, useState, type PointerEvent } from 'react'
 import { useT } from '../../i18n'
+import { Button } from '../components/ui/button'
 
 const DOTS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 
@@ -114,7 +115,7 @@ export function PatternPad({
         </svg>
         <div className="pattern-dots">
           {DOTS.map((dot) => (
-            <button
+            <Button
               key={dot}
               type="button"
               className="pattern-dot"
@@ -131,12 +132,12 @@ export function PatternPad({
       </div>
       {path.length > 0 && !pointer ? (
         <div className="row center" style={{ gap: 'var(--space-2)', justifyContent: 'center' }}>
-          <button type="button" className="btn btn-ghost small" onClick={() => choose([])}>
+          <Button type="button" variant="ghost" size="sm" onClick={() => choose([])}>
             {t('lock.patternClear')}
-          </button>
-          <button type="button" className="btn btn-outline small" onClick={finish}>
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={finish}>
             {t('lock.patternDone')}
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>

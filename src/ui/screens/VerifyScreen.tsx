@@ -12,6 +12,7 @@ import { QrPlaceholder } from '../components/QrPlaceholder'
 import { safetyNumber } from '../../core/crypto/safetyNumber'
 import { displayName } from './ChatList'
 import { useVerifyText } from './verifyText'
+import { Button } from '../components/ui/button'
 
 /**
  * The safety-number ceremony.
@@ -42,9 +43,9 @@ export function VerifyScreen({ peer }: { peer: string }) {
   return (
     <div className="screen">
       <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
+        <Button size="icon" variant="ghost" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </button>
+        </Button>
         <h1 className="grow">{text('title')}</h1>
       </header>
 
@@ -63,7 +64,7 @@ export function VerifyScreen({ peer }: { peer: string }) {
                 <span key={index}>{group}</span>
               ))}
             </div>
-            <CopyButton value={number.groups.join(' ')} className="btn btn-outline btn-block" />
+            <CopyButton value={number.groups.join(' ')} variant="outline" block />
           </div>
 
           <Suspense fallback={<QrPlaceholder />}>
@@ -76,16 +77,16 @@ export function VerifyScreen({ peer }: { peer: string }) {
                 <ShieldCheckIcon size={16} />
                 <span>{text('verifiedAt')}</span>
               </Banner>
-              <button
-                className="btn btn-outline btn-block"
+              <Button
+                variant="outline" block
                 onClick={() => void updateContact(peer, { verification: 'unverified' })}
               >
                 {text('markUnverified')}
-              </button>
+              </Button>
             </>
           ) : (
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              
               onClick={() => {
                 void updateContact(peer, { verification: 'verified' })
                 toast(t('contacts.verified'))
@@ -93,7 +94,7 @@ export function VerifyScreen({ peer }: { peer: string }) {
             >
               <ShieldCheckIcon size={16} />
               {text('markVerified')}
-            </button>
+            </Button>
           )}
 
           <div className="card stack-sm">
