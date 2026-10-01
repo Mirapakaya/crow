@@ -5,6 +5,7 @@ import { PlusIcon } from '../components/Icons'
 import { useInteractiveText } from './interactiveText'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { Checkbox } from '../components/ui/checkbox'
 
 export interface ChecklistCardProps {
   checklist: ChecklistSpec
@@ -53,11 +54,10 @@ export function ChecklistCard({
               className={entry.done ? 'checklist-item done' : 'checklist-item'}
               title={entry.by ? text('tickedBy', { name: nameOf(entry.by) }) : undefined}
             >
-              <input
-                type="checkbox"
-                className="checkbox checkbox-sm"
+              <Checkbox
+                size="sm"
                 checked={entry.done}
-                onChange={(event) => onCheck(entry.id, event.target.checked)}
+                onCheckedChange={(checked) => onCheck(entry.id, !!checked)}
               />
               <span className="grow" dir="auto">
                 {entry.label}

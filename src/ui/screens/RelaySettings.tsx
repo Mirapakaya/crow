@@ -12,6 +12,7 @@ import { DEFAULT_DM_RELAYS, SUGGESTED_RELAYS } from '../../core/transport/defaul
 import type { RelayEntry } from '../../core/models/types'
 import { verdictFor } from '../../core/transport/relayHealth'
 import { useAboutText } from './aboutText'
+import { Checkbox } from '../components/ui/checkbox'
 
 export function RelaySettings() {
   const { t, locale } = useI18n()
@@ -110,20 +111,18 @@ export function RelaySettings() {
 
               <div className="row faint" style={{ flexWrap: 'wrap', gap: 'var(--space-3)' }}>
                 <label className="row" style={{ gap: '0.35rem' }}>
-                  <input
-                    className="checkbox checkbox-sm"
-                    type="checkbox"
+                  <Checkbox
+                    size="sm"
                     checked={entry.read}
-                    onChange={(event) => void update(entry, { read: event.target.checked })}
+                    onCheckedChange={(checked) => void update(entry, { read: !!checked })}
                   />
                   {t('settings.relayRead')}
                 </label>
                 <label className="row" style={{ gap: '0.35rem' }}>
-                  <input
-                    className="checkbox checkbox-sm"
-                    type="checkbox"
+                  <Checkbox
+                    size="sm"
                     checked={entry.write}
-                    onChange={(event) => void update(entry, { write: event.target.checked })}
+                    onCheckedChange={(checked) => void update(entry, { write: !!checked })}
                   />
                   {t('settings.relayWrite')}
                 </label>

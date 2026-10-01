@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { CloseIcon, ContactsIcon } from './Icons'
 import { useT } from '../../i18n'
 import { Button } from '../components/ui/button'
+import { Checkbox } from '../components/ui/checkbox'
 
 /** Deterministic avatar colour from a public key — stable across devices. */
 export function avatarColor(seed: string): string {
@@ -225,12 +226,11 @@ export function Toggle({
           </span>
         ) : null}
       </span>
-      <input
-        className="checkbox"
-        type="checkbox"
+      <Checkbox
+        
         checked={checked}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.checked)}
+        onCheckedChange={(val) => onChange(!!val)}
       />
     </label>
   )

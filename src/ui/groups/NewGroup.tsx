@@ -11,6 +11,7 @@ import { MAX_GROUP_MEMBERS, MAX_MLS_MEMBERS, MAX_SUBJECT_CHARS } from '../../cor
 import { explainFailure, useSecureText } from './secureText'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { Checkbox } from '../components/ui/checkbox'
 
 type Kind = 'small' | 'secure'
 
@@ -176,13 +177,11 @@ export function NewGroup() {
                 const name = displayName(contact, contact.pubkey)
                 return (
                   <label key={contact.pubkey} className={`list-row${!on && full ? ' is-disabled' : ''}`}>
-                    <input
-                      type="checkbox"
-                      className="checkbox"
+                    <Checkbox
                       checked={on}
                       aria-label={name}
                       disabled={!on && full}
-                      onChange={() => toggle(contact.pubkey)}
+                      onCheckedChange={() => toggle(contact.pubkey)}
                     />
                     <Avatar name={name} seed={contact.pubkey} src={contact.avatar} size="sm" />
                     {/* Isolated rather than dir="auto": a Persian name in an
