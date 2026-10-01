@@ -5,6 +5,8 @@ import { useNavigate } from '../../crow/router'
 import { conversationTitle, displayName } from './ChatList'
 import { Avatar, GroupAvatar, Spinner } from '../components/primitives'
 import { SearchIcon, ArrowLeftIcon } from '../components/Icons'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import { formatListTimestamp } from '../format'
 import type { Conversation, Message } from '../../core/models/types'
 
@@ -47,19 +49,20 @@ export function MessageSearchScreen() {
   return (
     <div className="screen">
       <header className="app-header">
-        <button
-          className="btn btn-icon"
+        <Button
+          size="icon"
+          variant="ghost"
           aria-label={t('common.back')}
           onClick={() => navigate({ name: 'chats' })}
         >
           <ArrowLeftIcon />
-        </button>
+        </Button>
         <h1 className="grow">{t('chats.searchPlaceholder')}</h1>
       </header>
 
       <div className="row" style={{ padding: 'var(--space-2) var(--space-3)', gap: 'var(--space-2)' }}>
-        <input
-          className="input grow"
+        <Input
+          className="grow"
           type="search"
           placeholder={t('chats.searchPlaceholder')}
           value={query}
@@ -67,13 +70,12 @@ export function MessageSearchScreen() {
           onKeyDown={handleKeyDown}
           autoFocus
         />
-        <button
-          className="btn btn-primary"
+        <Button
           onClick={handleSearch}
           disabled={!query.trim() || searching}
         >
           {searching ? <Spinner /> : <SearchIcon size={16} />}
-        </button>
+        </Button>
       </div>
 
       <div className="screen-scroll">
