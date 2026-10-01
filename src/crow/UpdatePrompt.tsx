@@ -1,9 +1,6 @@
-import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useApp } from './store'
 import { translate } from '../i18n'
-import { createLogger } from '../core/util/log'
-
-const log = createLogger('pwa')
+import { useRegisterSW } from '../lib/useRegisterSW'
 
 /**
  * Service-worker update flow.
@@ -17,13 +14,7 @@ export function UpdatePrompt() {
   const locale = useApp((s) => s.settings.locale)
   const t = (key: Parameters<typeof translate>[1]) => translate(locale, key)
 
-  const {
-    needRefresh: [needRefresh, setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
-    onRegisteredSW: (url) => log.info(`service worker registered at ${url}`),
-    onRegisterError: (error) => log.warn('service worker registration failed', error),
-  })
+  const { needRefresh, updateServiceWorker, setNeedRefresh } = useRegisterSW()
 
   if (!needRefresh) return null
 
