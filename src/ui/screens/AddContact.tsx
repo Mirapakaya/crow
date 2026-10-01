@@ -14,6 +14,7 @@ import {
   type Invite,
 } from '../../core/identity/invite'
 import { parseProfilePointer } from '../../core/identity/keys'
+import { isValidNpub, isValidNostrAddress } from '../../lib/utils'
 import { Button } from '../components/ui/button'
 import { Textarea } from '../components/ui/textarea'
 
@@ -53,6 +54,21 @@ export function AddContact() {
   const accept = useCallback(
     async (raw: string) => {
       setError(null)
+
+      // Quick format validation before heavier invite/nprofile parsing.
+      const trimmed = raw.trim()
+      if (trimmed.startsWith('npub1')) {
+        if (!isValidNpub(trimmed)) {
+          setError(t('contacts.invalidInvite'))
+          return
+        }
+      } else if (trimmed.includes('@') && !trimmed.startsWith('nostr:') && !trimmed.includes('://')) {
+        if (!isValidNostrAddress(trimmed)) {
+          setError(t('contacts.invalidInvite'))
+          return
+        }
+      }
+
       const payload = extractInvitePayload(raw)
 
       // Either a signed invite (carries a name and relay hints) or a bare
