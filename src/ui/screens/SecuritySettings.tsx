@@ -154,9 +154,9 @@ export function SecuritySettings() {
                 {onlyWay ? <span className="hint">{text('onlyWay')}</span> : null}
               </span>
               {slot.type !== 'recovery' && !onlyWay ? (
-                <button className="btn btn-ghost small" onClick={() => start({ kind: 'remove', slot })}>
+                <Button variant="ghost" size="sm" onClick={() => start({ kind: 'remove', slot })}>
                   {t('common.remove')}
-                </button>
+                </Button>
               ) : null}
             </div>
           )
@@ -166,42 +166,42 @@ export function SecuritySettings() {
       <div className="stack-sm">
         <h3 style={{ fontSize: 'var(--step-0)' }}>{text('addTitle')}</h3>
         {gate ? null : support?.platform === 'yes' ? (
-          <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'biometric' })}>
+          <Button variant="outline" block onClick={() => start({ kind: 'biometric' })}>
             {text('addBiometric', { method: platform })}
-          </button>
+          </Button>
         ) : blocked ? (
           <p className="hint">
             <strong>{text('addBiometric', { method: platform })}</strong> — {blocked}
           </p>
         ) : null}
         {!gate && support?.securityKey ? (
-          <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'security-key' })}>
+          <Button variant="outline" block onClick={() => start({ kind: 'security-key' })}>
             {text('addKey')}
-          </button>
+          </Button>
         ) : null}
         {pinAllowed ? (
           <>
-            <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'pin' })}>
+            <Button variant="outline" block onClick={() => start({ kind: 'pin' })}>
               {pin && !pattern ? text('changePin') : text('addPin')}
-            </button>
-            <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'pattern' })}>
+            </Button>
+            <Button variant="outline" block onClick={() => start({ kind: 'pattern' })}>
               {pattern ? text('changePattern') : text('addPattern')}
-            </button>
+            </Button>
             {pin ? <p className="hint">{text('onePin')}</p> : null}
           </>
         ) : null}
-        <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'passphrase' })}>
+        <Button variant="outline" block onClick={() => start({ kind: 'passphrase' })}>
           {has('passphrase') ? text('changePassphrase') : text('addPassphrase')}
-        </button>
+        </Button>
         {/* Only while nothing else guards the device (ADR-059). */}
         {!canOpenInstantly() || has('device') ? null : guarded ? (
           <p className="hint">
             <strong>{text('choiceInstant')}</strong> — {text('instantExclusive')}
           </p>
         ) : (
-          <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'instant' })}>
+          <Button variant="outline" block onClick={() => start({ kind: 'instant' })}>
             {text('choiceInstant')}
-          </button>
+          </Button>
         )}
         <p className="hint">{text('notRetroactive')}</p>
       </div>
@@ -245,14 +245,14 @@ export function SecuritySettings() {
                 </div>
               ))}
             </div>
-            <button className="btn btn-ghost btn-block" onClick={() => setPhrase(null)}>
+            <Button variant="ghost" block onClick={() => setPhrase(null)}>
               {t('common.hide')}
-            </button>
+            </Button>
           </>
         ) : (
-          <button className="btn btn-outline btn-block" onClick={() => start({ kind: 'reveal' })}>
+          <Button variant="outline" block onClick={() => start({ kind: 'reveal' })}>
             {t('common.show')}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -376,8 +376,8 @@ function MethodFlow({
           <>
             <p className="muted small">{capitalize(text('twoPrompts', { method }))}</p>
             {errorLine}
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              
               disabled={busy}
               onClick={() =>
                 void run(async () => {
@@ -387,7 +387,7 @@ function MethodFlow({
               }
             >
               {busy ? <Spinner label={t('common.working')} /> : titles[kind]}
-            </button>
+            </Button>
           </>
         ) : null}
 
@@ -397,7 +397,7 @@ function MethodFlow({
               <span className="small">{lastWay ? text('removeLast') : text('removeConfirm')}</span>
             </Banner>
             {errorLine}
-            <button
+            <Button
               className="btn btn-danger-soft btn-block"
               disabled={busy}
               onClick={() =>
@@ -409,7 +409,7 @@ function MethodFlow({
               }
             >
               {busy ? <Spinner label={t('common.working')} /> : t('common.remove')}
-            </button>
+            </Button>
           </>
         ) : null}
 
@@ -424,8 +424,8 @@ function MethodFlow({
               onSubmit={() => undefined}
             />
             {progressBar}
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              
               disabled={busy || !value}
               onClick={() => {
                 const problem = pinProblem(value, repeat, text)
@@ -442,7 +442,7 @@ function MethodFlow({
               }}
             >
               {busy ? <Spinner label={t('common.working')} /> : t('common.save')}
-            </button>
+            </Button>
           </>
         ) : null}
 
@@ -473,8 +473,8 @@ function MethodFlow({
               onSubmit={() => undefined}
             />
             {progressBar}
-            <button
-              className="btn btn-primary btn-block"
+            <Button
+              
               disabled={busy || !value}
               onClick={() => {
                 const problem = passphraseProblem(value, repeat, text)
@@ -486,7 +486,7 @@ function MethodFlow({
               }}
             >
               {busy ? <Spinner label={t('common.working')} /> : t('common.save')}
-            </button>
+            </Button>
           </>
         ) : null}
 
@@ -496,7 +496,7 @@ function MethodFlow({
               <span className="small">{text('instantConfirm')}</span>
             </Banner>
             {errorLine}
-            <button
+            <Button
               className="btn btn-danger-soft btn-block"
               disabled={busy}
               onClick={() =>
@@ -507,7 +507,7 @@ function MethodFlow({
               }
             >
               {busy ? <Spinner label={t('common.working')} /> : text('choiceInstant')}
-            </button>
+            </Button>
           </>
         ) : null}
       </div>
@@ -578,8 +578,8 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
 
       {way === 'biometric' && biometric?.credentialId ? (
         <>
-          <button
-            className="btn btn-primary btn-block"
+          <Button
+            
             disabled={busy}
             onClick={() =>
               void check(async () => ({
@@ -593,7 +593,7 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
             }
           >
             {busy ? <Spinner label={t('common.working')} /> : other.biometric}
-          </button>
+          </Button>
           {errorLine}
         </>
       ) : way === 'pin' && style === 'pattern' ? (
@@ -632,7 +632,7 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
                 }}
               />
             ) : (
-              <input
+              <Input
                 className={way === 'pin' ? 'input pin-input' : 'input'}
                 type="password"
                 dir={way === 'pin' ? 'ltr' : undefined}
@@ -647,8 +647,8 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
               />
             )}
           </Field>
-          <button
-            className="btn btn-primary btn-block"
+          <Button
+            
             disabled={busy || (way === 'pin' ? !isValidPin('digits', secret) : !secret.trim())}
             onClick={() =>
               void check(async () =>
@@ -661,16 +661,16 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
             }
           >
             {busy ? <Spinner label={t('common.working')} /> : t('common.confirm')}
-          </button>
+          </Button>
         </>
       )}
 
       {offered
         .filter((candidate) => candidate !== way)
         .map((candidate) => (
-          <button
+          <Button
             key={candidate}
-            className="btn btn-ghost small"
+            variant="ghost" size="sm"
             onClick={() => {
               setWay(candidate)
               setSecret('')
@@ -678,7 +678,7 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
             }}
           >
             {other[candidate]}
-          </button>
+          </Button>
         ))}
     </div>
   )
