@@ -444,6 +444,13 @@ export const en = {
     unsupported: 'This browser is missing features Crow needs',
   },
 
+  shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
   update: { available: 'A new version is ready', reload: 'Reload' },
 }
 

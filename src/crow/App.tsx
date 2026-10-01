@@ -33,6 +33,7 @@ import { ConnectionBar } from '../ui/components/ConnectionStatus'
 import { UpdatePrompt } from './UpdatePrompt'
 import { DialogHost } from '../ui/components/dialog'
 import { TooltipProvider } from '../components/ui/tooltip'
+import { useKeyboardShortcuts } from './useKeyboardShortcuts'
 
 export function App() {
   const phase = useApp((s) => s.phase)
@@ -81,6 +82,7 @@ function Shell({ phase }: { phase: ReturnType<typeof useApp.getState>['phase'] }
   const wide = useWide()
 
   useLifecycleEffects()
+  useKeyboardShortcuts()
 
   if (phase === 'boot') {
     return (
