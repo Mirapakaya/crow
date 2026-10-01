@@ -1,17 +1,17 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Inter, Vazirmatn } from 'next/font/google'
 import { cn } from '@/lib/utils'
 import './globals.css'
 
-const geistSans = Geist({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-geist-sans',
+  variable: '--font-inter',
   display: 'swap',
 })
 
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
+const vazirmatn = Vazirmatn({
+  subsets: ['arabic'],
+  variable: '--font-vazirmatn',
   display: 'swap',
 })
 
@@ -63,7 +63,7 @@ export default function RootLayout({
     <html
       lang="en"
       dir="ltr"
-      className={cn(geistSans.variable, geistMono.variable)}
+      className={cn(inter.variable, vazirmatn.variable)}
       suppressHydrationWarning
     >
       <head>

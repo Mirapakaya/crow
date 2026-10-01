@@ -77,7 +77,7 @@
 
   /* --------------------------------------------------------------- metrics -- */
 
-  --font-sans: 'Inter Variable', 'Vazirmatn Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: var(--font-inter), var(--font-vazirmatn), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
 
   /* Fixed steps, not fluid ones. A viewport-interpolated body size means the
