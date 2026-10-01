@@ -1,6 +1,7 @@
 import { useApp } from '../../app/store'
 import { useI18n, LOCALE_NAMES } from '../../i18n'
 import { useNavigate, useRoute, type Route } from '../../app/router'
+import { Skeleton } from '../components/Skeleton'
 import { Avatar, Banner, Field, Toggle } from '../components/primitives'
 import {
   ChevronIcon,
@@ -28,7 +29,27 @@ export function SettingsHome() {
   const lock = useApp((s) => s.lock)
   const toast = useApp((s) => s.toast)
 
-  if (!identity) return null
+  if (!identity) {
+    return (
+      <div className="screen">
+        <header className="app-header">
+          <h1 className="grow">{t('settings.title')}</h1>
+        </header>
+        <div className="screen-scroll" aria-busy="true" aria-label="Loading settings…">
+          <div className="container stack" style={{ maxWidth: '34rem' }}>
+            <div className="skeleton-row">
+              <span className="skeleton skeleton-avatar avatar-lg" />
+              <div className="grow stack-sm" style={{ minWidth: 0 }}>
+                <span className="skeleton skeleton-text" style={{ width: '60%' }} />
+                <span className="skeleton skeleton-text skeleton-text-short" />
+              </div>
+            </div>
+            <span className="skeleton skeleton-text" style={{ height: '6rem' }} />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const pickAvatar = async (file: File) => {
     if (file.size > 1024 * 1024) {

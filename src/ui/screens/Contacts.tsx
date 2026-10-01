@@ -4,12 +4,14 @@ import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../app/router'
 import { Avatar, EmptyState } from '../components/primitives'
 import { PlusIcon, ShieldCheckIcon } from '../components/Icons'
+import { Skeleton } from '../components/Skeleton'
 import { displayName } from './ChatList'
 
 export function ContactsList() {
   const { t } = useI18n()
   const navigate = useNavigate()
   const contacts = useApp((s) => s.contacts)
+  const conversationsLoaded = useApp((s) => s.conversationsLoaded)
   const [query, setQuery] = useState('')
   // The contact open beside this list, on a wide window.
   const route = useRoute()
@@ -52,7 +54,9 @@ export function ContactsList() {
       ) : null}
 
       <div className="screen-scroll">
-        {list.length === 0 ? (
+        {!conversationsLoaded ? (
+          <ContactsSkeleton />
+        ) : list.length === 0 ? (
           <EmptyState
             title={t('contacts.empty')}
             action={
@@ -84,6 +88,19 @@ export function ContactsList() {
           ))
         )}
       </div>
+    </div>
+  )
+}
+
+function ContactsSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Loading contacts…">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <div key={index} className="skeleton-row">
+          <span className="skeleton skeleton-avatar" />
+          <span className="skeleton skeleton-text" style={{ width: '45%' }} />
+        </div>
+      ))}
     </div>
   )
 }

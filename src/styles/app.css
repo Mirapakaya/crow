@@ -1480,3 +1480,92 @@ time,
   color: var(--accent-text);
   flex-shrink: 0;
 }
+
+/* ---------------------------------------------------------------- skeleton -- */
+
+.skeleton {
+  display: block;
+  background: var(--surface-3);
+  border-radius: var(--radius-md);
+  color: transparent;
+  pointer-events: none;
+  user-select: none;
+}
+
+.skeleton-pulse {
+  animation: skeleton-pulse 2s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.skeleton-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.skeleton-text {
+  height: 0.875rem;
+  border-radius: var(--radius-sm);
+  flex: 1;
+}
+
+.skeleton-text-short {
+  width: 40%;
+}
+
+/* ---------------------------------------------------------------- transitions -- */
+
+.screen,
+.chat-screen,
+.call-screen,
+.modal {
+  animation: fade-in 180ms ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.message-bubble,
+.convo-row,
+.list-row {
+  transition: background var(--transition);
+}
+
+.call-button,
+.tabbar button,
+.btn-icon {
+  transition:
+    transform var(--transition),
+    background var(--transition),
+    color var(--transition),
+    box-shadow var(--transition);
+}
+
+.call-button:active:not(:disabled),
+.tabbar button:active:not(:disabled),
+.btn-icon:active:not(:disabled) {
+  transform: scale(0.94);
+}
