@@ -32,6 +32,7 @@ import { EntryLayout } from '../ui/components/EntryLayout'
 import { ConnectionBar } from '../ui/components/ConnectionStatus'
 import { UpdatePrompt } from './UpdatePrompt'
 import { DialogHost } from '../ui/components/dialog'
+import { TooltipProvider } from '../components/ui/tooltip'
 
 export function App() {
   const phase = useApp((s) => s.phase)
@@ -60,10 +61,15 @@ export function App() {
 
   return (
     <I18nContext.Provider value={i18n}>
-      <Shell phase={phase} />
-      <ToastRegion />
-      <DialogHost />
-      <UpdatePrompt />
+      <TooltipProvider delayDuration={300}>
+        <a href="#main-content" className="visually-hidden focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-[var(--radius-md)] focus:bg-[var(--accent)] focus:text-[var(--accent-fg)]">
+          {i18n.t('nav.chats')}
+        </a>
+        <Shell phase={phase} />
+        <ToastRegion />
+        <DialogHost />
+        <UpdatePrompt />
+      </TooltipProvider>
     </I18nContext.Provider>
   )
 }
@@ -162,7 +168,7 @@ function Panes({ route, wide }: { route: Route; wide: boolean }) {
   return (
     <div className={wide ? 'panes split' : 'panes'}>
       {wide ? (
-        <div className="sidebar">
+        <div className="sidebar" role="navigation" aria-label={t('nav.chats')}>
           <Suspense fallback={<RouteLoading />}>
             {section === 'chats' ? (
               <ChatList />
@@ -175,7 +181,7 @@ function Panes({ route, wide }: { route: Route; wide: boolean }) {
           <TabBar section={section} />
         </div>
       ) : null}
-      <div className="detail" data-level={wide ? level : undefined}>
+      <div className="detail" id="main-content" data-level={wide ? level : undefined} role="main">
         {wide && level === 0 ? (
           <p className="detail-empty">{t(PICK[section])}</p>
         ) : (
