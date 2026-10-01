@@ -16,6 +16,7 @@ import type { CallMedia } from '../core/models/call'
 import { isOpeningOffer } from '../core/models/protocol'
 import { supportsWebRtc } from '../core/transport/webrtc/directManager'
 import type { RelayStatus } from '../core/transport/relayPool'
+import type { MessageSearchResult } from '../ui/screens/MessageSearch'
 import type { DirectState } from '../core/transport/webrtc/directSession'
 import {
   createIdentity as makeIdentity,
@@ -231,6 +232,7 @@ interface AppState {
   refreshConversations: () => Promise<void>
   refreshContacts: () => Promise<void>
   refreshRelays: () => Promise<void>
+  searchMessages: (query: string, limit?: number) => Promise<MessageSearchResult[]>
 
   openConversation: (address: ChatAddress) => Promise<void>
   closeConversation: () => void
@@ -572,6 +574,28 @@ export const useApp = create<AppState>((set, get) => ({
     if (!vault.isUnlocked) return
     const list = await repo.listContacts()
     set({ contacts: new Map(list.map((contact) => [contact.pubkey, contact])) })
+  },
+
+  async searchMessages(query: string, limit = 50): Promise<MessageSearchResult[]> {
+    if (!vault.isUnlocked || !query.trim()) return []
+    const needle = query.trim().toLowerCase()
+    const conversations = get().conversations
+    const results: MessageSearchResult[] = []
+    for (const conversation of conversations) {
+      if (results.length >= limit) break
+      try {
+        const messages = await repo.listMessages(conversation.id, 200)
+        for (const message of messages) {
+          if (results.length >= limit) break
+          if (message.body && message.body.toLowerCase().includes(needle)) {
+            results.push({ message, conversation })
+          }
+        }
+      } catch {
+        // A conversation that cannot be read is skipped
+      }
+    }
+    return results.sort((a, b) => b.message.ts - a.message.ts)
   },
 
   async refreshRelays() {
