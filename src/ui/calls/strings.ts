@@ -141,7 +141,7 @@ const fa: Record<CallTextKey, string> = {
   close: 'بستن',
 }
 
-export const CALL_TEXT: Record<LocaleCode, Record<CallTextKey, string>> = { en, fa }
+export const CALL_TEXT: Record<LocaleCode, Record<CallTextKey, string>> = { en, fa, ar: en, ur: en, hi: en, bn: en, te: en, ta: en, kn: en, ml: en, mr: en, gu: en, pa: en, zh: en, ja: en, ko: en, th: en, vi: en, id: en, ms: en, es: en, pt: en, fr: en, de: en, it: en, nl: en, pl: en, uk: en, ru: en, tr: en }
 
 export type CallTextFn = (key: CallTextKey, values?: Interpolations) => string
 

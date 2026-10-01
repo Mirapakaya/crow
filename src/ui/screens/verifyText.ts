@@ -27,7 +27,7 @@ const fa: typeof en = {
     'ممکن است کلید اشتباهی به شما داده شده باشد. چیز حساسی نفرستید و دعوت‌نامه‌ها را دوباره حضوری رد و بدل کنید.',
 }
 
-const VERIFY_TEXT: Record<LocaleCode, typeof en> = { en, fa }
+const VERIFY_TEXT: Record<LocaleCode, typeof en> = { en, fa, ar: en, ur: en, hi: en, bn: en, te: en, ta: en, kn: en, ml: en, mr: en, gu: en, pa: en, zh: en, ja: en, ko: en, th: en, vi: en, id: en, ms: en, es: en, pt: en, fr: en, de: en, it: en, nl: en, pl: en, uk: en, ru: en, tr: en }
 
 export type VerifyTextKey = keyof typeof en
 
