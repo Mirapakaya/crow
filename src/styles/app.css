@@ -1569,3 +1569,67 @@ time,
 .btn-icon:active:not(:disabled) {
   transform: scale(0.94);
 }
+
+/* ---------------------------------------------------------------- message animations -- */
+
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-bubble {
+  animation: message-in 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message-bubble {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------- list polish -- */
+
+.list-row,
+.convo-row {
+  transition:
+    background var(--transition),
+    transform var(--transition);
+}
+
+.list-row:active:not(:disabled),
+.convo-row:active:not(:disabled) {
+  transform: scale(0.995);
+}
+
+/* ---------------------------------------------------------------- call polish -- */
+
+.call-button {
+  transition:
+    transform var(--transition),
+    background var(--transition),
+    box-shadow var(--transition);
+}
+
+.call-button:hover:not(:disabled) {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--n-0) 12%, transparent);
+}
+
+.call-button[aria-pressed='true'] {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* ---------------------------------------------------------------- group hero -- */
+
+.group-hero {
+  padding: var(--space-6) 0;
+}
+
+.group-hero .avatar {
+  --size: 5rem;
+}
