@@ -87,7 +87,7 @@ export function ChecklistCard({
           <button
             type="submit"
             className="btn btn-icon"
-            aria-label={text('addItem')}
+            aria-label={text('addItem')} title={text('addItem')}
             disabled={!draft.trim()}
           >
             <PlusIcon size={16} />

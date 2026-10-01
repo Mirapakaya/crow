@@ -42,7 +42,7 @@ export function VerifyScreen({ peer }: { peer: string }) {
   return (
     <div className="screen">
       <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+        <button className="btn btn-icon" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
         </button>
         <h1 className="grow">{text('title')}</h1>

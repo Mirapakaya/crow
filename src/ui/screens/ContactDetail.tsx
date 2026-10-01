@@ -27,7 +27,7 @@ export function ContactDetail({ peer }: { peer: string }) {
   const [note, setNote] = useState(contact?.note ?? '')
 
   const back = (
-    <button className="btn btn-icon btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
+    <button className="btn btn-icon btn-back" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
       <BackIcon />
     </button>
   )

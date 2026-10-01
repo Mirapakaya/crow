@@ -97,7 +97,7 @@ export function RelaySettings() {
                 <span className={badgeClass}>{badgeLabel}</span>
                 <button
                   className="btn btn-icon"
-                  aria-label={t('settings.relayRemove')}
+                  aria-label={t('settings.relayRemove')} title={t('settings.relayRemove')}
                   onClick={() => void remove(entry)}
                 >
                   <TrashIcon size={16} />

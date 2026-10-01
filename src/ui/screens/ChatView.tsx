@@ -409,7 +409,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
     return (
       <div className="screen">
         <header className="app-header">
-          <button className="btn btn-icon btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
+          <button className="btn btn-icon btn-back" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
             <BackIcon />
           </button>
         </header>
@@ -465,7 +465,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
         </header>
       ) : (
         <header className="chat-header">
-          <button className="btn btn-icon btn-back" aria-label={t('common.back')} onClick={() => goBack()}>
+          <button className="btn btn-icon btn-back" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
             <BackIcon />
           </button>
           {isGroup ? (
@@ -658,7 +658,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
             </span>
             {replyTo.body}
           </span>
-          <button className="btn btn-icon" aria-label={t('common.close')} onClick={() => setReplyTo(null)}>
+          <button className="btn btn-icon" aria-label={t('common.close')} title={t('common.close')} onClick={() => setReplyTo(null)}>
             <CloseIcon size={16} />
           </button>
         </div>

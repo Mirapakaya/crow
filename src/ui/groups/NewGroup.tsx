@@ -98,7 +98,7 @@ export function NewGroup() {
   return (
     <div className="screen">
       <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} onClick={() => goBack()}>
+        <button className="btn btn-icon" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
         </button>
         <h1 className="grow">{t('groups.newGroup')}</h1>

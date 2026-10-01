@@ -52,7 +52,7 @@ function Lines({
             <button
               type="button"
               className="btn btn-icon"
-              aria-label={text('removeRow')}
+              aria-label={text('removeRow')} title={text('removeRow')}
               onClick={() => onChange(values.filter((_, i) => i !== index))}
             >
               <CloseIcon size={16} />

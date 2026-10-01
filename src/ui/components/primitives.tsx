@@ -187,7 +187,7 @@ export function Modal({
             {title}
           </h2>
           {closable ? (
-            <button type="button" className="btn btn-icon" onClick={onClose} aria-label={t('common.close')}>
+            <button type="button" className="btn btn-icon" onClick={onClose} aria-label={t('common.close')} title={t('common.close')}>
               <CloseIcon />
             </button>
           ) : null}
