@@ -105,7 +105,7 @@ export const ta: Dictionary = {
     you: 'நீங்கள்: ',
     noMessages: 'இன்னும் செய்திகள் இல்லை',
     searchPlaceholder: 'உரையாடல்களைத் தேடு',
-    liveLocation: '📡 நேரடி இடம்',
+    liveLocation: '📡 நேரடி இடம்', filterAll: 'அனைத்தும்', filterUnread: 'படிக்காதவை', filterGroups: 'குழுக்கள்', pin: 'பின்', unpin: 'அன்பின்', pinned: 'பின் செய்யப்பட்டவை',
   },
 
   groups: {

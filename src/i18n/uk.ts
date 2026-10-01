@@ -105,7 +105,7 @@ export const uk: Dictionary = {
     you: 'Ви: ',
     noMessages: 'Поки що немає повідомлень',
     searchPlaceholder: 'Пошук розмов',
-    liveLocation: '📡 Трансляція місцезнаходження',
+    liveLocation: '📡 Трансляція місцезнаходження', filterAll: 'Усі', filterUnread: 'Непрочитані', filterGroups: 'Групи', pin: 'Закріпити', unpin: 'Відкріпити', pinned: 'Закріплені',
   },
 
   groups: {

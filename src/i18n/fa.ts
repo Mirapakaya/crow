@@ -113,7 +113,7 @@ export const fa: Dictionary = {
     you: 'شما: ',
     noMessages: 'هنوز پیامی نیست',
     searchPlaceholder: 'جستجوی گفتگوها',
-    liveLocation: '📡 موقعیت زنده',
+    liveLocation: '📡 موقعیت زنده', filterAll: 'همه', filterUnread: 'خوانده‌نشده', filterGroups: 'گروه‌ها', pin: 'سنجاق', unpin: 'برداشتن سنجاق', pinned: 'سنجاق‌شده',
   },
 
   groups: {

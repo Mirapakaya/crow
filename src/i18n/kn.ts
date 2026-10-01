@@ -105,7 +105,7 @@ export const kn: Dictionary = {
     you: 'ನೀವು: ',
     noMessages: 'ಇನ್ನೂ ಸಂದೇಶಗಳಿಲ್ಲ',
     searchPlaceholder: 'ಸಂಭಾಷಣೆಗಳನ್ನು ಹುಡುಕು',
-    liveLocation: '📡 ಲೈವ್ ಸ್ಥಾನ',
+    liveLocation: '📡 ಲೈವ್ ಸ್ಥಾನ', filterAll: 'ಎಲ್ಲಾ', filterUnread: 'ಓದದ', filterGroups: 'ಗುಂಪುಗಳು', pin: 'ಪಿನ್', unpin: 'ಅನ್‌ಪಿನ್', pinned: 'ಪಿನ್ ಮಾಡಲಾದ',
   },
 
   groups: {

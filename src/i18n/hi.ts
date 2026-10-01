@@ -105,7 +105,7 @@ export const hi: Dictionary = {
     you: 'आप: ',
     noMessages: 'अभी कोई संदेश नहीं',
     searchPlaceholder: 'वार्तालाप खोजें',
-    liveLocation: '📡 लाइव स्थान',
+    liveLocation: '📡 लाइव स्थान', filterAll: 'सभी', filterUnread: 'अपठित', filterGroups: 'समूह', pin: 'पिन', unpin: 'अनपिन', pinned: 'पिन किए गए',
   },
 
   groups: {

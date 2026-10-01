@@ -105,7 +105,7 @@ export const gu: Dictionary = {
     you: 'તમે: ',
     noMessages: 'હજુ સંદેશા નથી',
     searchPlaceholder: 'સંવાદ શોધો',
-    liveLocation: '📡 લાઈવ સ્થાન',
+    liveLocation: '📡 લાઈવ સ્થાન', filterAll: 'બધા', filterUnread: 'વંચાયેલા', filterGroups: 'જૂથો', pin: 'પિન', unpin: 'અનપિન', pinned: 'પિન કરેલ',
   },
 
   groups: {

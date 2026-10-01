@@ -61,7 +61,7 @@ export const bn: Dictionary = {
     addContact: 'একজন পরিচিতি যোগ করুন', requests: 'বার্তার অনুরোধ',
     requestsBody: 'আপনার পরিচিতির বাইরে থেকে যারা আপনার সাথে যোগাযোগ করেছেন।',
     draft: 'খসড়া', you: 'আপনি: ', noMessages: 'এখনও কোনো বার্তা নেই',
-    searchPlaceholder: 'কথোপকথন অনুসন্ধান', liveLocation: '📡 লাইভ লোকেশন',
+    searchPlaceholder: 'কথোপকথন অনুসন্ধান', liveLocation: '📡 লাইভ লোকেশন', filterAll: 'সব', filterUnread: 'অপঠিত', filterGroups: 'গ্রুপ', pin: 'পিন', unpin: 'আনপিন', pinned: 'পিন করা',
   },
 
   groups: {

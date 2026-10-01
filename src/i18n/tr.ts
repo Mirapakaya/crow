@@ -105,7 +105,7 @@ export const tr: Dictionary = {
     you: 'Siz: ',
     noMessages: 'Henüz mesaj yok',
     searchPlaceholder: 'Sohbetlerde ara',
-    liveLocation: '📡 Canlı konum',
+    liveLocation: '📡 Canlı konum', filterAll: 'Tümü', filterUnread: 'Okunmamış', filterGroups: 'Gruplar', pin: 'Sabitle', unpin: 'Sabitlemeyi kaldır', pinned: 'Sabitlendi',
   },
 
   groups: {
