@@ -12,7 +12,12 @@ if (typeof window !== 'undefined' && window.top !== window.self) {
 }
 
 if (typeof window !== 'undefined') {
-  const stored = JSON.parse(localStorage.getItem('crow:display') || '{}')
+  let stored: { locale?: string; theme?: string } = {}
+  try {
+    stored = JSON.parse(localStorage.getItem('crow:display') || '{}')
+  } catch {
+    /* storage can be blocked or corrupted; fall back to defaults */
+  }
   applyDisplayPrefs({ locale: stored.locale ?? detectLocale(), theme: stored.theme ?? 'system' })
 }
 
