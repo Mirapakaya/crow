@@ -27,9 +27,9 @@ export function ContactDetail({ peer }: { peer: string }) {
   const [note, setNote] = useState(contact?.note ?? '')
 
   const back = (
-    <button className="btn btn-icon btn-back" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
+    <Button size="icon" variant="ghost" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
       <BackIcon />
-    </button>
+    </Button>
   )
 
   // Removed on another screen, or a link to someone never added: still a
@@ -66,16 +66,16 @@ export function ContactDetail({ peer }: { peer: string }) {
           </div>
 
           <div className="row">
-            <button
-              className="btn btn-primary grow"
+            <Button
+              className="grow"
               onClick={() => navigate({ name: 'chat', peer })}
               disabled={contact.blocked}
             >
               {t('nav.chats')}
-            </button>
-            <button className="btn btn-outline grow" onClick={() => navigate({ name: 'verify', peer })}>
+            </Button>
+            <Button variant="outline" className="grow" onClick={() => navigate({ name: 'verify', peer })}>
               {t('contacts.verify')}
-            </button>
+            </Button>
           </div>
 
           <div className="card stack">
@@ -121,16 +121,16 @@ export function ContactDetail({ peer }: { peer: string }) {
           {contact.blocked ? (
             <Banner tone="danger">
               <span className="grow">{t('chat.blocked')}</span>
-              <button
-                className="btn btn-ghost small"
+              <Button
+                size="sm"
                 onClick={() => void updateContact(peer, { blocked: false })}
               >
                 {t('chat.unblock')}
-              </button>
+              </Button>
             </Banner>
           ) : (
-            <button
-              className="btn btn-outline btn-block"
+            <Button
+              variant="outline" block
               onClick={async () => {
                 if (await confirmDanger(t('chat.block'), t('chat.block'), t('contacts.blockConfirm'))) {
                   void updateContact(peer, { blocked: true })
@@ -138,11 +138,11 @@ export function ContactDetail({ peer }: { peer: string }) {
               }}
             >
               {t('chat.block')}
-            </button>
+            </Button>
           )}
 
-          <button
-            className="btn btn-danger btn-block"
+          <Button
+            variant="destructive" block
             onClick={async () => {
               if (
                 !(await confirmDanger(t('common.remove'), t('common.remove'), t('contacts.removeConfirm')))
@@ -155,7 +155,7 @@ export function ContactDetail({ peer }: { peer: string }) {
           >
             <TrashIcon size={16} />
             {t('common.remove')}
-          </button>
+          </Button>
 
           <p className="hint">{shortNpub(toNpub(peer))}</p>
         </div>

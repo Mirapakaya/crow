@@ -8,6 +8,7 @@ import { Banner, Field, Spinner } from '../components/primitives'
 import { confirmDanger } from '../components/dialog'
 import { EntryLayout } from '../components/EntryLayout'
 import { LockIcon } from '../components/Icons'
+import { Button } from '../components/ui/button'
 import { PatternPad } from '../components/PatternPad'
 import { gateName, unlockError } from '../biometric'
 
@@ -165,15 +166,15 @@ export function LockScreen() {
 
       {way === 'device' || way === 'biometric' ? (
         <>
-          <button
-            className="btn btn-primary btn-block"
+          <Button
+            block
             disabled={busy}
             onClick={
               way === 'device' ? () => void attempt(async () => ({ type: 'device' })) : () => withBiometric()
             }
           >
             {busy ? <Spinner label={t('lock.unlocking')} /> : labels[way]}
-          </button>
+          </Button>
           {error ? (
             <p className="error-text center" role="alert">
               {error}
@@ -253,9 +254,9 @@ export function LockScreen() {
               <div style={{ width: `${Math.round(progress * 100)}%` }} />
             </div>
           ) : null}
-          <button className="btn btn-primary btn-block" type="submit" disabled={!ready || busy}>
+          <Button block type="submit" disabled={!ready || busy}>
             {busy ? <Spinner label={t('lock.unlocking')} /> : t('lock.unlock')}
-          </button>
+          </Button>
         </form>
       ) : null}
 
@@ -263,17 +264,17 @@ export function LockScreen() {
         {available
           .filter((other) => other !== way)
           .map((other) => (
-            <button key={other} className="btn btn-ghost small" onClick={() => choose(other)}>
+            <Button key={other} variant="ghost" size="sm" onClick={() => choose(other)}>
               {labels[other]}
-            </button>
+            </Button>
           ))}
-        <button
-          className="btn btn-ghost small"
+        <Button
+          variant="ghost" size="sm"
           aria-expanded={showForgot}
           onClick={() => setShowForgot((value) => !value)}
         >
           {t('lock.forgot')}
-        </button>
+        </Button>
       </div>
 
       {showForgot ? (
@@ -281,8 +282,8 @@ export function LockScreen() {
           <Banner tone="warning">
             {available.includes('recovery') ? t('lock.forgotBodyRecovery') : t('lock.forgotBody')}
           </Banner>
-          <button
-            className="btn btn-danger-soft btn-block"
+          <Button
+            variant="danger-soft" block
             onClick={async () => {
               if (await confirmDanger(t('lock.startOver'), t('lock.startOver'), t('lock.startOverConfirm'))) {
                 void wipeDevice()
@@ -290,7 +291,7 @@ export function LockScreen() {
             }}
           >
             {t('lock.startOver')}
-          </button>
+          </Button>
         </div>
       ) : null}
     </EntryLayout>
