@@ -105,7 +105,9 @@ export const ta: Dictionary = {
     you: 'நீங்கள்: ',
     noMessages: 'இன்னும் செய்திகள் இல்லை',
     searchPlaceholder: 'உரையாடல்களைத் தேடு',
-    liveLocation: '📡 நேரடி இடம்', filterAll: 'அனைத்தும்', filterUnread: 'படிக்காதவை', filterGroups: 'குழுக்கள்', pin: 'பின்', unpin: 'அன்பின்', pinned: 'பின் செய்யப்பட்டவை',
+    liveLocation: '📡 நேரடி இடம்', filterAll: 'அனைத்தும்', filterUnread: 'படிக்காதவை', filterGroups: 'குழுக்கள்', 
+    filterLabel: 'Filter conversations',
+    pin: 'பின்', unpin: 'அன்பின்', pinned: 'பின் செய்யப்பட்டவை',
   },
 
   groups: {
@@ -440,6 +442,14 @@ export const ta: Dictionary = {
       'இந்த உலாவி உள்ளூர் சேமிப்பைத் தடுக்கிறது, அது Crow-க்கு உங்கள் பெட்டகத்தை வைத்திருக்கத் தேவை. தனிப்பட்ட உலாவல் சில நேரங்களில் இதற்குக் காரணமாக இருக்கலாம்.',
     unsupported: 'இந்த உலாவியில் Crow-க்குத் தேவையான அம்சங்கள் இல்லை',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: {
     available: 'புதிய பதிப்பு தயாராக உள்ளது',

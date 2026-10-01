@@ -105,7 +105,9 @@ export const mr: Dictionary = {
     you: 'तुम्ही: ',
     noMessages: 'अद्याप संदेश नाहीत',
     searchPlaceholder: 'संभाषणे शोधा',
-    liveLocation: '📡 थेट स्थान', filterAll: 'सर्व', filterUnread: 'न वाचलेले', filterGroups: 'गट', pin: 'पिन', unpin: 'अनपिन', pinned: 'पिन केलेले',
+    liveLocation: '📡 थेट स्थान', filterAll: 'सर्व', filterUnread: 'न वाचलेले', filterGroups: 'गट', 
+    filterLabel: 'Filter conversations',
+    pin: 'पिन', unpin: 'अनपिन', pinned: 'पिन केलेले',
   },
 
   groups: {
@@ -440,6 +442,14 @@ export const mr: Dictionary = {
       'हा ब्राउझर लोकल स्टोरेज अडवत आहे, जे Crow ला तुमचे वॉल्ट ठेवण्यासाठी लागते. प्रायव्हेट ब्राउझिंग कधीकधी हे कारणी ठरते.',
     unsupported: 'या ब्राउझरमध्ये Crow ला आवश्यक असलेली वैशिष्ट्ये नाहीत',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: { available: 'नवीन आवृत्ती तयार', reload: 'रीलोड' },
 }

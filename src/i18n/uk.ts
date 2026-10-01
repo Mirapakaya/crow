@@ -105,7 +105,9 @@ export const uk: Dictionary = {
     you: 'Ви: ',
     noMessages: 'Поки що немає повідомлень',
     searchPlaceholder: 'Пошук розмов',
-    liveLocation: '📡 Трансляція місцезнаходження', filterAll: 'Усі', filterUnread: 'Непрочитані', filterGroups: 'Групи', pin: 'Закріпити', unpin: 'Відкріпити', pinned: 'Закріплені',
+    liveLocation: '📡 Трансляція місцезнаходження', filterAll: 'Усі', filterUnread: 'Непрочитані', filterGroups: 'Групи', 
+    filterLabel: 'Filter conversations',
+    pin: 'Закріпити', unpin: 'Відкріпити', pinned: 'Закріплені',
   },
 
   groups: {
@@ -439,6 +441,14 @@ export const uk: Dictionary = {
       'Цей браузер блокує локальне сховище, яке Crow використовує для зберігання даних. Іноді це трапляється в режимі приватного перегляду.',
     unsupported: 'У цьому браузері відсутні функції, необхідні для роботи Crow',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: { available: 'Доступна нова версія', reload: 'Оновити' },
 }

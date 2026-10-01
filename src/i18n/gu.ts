@@ -105,7 +105,9 @@ export const gu: Dictionary = {
     you: 'તમે: ',
     noMessages: 'હજુ સંદેશા નથી',
     searchPlaceholder: 'સંવાદ શોધો',
-    liveLocation: '📡 લાઈવ સ્થાન', filterAll: 'બધા', filterUnread: 'વંચાયેલા', filterGroups: 'જૂથો', pin: 'પિન', unpin: 'અનપિન', pinned: 'પિન કરેલ',
+    liveLocation: '📡 લાઈવ સ્થાન', filterAll: 'બધા', filterUnread: 'વંચાયેલા', filterGroups: 'જૂથો', 
+    filterLabel: 'Filter conversations',
+    pin: 'પિન', unpin: 'અનપિન', pinned: 'પિન કરેલ',
   },
 
   groups: {
@@ -440,6 +442,14 @@ export const gu: Dictionary = {
       'આ બ્રાઉઝર લોકલ સ્ટોરેજ અવરોધે છે, જે Crow ને તમારું વૉલ્ટ રાખવા જોઈએ. પ્રાઇવેટ બ્રાઉઝિંગ ક્યારેક આનું કારણ બને છે.',
     unsupported: 'આ બ્રાઉઝરમાં Crow ને જોઈતી સુવિધાઓ નથી',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: { available: 'નવી આવૃત્તિ તૈયાર', reload: 'રિલોડ' },
 }

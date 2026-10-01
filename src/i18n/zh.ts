@@ -103,7 +103,9 @@ export const zh: Dictionary = {
     you: '您：',
     noMessages: '暂无消息',
     searchPlaceholder: '搜索对话',
-    liveLocation: '📡 实时位置', filterAll: '全部', filterUnread: '未读', filterGroups: '群组', pin: '置顶', unpin: '取消置顶', pinned: '已置顶',
+    liveLocation: '📡 实时位置', filterAll: '全部', filterUnread: '未读', filterGroups: '群组', 
+    filterLabel: 'Filter conversations',
+    pin: '置顶', unpin: '取消置顶', pinned: '已置顶',
   },
 
   groups: {
@@ -422,6 +424,14 @@ export const zh: Dictionary = {
     storageBlocked: '此浏览器正在阻止本地存储，Crow 需要它来保存您的保险库。隐私浏览模式有时会导致此问题。',
     unsupported: '此浏览器缺少 Crow 所需的功能',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: { available: '有新版本可用', reload: '重新加载' },
 }

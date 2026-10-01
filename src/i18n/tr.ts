@@ -105,7 +105,9 @@ export const tr: Dictionary = {
     you: 'Siz: ',
     noMessages: 'Henüz mesaj yok',
     searchPlaceholder: 'Sohbetlerde ara',
-    liveLocation: '📡 Canlı konum', filterAll: 'Tümü', filterUnread: 'Okunmamış', filterGroups: 'Gruplar', pin: 'Sabitle', unpin: 'Sabitlemeyi kaldır', pinned: 'Sabitlendi',
+    liveLocation: '📡 Canlı konum', filterAll: 'Tümü', filterUnread: 'Okunmamış', filterGroups: 'Gruplar', 
+    filterLabel: 'Filter conversations',
+    pin: 'Sabitle', unpin: 'Sabitlemeyi kaldır', pinned: 'Sabitlendi',
   },
 
   groups: {
@@ -439,6 +441,14 @@ export const tr: Dictionary = {
       'Bu tarayıcı yerel depolamayı engelliyor; Crow kasasını tutmak için buna ihtiyaç duyar. Gizli gezinme bazen buna neden olur.',
     unsupported: 'Bu tarayıcı Crow\'un gerektirdiği özelliklerden yoksun',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: { available: 'Yeni bir sürüm hazır', reload: 'Yenile' },
 }

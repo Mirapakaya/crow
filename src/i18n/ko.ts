@@ -28,7 +28,9 @@ export const ko: Dictionary = {
   },
   nav: { chats: '채팅', contacts: '연락처', settings: '설정', pickChat: '대화를 선택하세요', pickContact: '연락처를 선택하세요', pickSetting: '설정 항목을 선택하세요' },
   chats: {
-    title: '채팅', empty: '대화가 없습니다', emptyBody: '연락처를 추가하여 첫 번째 암호화 대화를 시작하세요.', addContact: '연락처 추가', requests: '메시지 요청', requestsBody: '연락처 외부에서 연락한 사람과 그룹입니다.', draft: '임시 보관', you: '나: ', noMessages: '메시지가 없습니다', searchPlaceholder: '대화 검색', liveLocation: '📡 실시간 위치', filterAll: '모두', filterUnread: '읽지 않음', filterGroups: '그룹', pin: '고정', unpin: '고정 해제', pinned: '고정됨',
+    title: '채팅', empty: '대화가 없습니다', emptyBody: '연락처를 추가하여 첫 번째 암호화 대화를 시작하세요.', addContact: '연락처 추가', requests: '메시지 요청', requestsBody: '연락처 외부에서 연락한 사람과 그룹입니다.', draft: '임시 보관', you: '나: ', noMessages: '메시지가 없습니다', searchPlaceholder: '대화 검색', liveLocation: '📡 실시간 위치', filterAll: '모두', filterUnread: '읽지 않음', filterGroups: '그룹', 
+    filterLabel: 'Filter conversations',
+    pin: '고정', unpin: '고정 해제', pinned: '고정됨',
   },
   groups: {
     newGroup: '새 그룹', name: '그룹 이름', namePlaceholder: '선택 — 구성원이 볼 수 있습니다', pickMembers: '구성원 선택', chosen: '{n}/{max}명 선택', limitTitle: '최대 {max}명 (본인 포함)',
@@ -110,5 +112,12 @@ export const ko: Dictionary = {
     deviceBody: '키, 연락처, 메시지는 브라우저에 암호화되어 저장되며, 설정→보안에서 선택한 방법으로만 열 수 있습니다. 인덱스 키는 블라인드되어 데이터베이스 구조만으로는 누구와 대화하는지 알 수 없습니다.',
   },
   errors: { generic: '문제가 발생했습니다', storageBlocked: '이 브라우저가 로컬 스토리지를 차단하고 있어 Crow가 금고를 저장할 수 없습니다. 시크릿 모드가 원인일 수 있습니다.', unsupported: '이 브라우저는 Crow에 필요한 기능이 없습니다' },
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
   update: { available: '새 버전을 사용할 수 있습니다', reload: '새로고침' },
 }

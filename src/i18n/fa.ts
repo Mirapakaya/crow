@@ -113,7 +113,9 @@ export const fa: Dictionary = {
     you: 'شما: ',
     noMessages: 'هنوز پیامی نیست',
     searchPlaceholder: 'جستجوی گفتگوها',
-    liveLocation: '📡 موقعیت زنده', filterAll: 'همه', filterUnread: 'خوانده‌نشده', filterGroups: 'گروه‌ها', pin: 'سنجاق', unpin: 'برداشتن سنجاق', pinned: 'سنجاق‌شده',
+    liveLocation: '📡 موقعیت زنده', filterAll: 'همه', filterUnread: 'خوانده‌نشده', filterGroups: 'گروه‌ها', 
+    filterLabel: 'Filter conversations',
+    pin: 'سنجاق', unpin: 'برداشتن سنجاق', pinned: 'سنجاق‌شده',
   },
 
   groups: {
@@ -448,6 +450,14 @@ export const fa: Dictionary = {
       'این مرورگر ذخیره‌سازی محلی را مسدود کرده است، اما کرو برای نگهداری مخزن شما به آن نیاز دارد. گاهی مرور ناشناس باعث این مشکل می‌شود.',
     unsupported: 'این مرورگر امکاناتی را که کرو نیاز دارد ندارد',
   },
+
+    shortcuts: {
+    tabChats: 'Go to Chats',
+    tabContacts: 'Go to Contacts',
+    tabSettings: 'Go to Settings',
+    lock: 'Lock vault',
+  },
+
 
   update: { available: 'نسخه تازه‌ای آماده است', reload: 'بارگذاری دوباره' },
 }
