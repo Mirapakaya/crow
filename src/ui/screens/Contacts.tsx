@@ -32,7 +32,7 @@ export function ContactsList() {
         <h1 className="grow">{t('contacts.title')}</h1>
         <button
           className="btn btn-icon"
-          aria-label={t('contacts.add')}
+          aria-label={t('contacts.add')} title={t('contacts.add')}
           onClick={() => navigate({ name: 'add-contact' })}
         >
           <PlusIcon />

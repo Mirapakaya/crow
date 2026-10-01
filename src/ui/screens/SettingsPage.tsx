@@ -15,7 +15,7 @@ export function SettingsPage({ title, children }: { title: string; children: Rea
       <header className="app-header">
         <button
           className="btn btn-icon btn-back"
-          aria-label={t('common.back')}
+          aria-label={t('common.back')} title={t('common.back')}
           onClick={() => goBack({ name: 'settings' })}
         >
           <BackIcon />
