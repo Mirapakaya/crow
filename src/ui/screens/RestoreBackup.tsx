@@ -10,6 +10,7 @@ import { useAccessText } from '../access/accessText'
 import { ProtectionChooser } from '../access/protection'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 
 /**
  * Restore a vault from an encrypted backup file, before any identity exists.
@@ -96,8 +97,8 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
         error={error ?? undefined}
       >
         {withRecovery ? (
-          <textarea
-            className="textarea mono"
+          <Textarea
+            className="mono"
             dir="ltr"
             autoCapitalize="none"
             autoCorrect="off"

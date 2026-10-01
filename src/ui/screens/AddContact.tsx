@@ -15,6 +15,7 @@ import {
 } from '../../core/identity/invite'
 import { parseProfilePointer } from '../../core/identity/keys'
 import { Button } from '../components/ui/button'
+import { Textarea } from '../components/ui/textarea'
 
 type Mode = 'share' | 'scan' | 'paste'
 
@@ -169,8 +170,7 @@ export function AddContact() {
           <div className="stack-sm">
             <span className="section-title">{t('contacts.pasteInvite')}</span>
             <Field error={error ?? undefined}>
-              <textarea
-                className="textarea"
+              <Textarea
                 dir="ltr"
                 style={{ minHeight: '4.5rem' }}
                 placeholder={t('contacts.pastePlaceholder')}

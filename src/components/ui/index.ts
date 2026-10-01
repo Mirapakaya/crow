@@ -65,4 +65,7 @@ export { Switch } from './switch'
 
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs'
 
+export { Textarea } from './textarea'
+export type { TextareaProps } from './textarea'
+
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './tooltip'

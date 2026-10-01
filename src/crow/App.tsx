@@ -27,8 +27,9 @@ import {
   SettingsHome,
   VerifyScreen,
 } from '../ui/lazyViews'
-import { ChatIcon, ContactsIcon, SettingsIcon } from '../ui/components/Icons'
+import { ChatIcon, ContactsIcon, SettingsIcon, LockIcon } from '../ui/components/Icons'
 import { Banner, Spinner } from '../ui/components/primitives'
+import { Button } from '../components/ui/button'
 import { EntryLayout } from '../ui/components/EntryLayout'
 import { ConnectionBar } from '../ui/components/ConnectionStatus'
 import { UpdatePrompt } from './UpdatePrompt'
@@ -87,7 +88,13 @@ function Shell({ phase }: { phase: ReturnType<typeof useApp.getState>['phase'] }
 
   if (phase === 'boot') {
     return (
-      <div className="app-shell" style={{ display: 'grid', placeItems: 'center' }}>
+      <div className="app-shell boot-screen">
+        <div className="boot-brand" dir="ltr">
+          <span className="boot-mark" aria-hidden="true">
+            <LockIcon size={28} />
+          </span>
+          <span className="boot-name">Crow</span>
+        </div>
         <Spinner label={t('common.loading')} />
       </div>
     )
@@ -350,9 +357,9 @@ function ToastRegion() {
       {toasts.map((toast) => (
         <div key={toast.id} className={`toast ${toast.tone === 'danger' ? 'toast-danger' : ''}`}>
           <span className="grow">{toast.message}</span>
-          <button className="btn btn-ghost small" onClick={() => dismiss(toast.id)}>
+          <Button size="sm" variant="ghost" onClick={() => dismiss(toast.id)}>
             ×
-          </button>
+          </Button>
         </div>
       ))}
     </div>

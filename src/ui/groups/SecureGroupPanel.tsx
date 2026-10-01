@@ -11,6 +11,7 @@ import { displayName } from '../screens/ChatList'
 import { explainFailure, useSecureText } from './secureText'
 import { Button } from '../components/ui/button'
 import { Checkbox } from '../components/ui/checkbox'
+import { Badge } from '../components/ui/badge'
 
 /**
  * RFC 9420's epoch authenticator, as people can read it aloud: the first 80
@@ -134,7 +135,7 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
             <span className="grow truncate">
               <bdi>{identity.name}</bdi>
             </span>
-            {amAdmin ? <span className="badge">{text('admin')}</span> : null}
+            {amAdmin ? <Badge>{text('admin')}</Badge> : null}
             <span className="hint">{t('groups.you')}</span>
           </div>
         ) : null}
@@ -154,7 +155,7 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
                 {contact?.verification === 'verified' ? (
                   <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
                 ) : null}
-                {mls.admins.includes(pubkey) ? <span className="badge">{text('admin')}</span> : null}
+                {mls.admins.includes(pubkey) ? <Badge>{text('admin')}</Badge> : null}
                 {amAdmin ? (
                   <Button
                     type="button"

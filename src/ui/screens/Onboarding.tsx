@@ -9,6 +9,8 @@ import { useAccessText } from '../access/accessText'
 import { ProtectionChooser } from '../access/protection'
 import { RestoreBackup } from './RestoreBackup'
 import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
+import { Button } from '../components/ui/button'
 
 type Step = 'welcome' | 'restore' | 'restore-file' | 'name' | 'protect'
 
@@ -78,8 +80,8 @@ export function Onboarding() {
             <p className="muted">{text('restoreBody')}</p>
           </div>
           <Field label={text('restorePhrase')} error={error ?? undefined}>
-            <textarea
-              className="textarea mono"
+            <Textarea
+              className="mono"
               dir="ltr"
               autoCapitalize="none"
               autoCorrect="off"

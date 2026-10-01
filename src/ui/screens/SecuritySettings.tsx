@@ -12,7 +12,6 @@ import { capitalize, gateName, unlockError } from '../biometric'
 import { formatDate } from '../format'
 import { useAccessText } from '../access/accessText'
 import {
-import { Input } from '../components/ui/input'
   biometricBlocked,
   digitsOnly,
   explainBiometric,
@@ -24,6 +23,9 @@ import { Input } from '../components/ui/input'
   useBiometricEnrolment,
   useBiometricSupport,
 } from '../access/protection'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 
 const AUTO_LOCK_CHOICES = [0, 1, 5, 15, 30, 60]
 
@@ -619,8 +621,8 @@ function ConfirmIdentity({ keyslots, onConfirmed }: { keyslots: KeyslotSummary[]
             error={error ?? undefined}
           >
             {way === 'recovery' ? (
-              <textarea
-                className="textarea mono"
+              <Textarea
+                className="mono"
                 dir="ltr"
                 autoFocus
                 autoCapitalize="none"
