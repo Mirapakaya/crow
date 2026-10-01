@@ -4,6 +4,8 @@ export type { ButtonProps } from './button'
 export { Avatar, AvatarImage, AvatarFallback } from './avatar'
 
 export { Badge, badgeVariants } from './badge'
+
+export { Checkbox } from './checkbox'
 export type { BadgeProps } from './badge'
 
 export {

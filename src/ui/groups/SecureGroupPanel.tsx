@@ -10,6 +10,7 @@ import { LockIcon, PlusIcon, RefreshIcon, ShieldCheckIcon, TrashIcon } from '../
 import { displayName } from '../screens/ChatList'
 import { explainFailure, useSecureText } from './secureText'
 import { Button } from '../components/ui/button'
+import { Checkbox } from '../components/ui/checkbox'
 
 /**
  * RFC 9420's epoch authenticator, as people can read it aloud: the first 80
@@ -188,13 +189,11 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
                   const blocked = !on && chosen.length >= room
                   return (
                     <label key={contact.pubkey} className={`list-row${blocked ? ' is-disabled' : ''}`}>
-                      <input
-                        type="checkbox"
-                        className="checkbox"
+                      <Checkbox
                         checked={on}
                         aria-label={name}
                         disabled={blocked}
-                        onChange={() =>
+                        onCheckedChange={() =>
                           setChosen((current) =>
                             on ? current.filter((p) => p !== contact.pubkey) : [...current, contact.pubkey],
                           )
