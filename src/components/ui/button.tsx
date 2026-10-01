@@ -1,31 +1,37 @@
 import * as React from 'react'
+import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-[var(--space-2)] whitespace-nowrap min-h-[var(--control-lg)] rounded-[var(--radius-md)] border border-transparent px-[var(--space-4)] text-[var(--step-0)] font-[var(--weight-medium)] cursor-pointer select-none transition-[background,border-color,color,opacity] focus-visible:outline-[var(--ring-width)] focus-visible:outline-solid focus-visible:outline-[var(--ring)] focus-visible:outline-offset-[var(--ring-offset)] disabled:pointer-events-none disabled:bg-[var(--surface-2)] disabled:border-[var(--border)] disabled:text-[var(--text-faint)] disabled:shadow-none disabled:cursor-not-allowed active:translate-y-px active:transition-duration-[var(--duration-instant)]',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-        outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
+        default: 'bg-[var(--accent)] text-[var(--accent-fg)] hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)]',
+        destructive: 'bg-[var(--danger)] text-[var(--danger-fg)] hover:bg-[var(--danger-hover)]',
+        outline: 'border-[var(--border-strong)] bg-transparent text-[var(--text)] hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] active:bg-[var(--surface-3)]',
+        secondary: 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]',
+        ghost: 'bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] active:bg-[var(--surface-3)]',
+        link: 'text-[var(--accent-text)] underline-offset-4 hover:underline',
+        'danger-soft': 'bg-[var(--danger-soft)] text-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--danger-fg)]',
       },
       size: {
-        default: 'h-9 px-4 py-2',
-        sm: 'h-8 rounded-md px-3 text-xs',
-        lg: 'h-10 rounded-md px-8',
-        icon: 'h-9 w-9',
+        default: 'h-auto px-[var(--space-4)]',
+        sm: 'min-h-[var(--control-md)] px-[var(--space-3)] text-[var(--step--1)]',
+        lg: 'min-h-[var(--control-xl)] px-[var(--space-5)]',
+        icon: 'min-h-[var(--control-lg)] w-[var(--control-lg)] px-0',
+      },
+      block: {
+        true: 'w-full',
       },
     },
     defaultVariants: {
       variant: 'default',
       size: 'default',
+      block: false,
     },
-  }
+  },
 )
 
 export interface ButtonProps
@@ -35,15 +41,16 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, block, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : 'button'
     return (
-      <button
-        className={cn(buttonVariants({ variant, size, className }))}
+      <Comp
+        className={cn(buttonVariants({ variant, size, block, className }))}
         ref={ref}
         {...props}
       />
     )
-  }
+  },
 )
 Button.displayName = 'Button'
 
