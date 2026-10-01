@@ -18,7 +18,7 @@ function threshold(): number {
 
 function emit(level: Level, scope: string, msg: string, extra?: unknown) {
   if (ORDER[level] < threshold()) return
-  const line = `[textor:${scope}] ${msg}`
+  const line = `[crow:${scope}] ${msg}`
   const fn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log
   if (extra === undefined) fn(line)
   else fn(line, extra)
