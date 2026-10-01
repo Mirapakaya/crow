@@ -1,0 +1,27 @@
+'use client'
+
+import { StrictMode } from 'react'
+import { App } from '@/crow/App'
+import { ErrorBoundary } from '@/crow/ErrorBoundary'
+import { applyDisplayPrefs } from '@/crow/displayPrefs'
+import { detectLocale } from '@/i18n'
+
+if (typeof window !== 'undefined' && window.top !== window.self) {
+  document.documentElement.textContent = 'Crow refuses to run inside a frame. Open it in its own tab.'
+  throw new Error('refusing to run framed')
+}
+
+if (typeof window !== 'undefined') {
+  const stored = JSON.parse(localStorage.getItem('crow:display') || '{}')
+  applyDisplayPrefs({ locale: stored.locale ?? detectLocale(), theme: stored.theme ?? 'system' })
+}
+
+export default function CrowRoot() {
+  return (
+    <StrictMode>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </StrictMode>
+  )
+}
