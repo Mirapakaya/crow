@@ -34,10 +34,10 @@ export const en = {
   },
 
   lock: {
-    title: 'Textor is locked',
+    title: 'Crow is locked',
     body: 'Unlock to read and send messages on this device.',
-    openBody: 'This device opens Textor without asking for anything.',
-    open: 'Open Textor',
+    openBody: 'This device opens Crow without asking for anything.',
+    open: 'Open Crow',
     unlock: 'Unlock',
     withBiometric: 'Unlock with {method}',
     bioApple: 'Touch ID or Face ID',
@@ -48,7 +48,7 @@ export const en = {
     securityKey: 'your security key',
     bioCancelled: 'Unlocking was cancelled. Try again when you are ready.',
     bioUnverified: '{method} did not confirm it was you. Try again.',
-    failed: 'That did not unlock Textor. Try again, or use another way.',
+    failed: 'That did not unlock Crow. Try again, or use another way.',
     passphrase: 'Passphrase',
     wrong: 'Wrong passphrase',
     pin: 'PIN',
@@ -56,7 +56,7 @@ export const en = {
     codeWrong: 'Wrong {what}',
     codeWrongLeft: 'Wrong {what}. {n} tries left before it is erased.',
     codeErased:
-      'Too many wrong tries: your {what} has been erased. Open Textor another way, then set a new one.',
+      'Too many wrong tries: your {what} has been erased. Open Crow another way, then set a new one.',
     drawPattern: 'Draw your pattern',
     patternDot: 'Dot {n}',
     patternClear: 'Clear',
@@ -65,13 +65,13 @@ export const en = {
     usePassphrase: 'Use your passphrase instead',
     useRecovery: 'Use your recovery phrase instead',
     passkeyRetired:
-      'Your passkey no longer opens Textor. Use your recovery phrase or passphrase, then choose a new way in.',
+      'Your passkey no longer opens Crow. Use your recovery phrase or passphrase, then choose a new way in.',
     recoveryPhrase: 'Recovery phrase',
     recoveryWrong: 'That phrase does not open this device',
     unlocking: 'Unlocking',
     autoLocked: 'Locked automatically after a period of inactivity.',
-    recovered: 'You opened Textor with your recovery phrase. Choose how this device opens from now on.',
-    retired: 'Your passkey no longer opens Textor. Choose how this device opens from now on.',
+    recovered: 'You opened Crow with your recovery phrase. Choose how this device opens from now on.',
+    retired: 'Your passkey no longer opens Crow. Choose how this device opens from now on.',
     recoveredAction: 'Choose',
     forgot: 'Can’t unlock?',
     forgotBody:
@@ -167,8 +167,8 @@ export const en = {
     offline: 'You are offline. Calls need a connection.',
     alreadyInCall: 'You are already in a call.',
     acceptFirst: 'Accept this contact before calling them.',
-    loadFailed: 'Calling could not load. Reload Textor to get the latest version.',
-    missedLoad: 'You missed a call from {name}: calling could not load. Reload Textor to update.',
+    loadFailed: 'Calling could not load. Reload Crow to get the latest version.',
+    missedLoad: 'You missed a call from {name}: calling could not load. Reload Crow to update.',
   },
 
   emoji: {
@@ -360,7 +360,7 @@ export const en = {
       'Connects straight to your contact for faster delivery. Reveals your IP address to them, as any direct connection does.',
     notifications: 'Show notifications for new messages',
     notificationsBody:
-      'Only while Textor is open in a tab — delivering notifications to a closed app would require a server we do not run. The notification shows who messaged you, never the message.',
+      'Only while Crow is open in a tab — delivering notifications to a closed app would require a server we do not run. The notification shows who messaged you, never the message.',
     notificationsDenied: 'Your browser has blocked notifications for this site.',
     publicProfile: 'Publish a public profile',
     publicProfileBody:
@@ -393,7 +393,7 @@ export const en = {
     relayOffline: 'Not connecting',
     relayNever: 'Not used yet',
     relayCannotRead:
-      'This relay requires sign-in to read your inbox, so it cannot deliver messages to you. Textor does not sign in to relays.',
+      'This relay requires sign-in to read your inbox, so it cannot deliver messages to you. Crow does not sign in to relays.',
     relayLatency: '{n} ms',
     relayStats: '{ok} delivered / {fail} failed',
     noRelaysWarning: 'You have no active relays. Messages cannot be sent or received.',
@@ -432,7 +432,7 @@ export const en = {
 
   privacy: {
     intro:
-      'Textor is a static web page. There is no Textor server, no account database, and no analytics. Here is precisely what goes out over the network, and what each party can see.',
+      'Crow is a static web page. There is no Crow server, no account database, and no analytics. Here is precisely what goes out over the network, and what each party can see.',
     deviceBody:
       'Your keys, contacts, and messages are stored in your browser, encrypted under a key that only the ways you chose in Settings → Security can open. Index keys are blinded, so even the database structure does not reveal who you talk to.',
   },
@@ -440,8 +440,8 @@ export const en = {
   errors: {
     generic: 'Something went wrong',
     storageBlocked:
-      'This browser is blocking local storage, which Textor needs to keep your vault. Private browsing sometimes causes this.',
-    unsupported: 'This browser is missing features Textor needs',
+      'This browser is blocking local storage, which Crow needs to keep your vault. Private browsing sometimes causes this.',
+    unsupported: 'This browser is missing features Crow needs',
   },
 
   update: { available: 'A new version is ready', reload: 'Reload' },
