@@ -125,8 +125,8 @@ export function DataSettings() {
         <h3 style={{ fontSize: 'var(--step-0)' }}>{t('settings.exportBackup')}</h3>
         <p className="muted small">{t('settings.exportBackupBody')}</p>
         <Field label={t('settings.exportPassphrase')} hint={t('settings.exportPassphraseHint')}>
-          <input
-            className="input"
+          <Input
+            
             type="password"
             autoComplete="new-password"
             value={exportPassphrase}
@@ -159,7 +159,7 @@ export function DataSettings() {
         <h3 style={{ fontSize: 'var(--step-0)' }}>{t('settings.importBackup')}</h3>
         <Field label={t('settings.importChoose')}>
           <input
-            className="input"
+            
             type="file"
             accept=".json,application/json"
             onChange={(event) => setImportFile(event.target.files?.[0] ?? null)}

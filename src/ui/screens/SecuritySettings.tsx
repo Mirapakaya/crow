@@ -12,6 +12,7 @@ import { capitalize, gateName, unlockError } from '../biometric'
 import { formatDate } from '../format'
 import { useAccessText } from '../access/accessText'
 import {
+import { Input } from '../components/ui/input'
   biometricBlocked,
   digitsOnly,
   explainBiometric,
@@ -210,7 +211,7 @@ export function SecuritySettings() {
       <div className="card stack-sm">
         <Field label={text('autoLock')}>
           <select
-            className="input select"
+            
             value={String(settings.autoLockMinutes)}
             onChange={(event) => void saveSettings({ autoLockMinutes: Number(event.target.value) })}
           >

@@ -4,6 +4,7 @@ import { useT } from '../../i18n'
 import { Banner, Field } from '../components/primitives'
 import { randomInt } from '../../core/util/bytes'
 import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 /**
  * The recovery-phrase ceremony.
@@ -74,8 +75,8 @@ export function BackupCeremony({ mnemonic }: { mnemonic: string }) {
             </div>
 
             <Field error={error ?? undefined}>
-              <input
-                className="input mono"
+              <Input
+                className="mono"
                 dir="ltr"
                 autoFocus
                 autoCapitalize="none"

@@ -8,6 +8,7 @@ import { PlusIcon, ShieldCheckIcon } from '../components/Icons'
 import { Skeleton } from '../components/Skeleton'
 import { displayName } from './ChatList'
 import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 export function ContactsList() {
   const { t } = useI18n()
@@ -45,8 +46,8 @@ export function ContactsList() {
 
       {contacts.size > 5 ? (
         <div style={{ padding: 'var(--space-2) var(--space-3)' }}>
-          <input
-            className="input"
+          <Input
+            
             type="search"
             placeholder={t('common.search')}
             value={query}

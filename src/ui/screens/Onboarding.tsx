@@ -8,6 +8,7 @@ import { isValidMnemonic, normalizeMnemonic } from '../../core/identity/keys'
 import { useAccessText } from '../access/accessText'
 import { ProtectionChooser } from '../access/protection'
 import { RestoreBackup } from './RestoreBackup'
+import { Input } from '../components/ui/input'
 
 type Step = 'welcome' | 'restore' | 'restore-file' | 'name' | 'protect'
 
@@ -122,8 +123,8 @@ export function Onboarding() {
             <p className="muted">{text('nameBody')}</p>
           </div>
           <Field>
-            <input
-              className="input"
+            <Input
+              
               autoFocus
               maxLength={64}
               placeholder={text('namePlaceholder')}

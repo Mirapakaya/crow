@@ -20,6 +20,7 @@ import type { LocaleCode, ThemePreference } from '../../core/models/types'
 import { APP_VERSION, SOURCE_URL } from '../../crow/meta'
 import { useAboutText } from './aboutText'
 import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 export function SettingsHome() {
   const { t } = useI18n()
@@ -94,9 +95,9 @@ export function SettingsHome() {
               effect and a render cascade on every keystroke elsewhere.
             */}
             <Field label={t('settings.displayName')}>
-              <input
+              <Input
                 key={`name:${identity.name}`}
-                className="input"
+                
                 defaultValue={identity.name}
                 maxLength={64}
                 onBlur={(event) => {
@@ -107,9 +108,9 @@ export function SettingsHome() {
             </Field>
 
             <Field label={t('settings.about')}>
-              <input
+              <Input
                 key={`about:${identity.about}`}
-                className="input"
+                
                 defaultValue={identity.about}
                 maxLength={200}
                 onBlur={(event) => {
@@ -144,7 +145,7 @@ export function SettingsHome() {
             <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
               <Field label={t('settings.language')}>
                 <select
-                  className="input select"
+                  
                   value={settings.locale}
                   onChange={(event) => void saveSettings({ locale: event.target.value as LocaleCode })}
                 >
@@ -315,7 +316,7 @@ export function PrivacySettings() {
       <div className="card stack-sm">
         <Field label={t('settings.retention')}>
           <select
-            className="input select"
+            
             value={settings.retention}
             onChange={(event) =>
               void saveSettings({ retention: event.target.value as typeof settings.retention })
@@ -332,7 +333,7 @@ export function PrivacySettings() {
       <div className="card stack-sm">
         <Field label={t('settings.messageExpiry')} hint={t('settings.messageExpiryBody')}>
           <select
-            className="input select"
+            
             value={String(settings.messageExpirationDays)}
             onChange={(event) => void saveSettings({ messageExpirationDays: Number(event.target.value) })}
           >

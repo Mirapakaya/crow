@@ -9,6 +9,7 @@ import type { ExportPayload } from '../../core/vault/exportImport'
 import { useAccessText } from '../access/accessText'
 import { ProtectionChooser } from '../access/protection'
 import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 /**
  * Restore a vault from an encrypted backup file, before any identity exists.
@@ -83,7 +84,7 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
 
       <Field label={t('settings.importChoose')}>
         <input
-          className="input"
+          
           type="file"
           accept=".json,application/json"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
@@ -109,8 +110,8 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
             }}
           />
         ) : (
-          <input
-            className="input"
+          <Input
+            
             type="password"
             autoComplete="off"
             value={secret}

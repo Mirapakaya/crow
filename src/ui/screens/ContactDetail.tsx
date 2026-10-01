@@ -9,6 +9,7 @@ import { shortNpub, toNpub } from '../../core/identity/keys'
 import { relayLabel } from '../../core/transport/relayUrl'
 import { formatDateTime } from '../format'
 import { displayName } from './ChatList'
+import { Input } from '../components/ui/input'
 
 /**
  * One contact: their name and note, their key, verifying and blocking them.
@@ -80,8 +81,8 @@ export function ContactDetail({ peer }: { peer: string }) {
 
           <div className="card stack">
             <Field label={t('contacts.nameLabel')}>
-              <input
-                className="input"
+              <Input
+                
                 value={name}
                 maxLength={64}
                 onChange={(event) => setName(event.target.value)}

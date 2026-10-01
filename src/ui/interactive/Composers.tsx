@@ -7,6 +7,7 @@ import { makeChecklist, makePoll } from '../../core/models/interactiveForms'
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS, MAX_POLL_OPTIONS } from '../../core/models/protocol'
 import { useInteractiveText } from './interactiveText'
 import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 
 /**
  * Write a poll or a checklist and send it to the open conversation.
@@ -40,8 +41,8 @@ function Lines({
       <legend className="label">{label}</legend>
       {values.map((value, index) => (
         <div key={index} className="row">
-          <input
-            className="input grow"
+          <Input
+            className="grow"
             dir="auto"
             value={value}
             maxLength={MAX_ITEM_CHARS}
@@ -108,8 +109,8 @@ export function PollComposer({ onClose }: { onClose: () => void }) {
         }}
       >
         <Field label={text('question')} error={error ?? undefined}>
-          <input
-            className="input"
+          <Input
+            
             dir="auto"
             value={question}
             maxLength={MAX_QUESTION_CHARS}
@@ -175,8 +176,8 @@ export function ChecklistComposer({ onClose }: { onClose: () => void }) {
         }}
       >
         <Field label={text('title')} error={error ?? undefined}>
-          <input
-            className="input"
+          <Input
+            
             dir="auto"
             value={title}
             maxLength={MAX_QUESTION_CHARS}
