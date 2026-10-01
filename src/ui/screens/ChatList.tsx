@@ -63,6 +63,7 @@ export function ChatList() {
   const typingPeers = useApp((s) => s.typingPeers)
   const previews = useApp((s) => s.previews)
   const sharing = useApp((s) => s.liveShares.length > 0)
+  const [filter, setFilter] = useState<'all' | 'unread' | 'groups'>('all')
   const [query, setQuery] = useState('')
   // The conversation open beside this list, on a wide window.
   const route = useRoute()
@@ -82,12 +83,16 @@ export function ChatList() {
         )
       )
     }
-    const visible = conversations.filter(matches)
+    const matched = conversations.filter(matches)
+    // Apply the active filter
+    let filtered = matched
+    if (filter === 'unread') filtered = filtered.filter((c) => c.unread > 0)
+    if (filter === 'groups') filtered = filtered.filter((c) => c.kind === 'group')
     return {
-      accepted: visible.filter((c) => !isRequest(c, contacts)),
-      requests: visible.filter((c) => isRequest(c, contacts)),
+      accepted: filtered.filter((c) => !isRequest(c, contacts)),
+      requests: matched.filter((c) => isRequest(c, contacts)),
     }
-  }, [conversations, contacts, query, locale])
+  }, [conversations, contacts, query, locale, filter])
 
   const renderRow = (conversation: Conversation) => {
     const group = conversation.kind === 'group'
@@ -206,6 +211,14 @@ export function ChatList() {
         <Suspense fallback={null}>
           <LiveBanner />
         </Suspense>
+      ) : null}
+
+      {conversations.length > 2 ? (
+        <div className="segmented" style={{ margin: 'var(--space-2) var(--space-3)' }} role="radiogroup" aria-label="Filter conversations">
+          <button aria-checked={filter === 'all'} onClick={() => setFilter('all')}>{t('chats.filterAll')}</button>
+          <button aria-checked={filter === 'unread'} onClick={() => setFilter('unread')}>{t('chats.filterUnread')}</button>
+          <button aria-checked={filter === 'groups'} onClick={() => setFilter('groups')}>{t('chats.filterGroups')}</button>
+        </div>
       ) : null}
 
       {conversations.length > 4 ? (
