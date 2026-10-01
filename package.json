@@ -19,6 +19,7 @@
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" \"*.{json,md}\" \"docs/*.md\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" \"*.{json,md}\" \"docs/*.md\"",
+    "generate:icons": "node scripts/generate-icons.mjs",
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test:coverage"
   },
   "dependencies": {
@@ -70,6 +71,7 @@
     "happy-dom": "^20.11.15",
     "postcss": "^8.5.0",
     "prettier": "^3.9.6",
+    "sharp": "^0.33.0",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.9.3",
