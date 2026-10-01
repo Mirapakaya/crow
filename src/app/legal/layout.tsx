@@ -23,7 +23,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           </a>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-4 py-8 prose prose-sm prose-invert dark:prose-invert light:prose-neutral">
+      <main className="mx-auto max-w-3xl px-4 py-8 space-y-4 text-sm leading-relaxed text-foreground">
         {children}
       </main>
       <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">

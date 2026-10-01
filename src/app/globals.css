@@ -6,52 +6,93 @@
 @import '../styles/app.css';
 @import '../styles/chat.css';
 
+/*
+ * Tailwind/shadcn colour bridge.
+ *
+ * HSL values derived from theme.css's ramp-and-role system so that Tailwind
+ * utility classes (bg-primary, text-muted-foreground, etc.) and any shadcn
+ * components render the same colours as the hand-crafted CSS that uses
+ * --bg, --text, --accent, etc. directly.
+ *
+ * The dark map is the default (matches :root without data-theme). The light
+ * map activates under data-theme='light', which is the same selector the rest
+ * of the app uses — the old .light class never matched anything.
+ */
+
 @layer base {
   :root {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 220 9% 46%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 0 0% 18%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 220 9% 46%;
-    --success: 142 76% 36%;
-    --warning: 38 92% 50%;
-    --radius: 0.625rem;
+    --background: 218 22% 7%;
+    --foreground: 210 25% 98%;
+    --card: 220 20% 12%;
+    --card-foreground: 210 25% 98%;
+    --popover: 220 20% 12%;
+    --popover-foreground: 210 25% 98%;
+    --primary: 216 63% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 19% 16%;
+    --secondary-foreground: 210 25% 98%;
+    --muted: 220 19% 16%;
+    --muted-foreground: 217 13% 69%;
+    --accent: 216 15% 20%;
+    --accent-foreground: 210 25% 98%;
+    --destructive: 4 77% 73%;
+    --destructive-foreground: 218 22% 7%;
+    --border: 215 12% 27%;
+    --input: 216 9% 44%;
+    --ring: 213 69% 66%;
+    --success: 151 41% 51%;
+    --warning: 39 67% 55%;
+    --radius: 0.4375rem;
   }
 
-  .light {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 9%;
-    --popover: 0 0% 98%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 220 9% 35%;
+  :root[data-theme='light'] {
+    --background: 210 22% 96%;
+    --foreground: 220 20% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 12%;
+    --primary: 217 75% 41%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 95%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 92%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 90%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 72% 51%;
+    --secondary: 210 24% 93%;
+    --secondary-foreground: 220 20% 12%;
+    --muted: 210 24% 93%;
+    --muted-foreground: 216 11% 36%;
+    --accent: 213 17% 90%;
+    --accent-foreground: 220 20% 12%;
+    --destructive: 4 70% 41%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 220 9% 35%;
+    --border: 215 17% 86%;
+    --input: 215 11% 58%;
+    --ring: 217 75% 41%;
+    --success: 154 66% 27%;
+    --warning: 34 87% 28%;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme='dark']) {
+      --background: 210 22% 96%;
+      --foreground: 220 20% 12%;
+      --card: 0 0% 100%;
+      --card-foreground: 220 20% 12%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 220 20% 12%;
+      --primary: 217 75% 41%;
+      --primary-foreground: 0 0% 100%;
+      --secondary: 210 24% 93%;
+      --secondary-foreground: 220 20% 12%;
+      --muted: 210 24% 93%;
+      --muted-foreground: 216 11% 36%;
+      --accent: 213 17% 90%;
+      --accent-foreground: 220 20% 12%;
+      --destructive: 4 70% 41%;
+      --destructive-foreground: 0 0% 100%;
+      --border: 215 17% 86%;
+      --input: 215 11% 58%;
+      --ring: 217 75% 41%;
+      --success: 154 66% 27%;
+      --warning: 34 87% 28%;
+    }
   }
 
   * {
