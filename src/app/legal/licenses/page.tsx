@@ -58,7 +58,6 @@ export default function LicensesPage() {
         <li><strong>Radix UI</strong> — Accessible UI primitives (WorkOS, Inc.)</li>
         <li><strong>Tailwind CSS</strong> — Utility-first CSS framework (Tailwind Labs)</li>
         <li><strong>ts-mls</strong> — MLS protocol implementation</li>
-        <li><strong>sonner</strong> — Toast notifications (Emil Kowalski)</li>
         <li><strong>class-variance-authority</strong> — Component variant utilities (Joe Bell)</li>
         <li><strong>clsx</strong> — Class name utility (Luke Edwards)</li>
         <li><strong>tailwind-merge</strong> — Tailwind class merging (Dany Lavoie)</li>
