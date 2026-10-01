@@ -349,6 +349,7 @@ time,
   letter-spacing: var(--tracking-caps);
   color: var(--text-faint);
   padding-inline: var(--space-1);
+  margin-block-start: var(--space-2);
 }
 
 :root[dir='rtl'] .section-title {
@@ -1386,6 +1387,19 @@ time,
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  animation: entry-in var(--duration-slow) var(--ease-out);
+}
+
+@keyframes entry-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry {
+    animation: none;
+  }
 }
 
 /* The bar shares the body's column so the wordmark sits on the same optical
@@ -1644,6 +1658,18 @@ time,
 .call-screen,
 .modal {
   animation: fade-in 180ms ease-out;
+}
+
+/* The ready shell fades in after the boot splash, so the transition
+   from branded spinner to working messenger reads as a single motion. */
+.app-shell:not(.boot-screen) {
+  animation: shell-ready var(--duration-slow) var(--ease-out);
+}
+
+@keyframes shell-ready {
+  from {
+    opacity: 0;
+  }
 }
 
 @keyframes fade-in {

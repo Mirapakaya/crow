@@ -114,7 +114,7 @@ export function AddContact() {
             <Button
               role="tab"
               aria-selected={mode === 'share'}
-              className={`btn grow ${mode === 'share' ? 'btn-primary' : 'btn-outline'}`}
+              variant={mode === 'share' ? 'default' : 'outline'} className="grow"
               onClick={() => setMode('share')}
             >
               <QrIcon size={16} />
@@ -123,7 +123,7 @@ export function AddContact() {
             <Button
               role="tab"
               aria-selected={mode === 'scan'}
-              className={`btn grow ${mode === 'scan' ? 'btn-primary' : 'btn-outline'}`}
+              variant={mode === 'scan' ? 'default' : 'outline'} className="grow"
               onClick={() => setMode('scan')}
             >
               <CameraIcon size={16} />
