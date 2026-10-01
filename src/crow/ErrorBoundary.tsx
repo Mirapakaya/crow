@@ -41,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="container stack" style={{ maxWidth: '34rem', paddingBlock: 'var(--space-7)' }}>
-        <h1 style={{ fontSize: 'var(--step-2)' }}>Textor hit an unexpected error</h1>
+        <h1 style={{ fontSize: 'var(--step-2)' }}>Crow hit an unexpected error</h1>
         <p className="muted">
           Your messages and keys are untouched — they are encrypted in this browser&apos;s storage and this
           screen does not change them. Reloading usually clears it.

@@ -33,7 +33,7 @@ export function Brand() {
       <span className="brand-mark" aria-hidden="true">
         <LockIcon size={13} />
       </span>
-      Textor
+      Crow
     </span>
   )
 }

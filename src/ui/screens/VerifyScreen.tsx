@@ -67,7 +67,7 @@ export function VerifyScreen({ peer }: { peer: string }) {
           </div>
 
           <Suspense fallback={<QrPlaceholder />}>
-            <QrCode value={`textor-sn:${number.compact}`} label={text('title')} />
+            <QrCode value={`crow-sn:${number.compact}`} label={text('title')} />
           </Suspense>
 
           {verified ? (
