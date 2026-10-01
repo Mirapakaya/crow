@@ -105,7 +105,7 @@ export const te: Dictionary = {
     you: 'మీరు: ',
     noMessages: 'ఇంకా సందేశాలు లేవు',
     searchPlaceholder: 'సంభాషణలను వెతకండి',
-    liveLocation: '📡 ప్రత్యక్ష స్థానం',
+    liveLocation: '📡 ప్రత్యక్ష స్థానం', filterAll: 'అన్నీ', filterUnread: 'చదవని', filterGroups: 'సమూహాలు', pin: 'పిన్', unpin: 'అన్‌పిన్', pinned: 'పిన్ చేసినవి',
   },
 
   groups: {

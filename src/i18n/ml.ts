@@ -105,7 +105,7 @@ export const ml: Dictionary = {
     you: 'നിങ്ങൾ: ',
     noMessages: 'സന്ദേശങ്ങൾ ഇതുവരെ ഇല്ല',
     searchPlaceholder: 'സംഭാഷണങ്ങൾ തിരയുക',
-    liveLocation: '📡 തത്സമയ ലൊക്കേഷൻ',
+    liveLocation: '📡 തത്സമയ ലൊക്കേഷൻ', filterAll: 'എല്ലാം', filterUnread: 'വായിക്കാത്തത്', filterGroups: 'ഗ്രൂപ്പുകൾ', pin: 'പിൻ', unpin: 'അൺപിൻ', pinned: 'പിൻ ചെയ്തത്',
   },
 
   groups: {

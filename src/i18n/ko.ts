@@ -28,7 +28,7 @@ export const ko: Dictionary = {
   },
   nav: { chats: '채팅', contacts: '연락처', settings: '설정', pickChat: '대화를 선택하세요', pickContact: '연락처를 선택하세요', pickSetting: '설정 항목을 선택하세요' },
   chats: {
-    title: '채팅', empty: '대화가 없습니다', emptyBody: '연락처를 추가하여 첫 번째 암호화 대화를 시작하세요.', addContact: '연락처 추가', requests: '메시지 요청', requestsBody: '연락처 외부에서 연락한 사람과 그룹입니다.', draft: '임시 보관', you: '나: ', noMessages: '메시지가 없습니다', searchPlaceholder: '대화 검색', liveLocation: '📡 실시간 위치',
+    title: '채팅', empty: '대화가 없습니다', emptyBody: '연락처를 추가하여 첫 번째 암호화 대화를 시작하세요.', addContact: '연락처 추가', requests: '메시지 요청', requestsBody: '연락처 외부에서 연락한 사람과 그룹입니다.', draft: '임시 보관', you: '나: ', noMessages: '메시지가 없습니다', searchPlaceholder: '대화 검색', liveLocation: '📡 실시간 위치', filterAll: '모두', filterUnread: '읽지 않음', filterGroups: '그룹', pin: '고정', unpin: '고정 해제', pinned: '고정됨',
   },
   groups: {
     newGroup: '새 그룹', name: '그룹 이름', namePlaceholder: '선택 — 구성원이 볼 수 있습니다', pickMembers: '구성원 선택', chosen: '{n}/{max}명 선택', limitTitle: '최대 {max}명 (본인 포함)',

@@ -41,7 +41,7 @@ export const ja: Dictionary = {
   chats: {
     title: 'チャット', empty: '会話がありません', emptyBody: '連絡先を追加して最初の暗号化会話を始めましょう。',
     addContact: '連絡先を追加', requests: 'メッセージリクエスト', requestsBody: '連絡先以外からのメッセージ。',
-    draft: '下書き', you: 'あなた：', noMessages: 'メッセージはまだありません', searchPlaceholder: '会話を検索', liveLocation: '📡 現在位置',
+    draft: '下書き', you: 'あなた：', noMessages: 'メッセージはまだありません', searchPlaceholder: '会話を検索', liveLocation: '📡 現在位置', filterAll: 'すべて', filterUnread: '未読', filterGroups: 'グループ', pin: 'ピン留め', unpin: 'ピン留め解除', pinned: 'ピン留め',
   },
   groups: {
     newGroup: '新しいグループ', name: 'グループ名', namePlaceholder: '任意 — メンバーに表示されます',

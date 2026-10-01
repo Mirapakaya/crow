@@ -105,7 +105,7 @@ export const mr: Dictionary = {
     you: 'तुम्ही: ',
     noMessages: 'अद्याप संदेश नाहीत',
     searchPlaceholder: 'संभाषणे शोधा',
-    liveLocation: '📡 थेट स्थान',
+    liveLocation: '📡 थेट स्थान', filterAll: 'सर्व', filterUnread: 'न वाचलेले', filterGroups: 'गट', pin: 'पिन', unpin: 'अनपिन', pinned: 'पिन केलेले',
   },
 
   groups: {

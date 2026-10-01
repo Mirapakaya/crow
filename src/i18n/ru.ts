@@ -105,7 +105,7 @@ export const ru: Dictionary = {
     you: 'Вы: ',
     noMessages: 'Пока нет сообщений',
     searchPlaceholder: 'Поиск разговоров',
-    liveLocation: '📡 Трансляция местоположения',
+    liveLocation: '📡 Трансляция местоположения', filterAll: 'Все', filterUnread: 'Непрочитанные', filterGroups: 'Группы', pin: 'Закрепить', unpin: 'Открепить', pinned: 'Закреплённые',
   },
 
   groups: {
