@@ -5,6 +5,7 @@ import { LAZY_CHUNKS } from '../lazyViews'
 import type { Sticker, StickerPack } from '../../core/models/types'
 import { EMOJI_GROUPS } from './emojiSet'
 import './picker.css'
+import { Button } from '../components/ui/button'
 
 /**
  * The emoji and sticker picker.
@@ -38,7 +39,7 @@ export default function EmojiPicker({ mode, onPickEmoji, onPickSticker }: EmojiP
     <div className="picker" role="group" aria-label={t('emoji.title')}>
       {mode === 'compose' ? (
         <div className="picker-tabs" role="tablist" aria-label={t('emoji.title')}>
-          <button
+          <Button
             type="button"
             role="tab"
             id="picker-tab-emoji"
@@ -48,8 +49,8 @@ export default function EmojiPicker({ mode, onPickEmoji, onPickSticker }: EmojiP
             onClick={() => setTab('emoji')}
           >
             {t('emoji.tabEmoji')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             role="tab"
             id="picker-tab-stickers"
@@ -59,7 +60,7 @@ export default function EmojiPicker({ mode, onPickEmoji, onPickSticker }: EmojiP
             onClick={() => setTab('stickers')}
           >
             {t('emoji.tabStickers')}
-          </button>
+          </Button>
         </div>
       ) : null}
 
@@ -88,7 +89,7 @@ function EmojiGrid({ onPick }: { onPick: (emoji: string) => void }) {
           <h3 className="picker-heading">{t(group.key)}</h3>
           <div className="picker-grid">
             {group.emoji.map((emoji) => (
-              <button
+              <Button
                 key={emoji}
                 type="button"
                 className="picker-emoji"
@@ -97,7 +98,7 @@ function EmojiGrid({ onPick }: { onPick: (emoji: string) => void }) {
                 onClick={() => onPick(emoji)}
               >
                 {emoji}
-              </button>
+              </Button>
             ))}
           </div>
         </section>
@@ -156,9 +157,9 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
           <section key={pack.id} className="picker-group">
             <h3 className="picker-heading">
               <span dir="auto">{pack.name}</span>
-              <button type="button" className="btn btn-ghost small" onClick={() => void deletePack(pack.id)}>
+              <Button type="button" variant="ghost" size="sm" onClick={() => void deletePack(pack.id)}>
                 {t('emoji.removePack')}
-              </button>
+              </Button>
             </h3>
             <div className="picker-grid stickers">
               {pack.stickers.map((sticker) => (
@@ -169,7 +170,7 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
         ))
       )}
 
-      <label className="btn btn-ghost small picker-import">
+      <label variant="ghost" size="sm" className="picker-import">
         {busy ? t('emoji.importing') : t('emoji.addPack')}
         <input
           ref={fileRef}
@@ -200,8 +201,8 @@ function StickerButton({ sticker, onPick }: { sticker: Sticker; onPick?: (sticke
   }, [openSticker, sticker])
 
   return (
-    <button type="button" className="picker-sticker" onClick={() => onPick?.(sticker)} disabled={!url}>
+    <Button type="button" className="picker-sticker" onClick={() => onPick?.(sticker)} disabled={!url}>
       {url ? <img src={url} alt="" loading="lazy" /> : <span className="picker-sticker-loading" />}
-    </button>
+    </Button>
   )
 }

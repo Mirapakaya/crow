@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { CloseIcon, ContactsIcon } from './Icons'
 import { useT } from '../../i18n'
+import { Button } from '../components/ui/button'
 
 /** Deterministic avatar colour from a public key — stable across devices. */
 export function avatarColor(seed: string): string {
@@ -187,9 +188,9 @@ export function Modal({
             {title}
           </h2>
           {closable ? (
-            <button type="button" className="btn btn-icon" onClick={onClose} aria-label={t('common.close')} title={t('common.close')}>
+            <Button type="button" size="icon" variant="ghost" onClick={onClose} aria-label={t('common.close')} title={t('common.close')}>
               <CloseIcon />
-            </button>
+            </Button>
           ) : null}
         </div>
         {children}
@@ -253,7 +254,7 @@ export function EmptyState({ title, body, action }: { title: string; body?: stri
 export function CopyButton({
   value,
   label,
-  className = 'btn btn-outline',
+  variant = 'outline' as const,
 }: {
   value: string
   label?: string
@@ -262,7 +263,7 @@ export function CopyButton({
   const t = useT()
   const [copied, setCopied] = useCopyState()
   return (
-    <button
+    <Button
       type="button"
       className={className}
       onClick={async () => {
@@ -276,7 +277,7 @@ export function CopyButton({
       }}
     >
       {copied ? t('common.copied') : (label ?? t('common.copy'))}
-    </button>
+    </Button>
   )
 }
 

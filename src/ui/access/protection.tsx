@@ -20,6 +20,7 @@ import {
 import { canOpenInstantly, isValidPin, normalizePin } from '../../core/vault/keyslots'
 import type { SlotEnrolment } from '../../core/vault/vault'
 import './access.css'
+import { Button } from '../components/ui/button'
 
 export const MIN_PASSPHRASE = 10
 
@@ -295,16 +296,16 @@ export function PatternSetup({
         </p>
       ) : null}
       {first ? (
-        <button
+        <Button
           type="button"
-          className="btn btn-ghost small"
+          variant="ghost" size="sm"
           onClick={() => {
             setFirst(null)
             setError(null)
           }}
         >
           {text('patternRestart')}
-        </button>
+        </Button>
       ) : null}
     </div>
   )
@@ -450,7 +451,7 @@ export function ProtectionChooser({
 
       <div className="choice-list" role="radiogroup" aria-label={text('protectTitle')}>
         {options.map((option) => (
-          <button
+          <Button
             key={option.value}
             type="button"
             role="radio"
@@ -461,7 +462,7 @@ export function ProtectionChooser({
           >
             <span className="choice-title">{option.title}</span>
             <span className="small muted">{option.body}</span>
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -505,9 +506,9 @@ export function ProtectionChooser({
       {recoveryNote ? <p className="hint">{text('recoveryNote')}</p> : null}
 
       {choice === 'pattern' ? null : (
-        <button className="btn btn-primary btn-block" disabled={busy} onClick={() => void go()}>
+        <Button  disabled={busy} onClick={() => void go()}>
           {busy ? <Spinner label={t('common.working')} /> : t('common.next')}
-        </button>
+        </Button>
       )}
     </>
   )

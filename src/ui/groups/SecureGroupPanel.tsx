@@ -9,6 +9,7 @@ import { confirmDanger } from '../components/dialog'
 import { LockIcon, PlusIcon, RefreshIcon, ShieldCheckIcon, TrashIcon } from '../components/Icons'
 import { displayName } from '../screens/ChatList'
 import { explainFailure, useSecureText } from './secureText'
+import { Button } from '../components/ui/button'
 
 /**
  * RFC 9420's epoch authenticator, as people can read it aloud: the first 80
@@ -81,9 +82,9 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
         <Banner tone="warning">
           <span className="grow">{text('left')}</span>
         </Banner>
-        <button
+        <Button
           type="button"
-          className="btn btn-danger-soft btn-block"
+          variant="danger-soft" block
           onClick={async () => {
             if (!(await confirmDanger(text('deleteHistory'), text('deleteHistory'), text('deleteConfirm'))))
               return
@@ -92,7 +93,7 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
         >
           <TrashIcon size={16} />
           {text('deleteHistory')}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -114,15 +115,15 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
           <p className="hint">{text('codeHint')}</p>
         </div>
         <p className="small">{text('refreshed', { when: relative(mls.refreshedAt, locale) })}</p>
-        <button
+        <Button
           type="button"
-          className="btn btn-ghost small"
+          variant="ghost" size="sm"
           disabled={busy}
           onClick={() => void run({ rotate: true })}
         >
           <RefreshIcon size={14} />
           {busy ? text('working') : text('refreshNow')}
-        </button>
+        </Button>
       </div>
 
       <div className="card-section">
@@ -154,9 +155,9 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
                 ) : null}
                 {mls.admins.includes(pubkey) ? <span className="badge">{text('admin')}</span> : null}
                 {amAdmin ? (
-                  <button
+                  <Button
                     type="button"
-                    className="btn btn-ghost small danger-text"
+                    variant="ghost" size="sm" className="danger-text"
                     disabled={busy}
                     aria-label={`${text('remove')} ${name}`}
                     onClick={async () => {
@@ -168,7 +169,7 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
                     }}
                   >
                     {text('remove')}
-                  </button>
+                  </Button>
                 ) : null}
               </div>
             )
@@ -209,9 +210,9 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
               </div>
             ) : null}
             <div className="row" style={{ gap: 'var(--space-2)' }}>
-              <button
+              <Button
                 type="button"
-                className="btn btn-primary grow"
+                className="grow"
                 disabled={busy || chosen.length === 0}
                 onClick={() =>
                   void run({ add: chosen }, () => {
@@ -221,28 +222,28 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
                 }
               >
                 {busy ? text('finding') : text('addChosen', { n: chosen.length })}
-              </button>
-              <button type="button" className="btn btn-ghost" onClick={() => setAdding(false)}>
+              </Button>
+              <Button type="button" variant="ghost" onClick={() => setAdding(false)}>
                 {t('common.cancel')}
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
-          <button
+          <Button
             type="button"
-            className="btn btn-ghost btn-block"
+            variant="ghost" block
             disabled={room <= 0}
             onClick={() => setAdding(true)}
           >
             <PlusIcon size={16} />
             {text('add')}
-          </button>
+          </Button>
         )
       ) : null}
 
-      <button
+      <Button
         type="button"
-        className="btn btn-danger-soft btn-block"
+        variant="danger-soft" block
         disabled={busy}
         onClick={async () => {
           const note = amAdmin && group.members.length > 0 ? `\n\n${text('leaveAdmin')}` : ''
@@ -251,7 +252,7 @@ export function SecureGroupPanel({ group }: { group: Conversation }) {
         }}
       >
         {text('leave')}
-      </button>
+      </Button>
     </div>
   )
 }

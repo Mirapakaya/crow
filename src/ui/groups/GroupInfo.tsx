@@ -8,6 +8,7 @@ import { BackIcon, ShieldCheckIcon, TrashIcon } from '../components/Icons'
 import { Skeleton } from '../components/Skeleton'
 import { conversationTitle, displayName } from '../screens/ChatList'
 import { SecureGroupPanel } from './SecureGroupPanel'
+import { Button } from '../components/ui/button'
 
 /**
  * Who is in a group, and what can be done to it here.
@@ -36,9 +37,9 @@ export function GroupInfo({ id }: { id: string }) {
     return (
       <div className="screen">
         <header className="app-header">
-          <button className="btn btn-icon" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
+          <Button size="icon" variant="ghost" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
             <BackIcon />
-          </button>
+          </Button>
         </header>
         {!conversationsLoaded ? (
           <GroupInfoSkeleton />
@@ -58,9 +59,9 @@ export function GroupInfo({ id }: { id: string }) {
   return (
     <div className="screen">
       <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
+        <Button size="icon" variant="ghost" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </button>
+        </Button>
         <h1 className="grow">{t('groups.info')}</h1>
       </header>
 
@@ -112,14 +113,14 @@ export function GroupInfo({ id }: { id: string }) {
                     // Someone in the address book opens their contact page, where
                     // they can be verified; a stranger has nothing to open yet.
                     return contact ? (
-                      <button
+                      <Button
                         key={pubkey}
                         type="button"
                         className="list-row"
                         onClick={() => navigate({ name: 'contact', peer: pubkey })}
                       >
                         {body}
-                      </button>
+                      </Button>
                     ) : (
                       <div key={pubkey} className="list-row">
                         {body}
@@ -130,10 +131,10 @@ export function GroupInfo({ id }: { id: string }) {
 
               <p className="hint">{t('groups.fixedMembers')}</p>
 
-              <button type="button" className="btn btn-danger-soft btn-block" onClick={() => void remove()}>
+              <Button type="button" variant="danger-soft" block onClick={() => void remove()}>
                 <TrashIcon size={16} />
                 {t('groups.delete')}
-              </button>
+              </Button>
             </>
           )}
         </div>

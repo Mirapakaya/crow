@@ -8,6 +8,7 @@ import type { SlotEnrolment } from '../../core/vault/vault'
 import type { ExportPayload } from '../../core/vault/exportImport'
 import { useAccessText } from '../access/accessText'
 import { ProtectionChooser } from '../access/protection'
+import { Button } from '../components/ui/button'
 
 /**
  * Restore a vault from an encrypted backup file, before any identity exists.
@@ -66,9 +67,9 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
     return (
       <EntryLayout>
         <ProtectionChooser recoveryNote={Boolean(payload.identity?.mnemonic)} onChoose={restore} />
-        <button className="btn btn-ghost btn-block" onClick={onCancel}>
+        <Button variant="ghost" block onClick={onCancel}>
           {t('common.cancel')}
-        </button>
+        </Button>
       </EntryLayout>
     )
   }
@@ -120,8 +121,8 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
           />
         )}
       </Field>
-      <button
-        className="btn btn-ghost small"
+      <Button
+        variant="ghost" size="sm"
         onClick={() => {
           setWithRecovery((value) => !value)
           setSecret('')
@@ -129,18 +130,18 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
         }}
       >
         {withRecovery ? text('fileWithPassphrase') : text('fileWithRecovery')}
-      </button>
+      </Button>
 
-      <button
-        className="btn btn-primary btn-block"
+      <Button
+        
         disabled={!file || !secret.trim() || busy}
         onClick={() => void open()}
       >
         {busy ? <Spinner label={t('common.working')} /> : t('common.next')}
-      </button>
-      <button className="btn btn-ghost btn-block" onClick={onCancel} disabled={busy}>
+      </Button>
+      <Button variant="ghost" block onClick={onCancel} disabled={busy}>
         {t('common.cancel')}
-      </button>
+      </Button>
     </EntryLayout>
   )
 }

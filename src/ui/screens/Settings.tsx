@@ -19,6 +19,7 @@ import { SettingsPage } from './SettingsPage'
 import type { LocaleCode, ThemePreference } from '../../core/models/types'
 import { APP_VERSION, SOURCE_URL } from '../../crow/meta'
 import { useAboutText } from './aboutText'
+import { Button } from '../components/ui/button'
 
 export function SettingsHome() {
   const { t } = useI18n()
@@ -118,7 +119,7 @@ export function SettingsHome() {
             </Field>
 
             <div className="row">
-              <label className="btn btn-outline grow">
+              <label variant="outline" className="grow">
                 {t('settings.avatarChoose')}
                 <input
                   type="file"
@@ -131,9 +132,9 @@ export function SettingsHome() {
                 />
               </label>
               {identity.avatar ? (
-                <button className="btn btn-ghost" onClick={() => void updateProfile({ avatar: undefined })}>
+                <Button variant="ghost" onClick={() => void updateProfile({ avatar: undefined })}>
                   {t('settings.avatarRemove')}
-                </button>
+                </Button>
               ) : null}
             </div>
           </div>
@@ -219,10 +220,10 @@ export function SettingsHome() {
             </div>
           </div>
 
-          <button className="btn btn-outline btn-block" onClick={() => lock()}>
+          <Button variant="outline" block onClick={() => lock()}>
             <LockIcon size={16} />
             {t('settings.lockNow')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -234,11 +235,11 @@ export function NavRow({ icon, label, to }: { icon?: React.ReactNode; label: str
   const navigate = useNavigate()
   const current = useRoute().name === to.name
   return (
-    <button className="list-row" aria-current={current || undefined} onClick={() => navigate(to)}>
+    <Button className="list-row" aria-current={current || undefined} onClick={() => navigate(to)}>
       {icon ? <span style={{ color: 'var(--text-muted)' }}>{icon}</span> : null}
       <span className="grow">{label}</span>
       <ChevronIcon size={16} style={{ color: 'var(--text-faint)' }} />
-    </button>
+    </Button>
   )
 }
 

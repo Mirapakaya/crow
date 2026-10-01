@@ -14,6 +14,7 @@ import { locationText, useLocationText } from './locationText'
 import { liveLine, markerFor, spanAround } from './present'
 import { ASPECT, MapView, type MapMarker } from './MapView'
 import { useNow } from './useNow'
+import { Button } from '../components/ui/button'
 
 /** The closest and furthest a map may be drawn: a room, and a province. */
 const SPAN = { min: 30, max: 200_000 }
@@ -137,17 +138,17 @@ export function LocationViewer({ message, onClose }: { message: Message; onClose
         </dl>
 
         <div className="location-actions">
-          <button type="button" className="btn btn-outline" onClick={() => setShowMe((on) => !on)}>
+          <Button type="button" variant="outline" onClick={() => setShowMe((on) => !on)}>
             {showMe ? text('hideMe') : text('showMe')}
-          </button>
-          <button type="button" className="btn btn-outline" onClick={copy}>
+          </Button>
+          <Button type="button" variant="outline" onClick={copy}>
             {text('copy')}
-          </button>
-          <a className="btn btn-outline" href={`geo:${lat},${lon}`}>
+          </Button>
+          <a variant="outline" href={`geo:${lat},${lon}`}>
             {text('openApp')}
           </a>
           <a
-            className="btn btn-outline"
+            variant="outline"
             href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -155,16 +156,16 @@ export function LocationViewer({ message, onClose }: { message: Message; onClose
             {text('openOsm')}
           </a>
           {status?.active && message.direction === 'out' ? (
-            <button
+            <Button
               type="button"
-              className="btn btn-danger"
+              variant="destructive"
               onClick={() => {
                 void stopSharing(message.id)
                 onClose()
               }}
             >
               {text('stop')}
-            </button>
+            </Button>
           ) : null}
         </div>
         <p className="hint">

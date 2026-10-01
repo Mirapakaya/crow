@@ -13,6 +13,7 @@ import { ConnectionBadge } from '../components/ConnectionStatus'
 import { callSummary, isCallEntry } from '../components/CallBubble'
 import { LiveBanner } from '../lazyViews'
 import { Skeleton } from '../components/Skeleton'
+import { Button } from '../components/ui/button'
 
 export function displayName(contact: Contact | undefined, pubkey: string): string {
   return contact?.name || contact?.remoteName || shortNpub(toNpub(pubkey))
@@ -113,7 +114,7 @@ export function ChatList() {
         : null
     return (
       <div key={conversation.id} className="convo-row-wrap" role="listitem">
-        <button
+        <Button
           className="convo-row"
           aria-current={open === (group ? conversation.id : conversation.peerPubkey) || undefined}
           onClick={() =>
@@ -181,12 +182,12 @@ export function ChatList() {
             ) : null}
           </span>
         </span>
-      </button>
+      </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="btn btn-icon convo-row-more" aria-label={t('chats.messageActions')} title={t('chats.messageActions')}>
+          <Button size="icon" variant="ghost" className="convo-row-more" aria-label={t('chats.messageActions')} title={t('chats.messageActions')}>
             <MoreIcon size={16} />
-          </button>
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onSelect={() => togglePin(conversation.id)}>
@@ -204,30 +205,30 @@ export function ChatList() {
       <header className="app-header">
         <h1 className="grow">{t('chats.title')}</h1>
         <ConnectionBadge />
-        <button
-          className="btn btn-icon"
+        <Button
+          size="icon" variant="ghost"
           aria-label={t('chats.filterLabel')}
           title={t('chats.searchPlaceholder')}
           onClick={() => navigate({ name: 'search' })}
         >
           <SearchIcon />
-        </button>
-        <button
-          className="btn btn-icon"
+        </Button>
+        <Button
+          size="icon" variant="ghost"
           aria-label={t('groups.newGroup')}
           title={t('groups.newGroup')}
           onClick={() => navigate({ name: 'new-group' })}
         >
           <ContactsIcon />
-        </button>
-        <button
-          className="btn btn-icon"
+        </Button>
+        <Button
+          size="icon" variant="ghost"
           aria-label={t('contacts.add')}
           title={t('contacts.add')}
           onClick={() => navigate({ name: 'add-contact' })}
         >
           <PlusIcon />
-        </button>
+        </Button>
       </header>
 
       <Notices />
@@ -240,9 +241,9 @@ export function ChatList() {
 
       {conversations.length > 2 ? (
         <div className="segmented" style={{ margin: 'var(--space-2) var(--space-3)' }} role="tablist" aria-label={t('chats.filterLabel')}>
-          <button role="tab" aria-selected={filter === 'all'} onClick={() => setFilter('all')}>{t('chats.filterAll')}</button>
-          <button role="tab" aria-selected={filter === 'unread'} onClick={() => setFilter('unread')}>{t('chats.filterUnread')}</button>
-          <button role="tab" aria-selected={filter === 'groups'} onClick={() => setFilter('groups')}>{t('chats.filterGroups')}</button>
+          <Button role="tab" aria-selected={filter === 'all'} onClick={() => setFilter('all')}>{t('chats.filterAll')}</Button>
+          <Button role="tab" aria-selected={filter === 'unread'} onClick={() => setFilter('unread')}>{t('chats.filterUnread')}</Button>
+          <Button role="tab" aria-selected={filter === 'groups'} onClick={() => setFilter('groups')}>{t('chats.filterGroups')}</Button>
         </div>
       ) : null}
 
@@ -266,9 +267,9 @@ export function ChatList() {
             title={t('chats.empty')}
             body={t('chats.emptyBody')}
             action={
-              <button className="btn btn-primary" onClick={() => navigate({ name: 'add-contact' })}>
+              <Button  onClick={() => navigate({ name: 'add-contact' })}>
                 {t('chats.addContact')}
-              </button>
+              </Button>
             }
           />
         ) : (
@@ -320,9 +321,9 @@ function Notices() {
       {backup ? (
         <Banner tone="warning">
           <span className="grow">{t('onboarding.backupTitle')}</span>
-          <button className="btn btn-ghost small" onClick={() => resumeBackup()}>
+          <Button variant="ghost" size="sm" onClick={() => resumeBackup()}>
             {t('common.show')}
-          </button>
+          </Button>
         </Banner>
       ) : null}
       {/* Opened with the recovery phrase, which usually means the everyday
@@ -331,15 +332,15 @@ function Notices() {
       {opened || retired ? (
         <Banner tone="accent">
           <span className="grow small">{retired ? t('lock.retired') : t('lock.recovered')}</span>
-          <button
-            className="btn btn-ghost small"
+          <Button
+            variant="ghost" size="sm"
             onClick={() => {
               dismiss()
               navigate({ name: 'settings-security' })
             }}
           >
             {t('lock.recoveredAction')}
-          </button>
+          </Button>
         </Banner>
       ) : null}
     </div>

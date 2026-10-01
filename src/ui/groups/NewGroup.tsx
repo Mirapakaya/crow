@@ -9,6 +9,7 @@ import { BackIcon, ContactsIcon, LockIcon, ShieldCheckIcon } from '../components
 import { displayName } from '../screens/ChatList'
 import { MAX_GROUP_MEMBERS, MAX_MLS_MEMBERS, MAX_SUBJECT_CHARS } from '../../core/models/protocol'
 import { explainFailure, useSecureText } from './secureText'
+import { Button } from '../components/ui/button'
 
 type Kind = 'small' | 'secure'
 
@@ -100,9 +101,9 @@ export function NewGroup() {
   return (
     <div className="screen">
       <header className="app-header">
-        <button className="btn btn-icon" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
+        <Button size="icon" variant="ghost" aria-label={t('common.back')} title={t('common.back')} onClick={() => goBack()}>
           <BackIcon />
-        </button>
+        </Button>
         <h1 className="grow">{t('groups.newGroup')}</h1>
       </header>
 
@@ -113,9 +114,9 @@ export function NewGroup() {
           <EmptyState
             title={t('groups.noContacts')}
             action={
-              <button className="btn btn-primary" onClick={() => navigate({ name: 'add-contact' })}>
+              <Button  onClick={() => navigate({ name: 'add-contact' })}>
                 {t('chats.addContact')}
-              </button>
+              </Button>
             }
           />
         ) : (
@@ -205,15 +206,15 @@ export function NewGroup() {
               </Banner>
             ) : null}
 
-            <button
+            <Button
               type="button"
-              className="btn btn-primary btn-block"
+              
               disabled={!enough || busy}
               aria-busy={busy}
               onClick={() => void create()}
             >
               {busy && secure ? text('finding') : t('groups.create')}
-            </button>
+            </Button>
           </div>
         )}
       </div>

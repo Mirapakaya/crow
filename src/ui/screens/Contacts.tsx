@@ -7,6 +7,7 @@ import { Badge } from '../components/ui/badge'
 import { PlusIcon, ShieldCheckIcon } from '../components/Icons'
 import { Skeleton } from '../components/Skeleton'
 import { displayName } from './ChatList'
+import { Button } from '../components/ui/button'
 
 export function ContactsList() {
   const { t } = useI18n()
@@ -33,13 +34,13 @@ export function ContactsList() {
     <div className="screen">
       <header className="app-header">
         <h1 className="grow">{t('contacts.title')}</h1>
-        <button
-          className="btn btn-icon"
+        <Button
+          size="icon" variant="ghost"
           aria-label={t('contacts.add')} title={t('contacts.add')}
           onClick={() => navigate({ name: 'add-contact' })}
         >
           <PlusIcon />
-        </button>
+        </Button>
       </header>
 
       {contacts.size > 5 ? (
@@ -61,14 +62,14 @@ export function ContactsList() {
           <EmptyState
             title={t('contacts.empty')}
             action={
-              <button className="btn btn-primary" onClick={() => navigate({ name: 'add-contact' })}>
+              <Button  onClick={() => navigate({ name: 'add-contact' })}>
                 {t('contacts.add')}
-              </button>
+              </Button>
             }
           />
         ) : (
           list.map((contact) => (
-            <button
+            <Button
               key={contact.pubkey}
               className="list-row"
               aria-current={open === contact.pubkey || undefined}
@@ -85,7 +86,7 @@ export function ContactsList() {
                 <ShieldCheckIcon size={15} style={{ color: 'var(--success)' }} />
               ) : null}
               {contact.blocked ? <Badge variant="danger">{t('chat.block')}</Badge> : null}
-            </button>
+            </Button>
           ))
         )}
       </div>

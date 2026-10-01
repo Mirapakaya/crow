@@ -455,7 +455,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
             <ForwardIcon />
           </Button>
           <Button
-            className="btn btn-icon danger-text"
+            size="icon" variant="ghost" className="danger-text"
             aria-label={t('chat.delete')}
             title={t('chat.delete')}
             onClick={() => void remove(picked)}
@@ -541,7 +541,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
               {t('groups.accept')}
             </Button>
             <Button
-              className="btn btn-ghost small danger-text"
+              variant="ghost" size="sm" className="danger-text"
               onClick={async () => {
                 if (!(await confirmDanger(t('groups.delete'), t('groups.delete'), t('groups.deleteConfirm'))))
                   return
@@ -565,7 +565,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
               {t('chat.accept')}
             </Button>
             <Button
-              className="btn btn-ghost small danger-text"
+              variant="ghost" size="sm" className="danger-text"
               onClick={() => void updateContact(peer, { blocked: true })}
             >
               {t('chat.block')}

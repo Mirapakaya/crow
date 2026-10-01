@@ -398,7 +398,7 @@ function MethodFlow({
             </Banner>
             {errorLine}
             <Button
-              className="btn btn-danger-soft btn-block"
+              variant="danger-soft" block
               disabled={busy}
               onClick={() =>
                 void run(async () => {
@@ -497,7 +497,7 @@ function MethodFlow({
             </Banner>
             {errorLine}
             <Button
-              className="btn btn-danger-soft btn-block"
+              variant="danger-soft" block
               disabled={busy}
               onClick={() =>
                 void run(async () => {

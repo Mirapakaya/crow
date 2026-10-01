@@ -5,6 +5,7 @@ import { useCallSettingsText, type CallSettingsTextFn, type CallSettingsTextKey 
 import { Banner, Field, Toggle } from '../components/primitives'
 import { GlobeIcon, PlusIcon, RefreshIcon, TrashIcon } from '../components/Icons'
 import { SettingsPage } from './SettingsPage'
+import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { hasTurnServer } from '../../core/models/call'
 import { alreadyListed, parseIceServer, serverUrls } from '../../core/calls/iceServers'
@@ -123,14 +124,14 @@ export function CallSettings() {
                   </span>
                 ) : null}
               </span>
-              <button
-                className="btn btn-icon"
+              <Button
+                size="icon" variant="ghost"
                 aria-label={st('iceRemove')}
                 title={st('iceRemove')}
                 onClick={() => void remove(index)}
               >
                 <TrashIcon size={16} />
-              </button>
+              </Button>
             </div>
           ))
         )}
@@ -189,22 +190,22 @@ export function CallSettings() {
             </Field>
           </div>
         </div>
-        <button className="btn btn-primary" type="submit" disabled={!url.trim()}>
+        <Button  type="submit" disabled={!url.trim()}>
           <PlusIcon size={16} />
           {st('iceAdd')}
-        </button>
+        </Button>
       </form>
 
       <div className="card stack-sm">
-        <button
-          className="btn btn-outline"
+        <Button
+          variant="outline"
           disabled={!canCall || probe === 'running'}
           onClick={() => void test()}
           aria-busy={probe === 'running'}
         >
           <RefreshIcon size={16} />
           {probe === 'running' ? st('iceTesting') : st('iceTest')}
-        </button>
+        </Button>
         {typeof probe === 'object' ? (
           <div className="stack-sm" aria-live="polite">
             <ProbeRow label={st('iceStun')} ok={probe.stun} st={st} />
