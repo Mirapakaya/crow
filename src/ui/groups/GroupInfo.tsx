@@ -5,6 +5,7 @@ import { goBack, useNavigate } from '../../crow/router'
 import { Avatar, EmptyState, GroupAvatar } from '../components/primitives'
 import { confirmDanger } from '../components/dialog'
 import { BackIcon, ShieldCheckIcon, TrashIcon } from '../components/Icons'
+import { Skeleton } from '../components/Skeleton'
 import { conversationTitle, displayName } from '../screens/ChatList'
 import { SecureGroupPanel } from './SecureGroupPanel'
 
@@ -39,9 +40,11 @@ export function GroupInfo({ id }: { id: string }) {
             <BackIcon />
           </button>
         </header>
-        {conversationsLoaded ? (
+        {!conversationsLoaded ? (
+          <GroupInfoSkeleton />
+        ) : (
           <EmptyState title={t('groups.notFound')} body={t('groups.notFoundBody')} />
-        ) : null}
+        )}
       </div>
     )
   }
@@ -135,6 +138,24 @@ export function GroupInfo({ id }: { id: string }) {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function GroupInfoSkeleton() {
+  return (
+    <div
+      className="container stack"
+      aria-busy="true"
+      aria-label="Loading group info…"
+      style={{ maxWidth: '34rem' }}
+    >
+      <div className="stack-sm center" style={{ padding: 'var(--space-6) 0' }}>
+        <span className="skeleton skeleton-avatar avatar-lg" style={{ width: '5rem', height: '5rem' }} />
+        <span className="skeleton skeleton-text" style={{ width: '50%' }} />
+      </div>
+      <span className="skeleton skeleton-text" style={{ height: '4rem' }} />
+      <span className="skeleton skeleton-text" style={{ height: '4rem' }} />
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { goBack, useNavigate } from '../../crow/router'
+import { Skeleton } from '../components/Skeleton'
 import { Avatar, Banner, EmptyState, Field } from '../components/primitives'
 import { SegmentedControl } from '../components/SegmentedControl'
 import { BackIcon, ContactsIcon, LockIcon, ShieldCheckIcon } from '../components/Icons'
@@ -27,6 +28,7 @@ export function NewGroup() {
   const text = useSecureText()
   const navigate = useNavigate()
   const contacts = useApp((s) => s.contacts)
+  const conversationsLoaded = useApp((s) => s.conversationsLoaded)
   const createGroup = useApp((s) => s.createGroup)
   const createSecureGroup = useApp((s) => s.createSecureGroup)
   const toast = useApp((s) => s.toast)
@@ -105,7 +107,9 @@ export function NewGroup() {
       </header>
 
       <div className="screen-scroll">
-        {candidates.length < (secure ? 1 : 2) ? (
+        {!conversationsLoaded ? (
+          <ContactsSkeleton />
+        ) : candidates.length < (secure ? 1 : 2) ? (
           <EmptyState
             title={t('groups.noContacts')}
             action={
@@ -213,6 +217,19 @@ export function NewGroup() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function ContactsSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Loading contacts…">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <div key={index} className="skeleton-row">
+          <span className="skeleton skeleton-avatar" />
+          <span className="skeleton skeleton-text" style={{ width: '45%' }} />
+        </div>
+      ))}
     </div>
   )
 }
