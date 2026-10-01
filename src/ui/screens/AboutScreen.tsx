@@ -86,6 +86,34 @@ export function AboutScreen() {
           {BUILD_TIME}
         </p>
       </div>
+
+      <div className="card stack-sm">
+        <h3 style={{ fontSize: 'var(--step-0)' }}>Legal</h3>
+        <a href="/legal/terms/" className="row-between" target="_blank" rel="noreferrer">
+          <span className="muted small">Terms of Service</span>
+          <span className="muted small">↗</span>
+        </a>
+        <a href="/legal/privacy/" className="row-between" target="_blank" rel="noreferrer">
+          <span className="muted small">Privacy Policy</span>
+          <span className="muted small">↗</span>
+        </a>
+        <a href="/legal/acceptable-use/" className="row-between" target="_blank" rel="noreferrer">
+          <span className="muted small">Acceptable Use</span>
+          <span className="muted small">↗</span>
+        </a>
+        <a href="/legal/cookies/" className="row-between" target="_blank" rel="noreferrer">
+          <span className="muted small">Cookie Policy</span>
+          <span className="muted small">↗</span>
+        </a>
+        <a href="/legal/licenses/" className="row-between" target="_blank" rel="noreferrer">
+          <span className="muted small">Open Source Licenses</span>
+          <span className="muted small">↗</span>
+        </a>
+        <a href="/legal/security/" className="row-between" target="_blank" rel="noreferrer">
+          <span className="muted small">Security Disclosure</span>
+          <span className="muted small">↗</span>
+        </a>
+      </div>
     </SettingsPage>
   )
 }
