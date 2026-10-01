@@ -11,6 +11,7 @@ import type { LocaleCode } from '../../core/models/types'
 import { ConnectionBadge } from '../components/ConnectionStatus'
 import { callSummary, isCallEntry } from '../components/CallBubble'
 import { LiveBanner } from '../lazyViews'
+import { Skeleton } from '../components/Skeleton'
 
 export function displayName(contact: Contact | undefined, pubkey: string): string {
   return contact?.name || contact?.remoteName || shortNpub(toNpub(pubkey))
@@ -57,6 +58,7 @@ export function ChatList() {
   const { t, locale } = useI18n()
   const navigate = useNavigate()
   const conversations = useApp((s) => s.conversations)
+  const conversationsLoaded = useApp((s) => s.conversationsLoaded)
   const contacts = useApp((s) => s.contacts)
   const typingPeers = useApp((s) => s.typingPeers)
   const previews = useApp((s) => s.previews)
@@ -211,7 +213,9 @@ export function ChatList() {
       ) : null}
 
       <div className="screen-scroll">
-        {conversations.length === 0 ? (
+        {!conversationsLoaded ? (
+          <ChatListSkeleton />
+        ) : conversations.length === 0 ? (
           <EmptyState
             title={t('chats.empty')}
             body={t('chats.emptyBody')}
@@ -284,6 +288,22 @@ function Notices() {
           </button>
         </Banner>
       ) : null}
+    </div>
+  )
+}
+
+function ChatListSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Loading conversations…">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <div key={index} className="skeleton-row">
+          <span className="skeleton skeleton-avatar" />
+          <div className="grow stack-sm" style={{ minWidth: 0 }}>
+            <span className="skeleton skeleton-text" style={{ width: '65%' }} />
+            <span className="skeleton skeleton-text skeleton-text-short" />
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
