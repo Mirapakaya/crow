@@ -34,6 +34,7 @@ export function sectionOf(route: Route): Section | null {
     case 'group':
     case 'group-info':
     case 'new-group':
+    case 'search':
       return 'chats'
     case 'contacts':
     case 'contact':

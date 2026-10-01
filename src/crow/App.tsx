@@ -9,6 +9,7 @@ import { ChatList } from '../ui/screens/ChatList'
 import { ChatView } from '../ui/screens/ChatView'
 import { ContactsList } from '../ui/screens/Contacts'
 import { LockScreen } from '../ui/screens/LockScreen'
+import { MessageSearchScreen } from '../ui/screens/MessageSearch'
 import {
   AboutScreen,
   AddContact,
@@ -286,6 +287,8 @@ function RouteView({ route }: { route: Route }) {
       return <DataSettings />
     case 'settings-calls':
       return <CallSettings />
+    case 'search':
+      return <MessageSearchScreen />
     case 'about':
       return <AboutScreen />
   }

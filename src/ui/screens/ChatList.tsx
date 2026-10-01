@@ -3,7 +3,7 @@ import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../crow/router'
 import { Avatar, Banner, EmptyState, GroupAvatar } from '../components/primitives'
-import { ContactsIcon, PlusIcon, ShieldCheckIcon } from '../components/Icons'
+import { ContactsIcon, PlusIcon, SearchIcon, ShieldCheckIcon } from '../components/Icons'
 import { formatListTimestamp } from '../format'
 import { shortNpub, toNpub } from '../../core/identity/keys'
 import type { Contact, Conversation } from '../../core/models/types'
@@ -174,6 +174,14 @@ export function ChatList() {
       <header className="app-header">
         <h1 className="grow">{t('chats.title')}</h1>
         <ConnectionBadge />
+        <button
+          className="btn btn-icon"
+          aria-label={t('chats.searchPlaceholder')}
+          title={t('chats.searchPlaceholder')}
+          onClick={() => navigate({ name: 'search' })}
+        >
+          <SearchIcon />
+        </button>
         <button
           className="btn btn-icon"
           aria-label={t('groups.newGroup')}

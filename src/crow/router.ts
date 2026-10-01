@@ -34,6 +34,7 @@ export type Route =
   | { name: 'settings-security' }
   | { name: 'settings-data' }
   | { name: 'settings-calls' }
+  | { name: 'search' }
   | { name: 'about' }
 
 const HEX32 = /^[0-9a-f]{64}$/
@@ -88,6 +89,8 @@ export function parseHash(hash: string): Route {
         default:
           return { name: 'settings' }
       }
+    case 'search':
+      return { name: 'search' }
     case 'about':
       return { name: 'about' }
     default:
@@ -129,6 +132,8 @@ export function routeToHash(route: Route): string {
       return '#/settings/data'
     case 'settings-calls':
       return '#/settings/calls'
+    case 'search':
+      return '#/search'
     case 'about':
       return '#/about'
   }
