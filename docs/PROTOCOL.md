@@ -65,3 +65,18 @@ The relay pool applies a small, uniformly random delay (up to 200 ms) before
 sending each event to a relay. This decorrelates the publish timestamp visible
 to a relay from the exact moment the user pressed send, reducing the precision
 of timing metadata.
+
+## Extension and leakage defenses
+
+The static export is served with a strict Content Security Policy via a
+`<meta>` tag in `src/app/layout.tsx`. The policy:
+
+- forbids inline scripts (`script-src 'self'`),
+- restricts frames, objects, and forms,
+- keeps style inline only because Next.js needs it during hydration,
+- allows WebSocket/HTTPS `connect-src` so user-configured relays work.
+
+`theme.js` is loaded with a Subresource Integrity hash so a compromised server
+cannot substitute an arbitrary bootstrap script. The same CSP string is shared
+between the Next.js HTTP headers (when a server build is used) and the meta
+tag (the effective policy for the static export).
