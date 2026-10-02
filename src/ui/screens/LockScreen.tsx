@@ -188,7 +188,7 @@ export function LockScreen() {
         <div className="stack-sm">
           <PatternPad label={t('lock.drawPattern')} disabled={busy} onDone={withPin} />
           {busy ? (
-            <div className="progress">
+            <div className="progress" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100} aria-label={t('lock.unlocking')}>
               <div style={{ width: `${Math.round(progress * 100)}%` }} />
             </div>
           ) : null}
@@ -251,7 +251,7 @@ export function LockScreen() {
           {/* A passphrase or a PIN runs scrypt, which takes a second or more on a
               phone. Without a progress bar that reads as the app having frozen. */}
           {busy && way !== 'recovery' ? (
-            <div className="progress">
+            <div className="progress" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100} aria-label={t('lock.unlocking')}>
               <div style={{ width: `${Math.round(progress * 100)}%` }} />
             </div>
           ) : null}
@@ -272,6 +272,7 @@ export function LockScreen() {
         <Button
           variant="ghost" size="sm"
           aria-expanded={showForgot}
+          aria-controls="forgot-section"
           onClick={() => setShowForgot((value) => !value)}
         >
           {t('lock.forgot')}
@@ -279,7 +280,7 @@ export function LockScreen() {
       </div>
 
       {showForgot ? (
-        <div className="stack">
+        <div className="stack" id="forgot-section">
           <Banner tone="warning">
             {available.includes('recovery') ? t('lock.forgotBodyRecovery') : t('lock.forgotBody')}
           </Banner>

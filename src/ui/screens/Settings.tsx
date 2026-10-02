@@ -120,12 +120,14 @@ export function SettingsHome() {
             </Field>
 
             <div className="row">
-              <label variant="outline" className="grow">
+              <label className="btn btn-outline grow" htmlFor="avatar-upload">
                 {t('settings.avatarChoose')}
                 <input
+                  id="avatar-upload"
                   type="file"
                   accept="image/*"
                   className="visually-hidden"
+                  aria-label={t('settings.avatarChoose')}
                   onChange={(event) => {
                     const file = event.target.files?.[0]
                     if (file) void pickAvatar(file)
@@ -145,7 +147,7 @@ export function SettingsHome() {
             <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
               <Field label={t('settings.language')}>
                 <select
-                  
+                  aria-label={t('settings.language')}
                   value={settings.locale}
                   onChange={(event) => void saveSettings({ locale: event.target.value as LocaleCode })}
                 >
@@ -211,7 +213,7 @@ export function SettingsHome() {
           <span className="section-title">{t('settings.aboutSection')}</span>
           <div className="card-section">
             <NavRow label={t('settings.whatLeaves')} to={{ name: 'about' }} />
-            <a className="list-row" href={SOURCE_URL} target="_blank" rel="noreferrer noopener">
+            <a className="list-row" href={SOURCE_URL} target="_blank" rel="noreferrer noopener" aria-label={`${t('settings.sourceCode')} — ${SOURCE_URL}`}>
               <span className="grow">{t('settings.sourceCode')}</span>
               <ChevronIcon size={16} />
             </a>
@@ -221,7 +223,7 @@ export function SettingsHome() {
             </div>
           </div>
 
-          <Button variant="outline" block onClick={() => lock()}>
+          <Button variant="outline" block aria-label={t('settings.lockNow')} onClick={() => lock()}>
             <LockIcon size={16} />
             {t('settings.lockNow')}
           </Button>
@@ -236,10 +238,10 @@ export function NavRow({ icon, label, to }: { icon?: React.ReactNode; label: str
   const navigate = useNavigate()
   const current = useRoute().name === to.name
   return (
-    <Button className="list-row" aria-current={current || undefined} onClick={() => navigate(to)}>
-      {icon ? <span style={{ color: 'var(--text-muted)' }}>{icon}</span> : null}
+    <Button className="list-row" aria-current={current || undefined} aria-label={label} onClick={() => navigate(to)}>
+      {icon ? <span style={{ color: 'var(--text-muted)' }} aria-hidden="true">{icon}</span> : null}
       <span className="grow">{label}</span>
-      <ChevronIcon size={16} style={{ color: 'var(--text-faint)' }} />
+      <ChevronIcon size={16} style={{ color: 'var(--text-faint)' }} aria-hidden="true" />
     </Button>
   )
 }
@@ -316,7 +318,7 @@ export function PrivacySettings() {
       <div className="card stack-sm">
         <Field label={t('settings.retention')}>
           <select
-            
+            aria-label={t('settings.retention')}
             value={settings.retention}
             onChange={(event) =>
               void saveSettings({ retention: event.target.value as typeof settings.retention })
@@ -333,7 +335,7 @@ export function PrivacySettings() {
       <div className="card stack-sm">
         <Field label={t('settings.messageExpiry')} hint={t('settings.messageExpiryBody')}>
           <select
-            
+            aria-label={t('settings.messageExpiry')}
             value={String(settings.messageExpirationDays)}
             onChange={(event) => void saveSettings({ messageExpirationDays: Number(event.target.value) })}
           >
