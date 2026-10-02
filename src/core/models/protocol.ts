@@ -36,6 +36,7 @@ import { CALL_END_REASONS, type CallEndReason, type CallMedia } from './call'
 import { readFix, type GeoFix } from './location'
 import { orderTag } from './timeline'
 import { cleanLine } from '../util/text'
+import { LEGACY_ATTACHMENT_TAG } from '../legacy'
 
 export const KIND_CHAT = 14
 export const KIND_FILE = 15
@@ -782,7 +783,7 @@ export function threadTags(rootId: string, replyTo: string): string[][] {
  * read from inside an already-decrypted rumor.
  */
 /** Legacy tag value; changing it would break attachment discovery on relays. */
-export const ATTACHMENT_TAG = 'textor-attachment'
+export const ATTACHMENT_TAG = LEGACY_ATTACHMENT_TAG
 
 /** Cap the tag: it travels in every copy of the message, on every relay. */
 export const MAX_ATTACHMENT_TAG_CHARS = 8192

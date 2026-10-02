@@ -196,8 +196,9 @@ export class CrowDatabase extends Dexie {
   mlsGroups!: EntityTable<MlsRow, 'id'>
   mlsKeys!: EntityTable<MlsRow, 'id'>
 
-  constructor(name = 'textor') {
-    // Legacy IndexedDB name; changing it would orphan existing vaults.
+  constructor(name = 'crow') {
+    // Default database name for new vaults. Legacy databases from the prior
+    // release are handled by the migration path in src/core/legacy/.
     super(name)
     this.version(1).stores({
       meta: 'k',
