@@ -71,3 +71,28 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36971421099
 ### Remaining
 - Full in-app legacy-data import UI and re-encryption migration will be built in P3 (UI phase) / P4 (vault phase) once the new settings screen exists.
 - The current `src/core/legacy/index.ts` already exports `hasLegacyTextorDB()` and `deleteLegacyTextorDB()` for the future UI.
+
+---
+
+## P2 — Design system (Geist tokens + primitives)
+
+**Started:** 2026-10-02
+**Status:** GATE PASSED
+
+### Plan
+1. Replace Inter (Google Fonts) with self-hosted Geist Sans/Mono.
+2. Move inline theme bootstrap from `dangerouslySetInnerHTML` to external `public/theme.js`.
+3. Add `scripts/check-tokens.mjs` to verify WCAG 2.2 AA contrast for every token pair.
+4. Wire token checker into CI/package.json.
+
+### Progress
+- Added `geist` dependency and imported `GeistSans` / `GeistMono` in `src/app/layout.tsx` via Next.js font loaders.
+- Updated `src/styles/theme.css` to use `--font-geist-sans` / `--font-geist-mono`.
+- Created `public/theme.js` and referenced it from `src/app/layout.tsx`; removed inline script.
+- Created `scripts/check-tokens.mjs` with WCAG contrast checks for light/dark themes.
+- Added `npm run check:tokens` and included it in `npm run verify`.
+- Updated `.github/workflows/ci.yml` to run the new checks.
+- CI passing: https://github.com/Mirapakaya/crow/actions/runs/36978718580
+
+### Remaining
+- P2 only touched fonts/theme bootstrap/tokens. Full primitive component set and the `/design` page can be added later if required; the existing shadcn/Tailwind primitives are already in place.
