@@ -176,3 +176,34 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 
 ### Branch
 `p5-forward-secrecy` pushed to `Mirapakaya/crow`.
+
+---
+
+## P6 — Metadata reduction
+
+**Started:** 2026-10-02
+**Status:** In progress
+
+### Plan
+1. Harden self-hosted relay infra (Docker Compose, Caddy, strfry).
+2. Document relay-visible metadata in `THREAT-MODEL.md`.
+3. Add fixed-size bucket padding to gift-wrap/seal content to hide exact message lengths.
+4. Add randomized publish jitter to decorrelate timing metadata.
+5. Keep NIP-42 `auth-required` handling that already marks refusing relays as degraded.
+6. Default message expiry remains 30 days (configurable in Settings); live location updates expire after 1 hour.
+7. Run CI and pass the gate.
+
+### Progress
+- Created `infra/` with `docker-compose.yml`, `Caddyfile`, `strfry.conf`, `.env.example`, and `README.md` for an optional self-hosted relay.
+- Updated `THREAT-MODEL.md` §6.1 with a relay-visible-metadata table.
+- Added `padToBucket` / `unpadBucket` in `src/core/crypto/giftwrap.ts` and applied padding to seal and gift-wrap content.
+- Added `tests/giftwrap.test.ts` covering round-trip and bucket behavior.
+- Added up to 200 ms per-relay publish jitter in `src/core/transport/relayPool.ts`.
+- Documented padding and jitter in `docs/PROTOCOL.md`.
+
+### Remaining
+- Per-contact rotating inbox keys require deeper identity/contact changes and are deferred to a future phase.
+- Optional cover traffic is a research item; not implemented in this phase.
+
+### Branch
+`p6-metadata-reduction` pushed to `Mirapakaya/crow`.
