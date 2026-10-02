@@ -213,7 +213,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 ## P7 — Extension and leakage defense
 
 **Started:** 2026-10-02
-**Status:** In progress
+**Status:** GATE PASSED
 
 ### Plan
 1. Centralize CSP string in `src/core/util/csp.ts` so Next.js headers and the static-export meta tag match.
@@ -229,4 +229,4 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 - Removed unused `Skeleton`, `Contact`, `LocaleCode`, and `displayName` imports flagged by lint in six UI files.
 
 ### Branch
-`p7-extension-leakage` pushed to `Mirapakaya/crow`.
+`p7-extension-leakage` pushed to `Mirapakaya/crow`. PR #11 opened.
