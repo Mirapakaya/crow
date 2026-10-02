@@ -25,6 +25,7 @@ import { ForwardSheet, LiveBanner, MessageInfo } from '../lazyViews'
 import { supportsWebRtc } from '../../core/transport/webrtc/directManager'
 import { formatDayLabel, isSameDay } from '../format'
 import { conversationTitle, displayName } from './ChatList'
+import { Button } from '../../components/ui/button'
 import { isGroupAddress, type ChatAddress, type Conversation, type Message } from '../../core/models/types'
 
 /** The stored conversation at an address: a group by its id, a person by their key. */

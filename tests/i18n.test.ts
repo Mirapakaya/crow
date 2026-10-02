@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { LOCALE_CODES, LOCALE_DIRECTION, LOCALE_NAMES, translate, type LocaleCode } from '../src/i18n'
+import { LOCALE_CODES, LOCALE_DIRECTION, LOCALE_NAMES, translate } from '../src/i18n'
+import type { LocaleCode } from '../src/core/models/types'
 import { en } from '../src/i18n/en'
 
 describe('i18n', () => {

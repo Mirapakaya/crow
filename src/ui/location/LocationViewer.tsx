@@ -144,17 +144,20 @@ export function LocationViewer({ message, onClose }: { message: Message; onClose
           <Button type="button" variant="outline" onClick={copy}>
             {text('copy')}
           </Button>
-          <a variant="outline" href={`geo:${lat},${lon}`}>
-            {text('openApp')}
-          </a>
-          <a
-            variant="outline"
-            href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {text('openOsm')}
-          </a>
+          <Button variant="outline" asChild>
+            <a href={`geo:${lat},${lon}`}>
+              {text('openApp')}
+            </a>
+          </Button>
+          <Button variant="outline" asChild>
+            <a
+              href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {text('openOsm')}
+            </a>
+          </Button>
           {status?.active && message.direction === 'out' ? (
             <Button
               type="button"

@@ -8,8 +8,8 @@ import {
   LOCALE_NAMES,
   LOCALE_SHORT_NAMES,
   DICTIONARIES,
-  type LocaleCode,
 } from '../src/i18n'
+import type { LocaleCode } from '../src/core/models/types'
 import { en } from '../src/i18n/en'
 
 describe('translate', () => {

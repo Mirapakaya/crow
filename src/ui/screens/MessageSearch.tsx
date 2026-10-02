@@ -4,7 +4,8 @@ import { useI18n } from '../../i18n'
 import { useNavigate } from '../../crow/router'
 import { conversationTitle, displayName } from './ChatList'
 import { Avatar, GroupAvatar, Spinner } from '../components/primitives'
-import { SearchIcon, ArrowLeftIcon } from '../components/Icons'
+import { BackIcon } from '../components/Icons'
+import { Search as SearchIcon } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { formatListTimestamp } from '../format'
@@ -55,7 +56,7 @@ export function MessageSearchScreen() {
           aria-label={t('common.back')}
           onClick={() => navigate({ name: 'chats' })}
         >
-          <ArrowLeftIcon />
+          <BackIcon />
         </Button>
         <h1 className="grow">{t('chats.searchPlaceholder')}</h1>
       </header>
