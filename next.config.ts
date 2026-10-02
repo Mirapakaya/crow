@@ -7,6 +7,7 @@ const isDev = process.env.NODE_ENV === 'development'
 const nextConfig: NextConfig = {
   output: 'export',
   distDir: 'dist',
+  basePath: process.env.CROW_BASE_PATH || '',
   images: { unoptimized: true },
   trailingSlash: true,
   env: {
