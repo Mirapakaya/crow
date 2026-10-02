@@ -29,24 +29,15 @@ export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#09090b' },
-  },
+  ],
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      dir="ltr"
-      className={cn(vazirmatn.variable)}
-      suppressHydrationWarning
-    >
+    <html lang="en" dir="ltr" className={cn(vazirmatn.variable)} suppressHydrationWarning>
       <head>
         <script src="/theme.js" />
       </head>
