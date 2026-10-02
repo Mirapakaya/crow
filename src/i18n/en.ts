@@ -113,7 +113,6 @@ export const en = {
     pin: 'Pin',
     unpin: 'Unpin',
     pinned: 'Pinned',
-    delete: 'Delete',
   },
 
   groups: {
