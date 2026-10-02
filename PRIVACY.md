@@ -232,11 +232,11 @@ clarifications may be made without notice.
 
 For privacy-related questions:
 
-- **Email:** privacy@[YOUR DOMAIN] *[PLACEHOLDER]*
+- **Email:** crow@w8n.pw
 - **GitHub:** <https://github.com/Mirapakaya/crow/issues>
 
 We do not have a Data Protection Officer because we do not operate as a data
-controller. *[OPEN QUESTION: Whether a DPO or EU representative is required.]*
+controller.
 
 ---
 
