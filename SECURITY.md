@@ -37,7 +37,7 @@ Security Policy.
 |---|---|---|
 | **secp256k1 Schnorr** | `@noble/curves` | Identity key pairs, event signatures (NIP-01). |
 | **ChaCha20 / XChaCha20-Poly1305** | `@noble/ciphers` | Symmetric encryption of attachments, vault records, and backup files. |
-| **scrypt** | `@noble/hashes` | Key derivation from passphrase, PIN, and recovery phrase (N = 2¹⁶, r = 8, p = 1). |
+| **scrypt / Argon2id** | `@noble/hashes` | Key derivation from passphrase, PIN, and recovery phrase. New vaults use Argon2id (m = 64 MiB, t = 3, p = 1); existing scrypt vaults still open and migrate on the next passphrase change. |
 | **HKDF-SHA-256** | `@noble/hashes` | Deriving sub-keys (record keys, recovery keyslots, MLS key schedule). |
 | **SHA-256** | `@noble/hashes` | Hashing, blob identity, integrity checks. |
 | **NIP-44 v2** | `nostr-tools` | Conversation-key-based AEAD for sealed-direct messages (XChaCha20-Poly1305 internally). |
