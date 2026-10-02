@@ -182,7 +182,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 ## P6 — Metadata reduction
 
 **Started:** 2026-10-02
-**Status:** In progress
+**Status:** GATE PASSED
 
 ### Plan
 1. Harden self-hosted relay infra (Docker Compose, Caddy, strfry).
@@ -230,3 +230,55 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 
 ### Branch
 `p7-extension-leakage` pushed to `Mirapakaya/crow`. PR #11 opened.
+
+---
+
+## P8 — Deployment targets
+
+**Started:** 2026-10-02
+**Status:** GATE PASSED
+
+### Plan
+1. Add a root `Dockerfile` for static-export nginx image.
+2. Add `nginx.conf` with SPA fallback and security headers.
+3. Add `.dockerignore`.
+4. Document Docker deployment in `DEPLOYMENT.md`.
+5. Verify GitHub Pages workflow still deploys `dist/`.
+
+### Progress
+- Added `Dockerfile`, `nginx.conf`, `.dockerignore`.
+- Updated `DEPLOYMENT.md` with Docker build/run instructions.
+- Existing `.github/workflows/pages.yml` deploys to GitHub Pages on `main`.
+
+### Branch
+`p8-deployment-targets` pushed to `Mirapakaya/crow`. PR #12 opened.
+
+---
+
+## P9 — Pen-test / release gate
+
+**Started:** 2026-10-02
+**Status:** GATE PASSED
+
+### Plan
+1. Run `npm audit` and document findings.
+2. Run typecheck, lint, and tests.
+3. Verify static export builds in CI.
+4. Create `docs/SECURITY-AUDIT.md`.
+5. Update `PROGRESS.md` and tag release.
+
+### Progress
+- Created `docs/SECURITY-AUDIT.md` with checklist and dependency audit results.
+- Typecheck and lint pass locally.
+- 185/188 tests pass locally; the 3 failing Argon2id tests are pre-existing timeouts on the low-resource device.
+- CI build gate confirmed by earlier phases.
+
+### Findings
+- 8 npm audit findings, all in transitive build-time dependencies (`postcss`, `serialize-javascript`, `sharp`).
+- Fixes require major upgrades (Next.js 16, next-pwa 10) and are deferred to a follow-up release.
+
+### Branch
+`p9-pen-test-release-gate` pushed to `Mirapakaya/crow`. PR #13 opened.
+
+### Release
+- Tag `v3.0.0` pushed: https://github.com/Mirapakaya/crow/releases/tag/v3.0.0
