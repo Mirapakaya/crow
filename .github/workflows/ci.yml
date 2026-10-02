@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, 'p*', 'feature/*']
+    branches: [S1011H]
   pull_request:
-    branches: [main]
+    branches: [S1011H]
 
 jobs:
   verify:
