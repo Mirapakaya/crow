@@ -36,24 +36,21 @@ Security Policy.
 | Primitive | Library | Purpose |
 |---|---|---|
 | **secp256k1 Schnorr** | `@noble/curves` | Identity key pairs, event signatures (NIP-01). |
-| **ChaCha20 / XChaCha20-Poly1305** | `@noble/ciphers` | Symmetric encryption of attachments, vault records, and backup files. |
+| **ChaCha20 + HMAC-SHA256 / XChaCha20-Poly1305** | `@noble/ciphers` | Symmetric encryption of attachments, vault records, and backup files. |
 | **scrypt / Argon2id** | `@noble/hashes` | Key derivation from passphrase, PIN, and recovery phrase. New vaults use Argon2id (m = 64 MiB, t = 3, p = 1); existing scrypt vaults still open and migrate on the next passphrase change. |
 | **HKDF-SHA-256** | `@noble/hashes` | Deriving sub-keys (record keys, recovery keyslots, MLS key schedule). |
 | **SHA-256** | `@noble/hashes` | Hashing, blob identity, integrity checks. |
-| **NIP-44 v2** | `nostr-tools` | Conversation-key-based AEAD for sealed-direct messages (XChaCha20-Poly1305 internally). |
+| **NIP-44 v2** | `nostr-tools` | Conversation-key-based AEAD for sealed-direct messages (ChaCha20 + HMAC-SHA256 internally). |
 | **MLS (RFC 9420)** | `ts-mls` | Forward-secret group key agreement (X25519 + HKDF-SHA-256 ciphersuite). |
 
 ### Key derivation chain
 
-```
-User secret (passphrase / PIN / biometric / recovery words)
-  └─ scrypt / HKDF-SHA-256
-      └─ keyslot key (AES-256-GCM in vault header)
-          └─ data key (AES-256-GCM in vault meta table)
-              └─ HKDF-SHA-256
-                  ├─ record key  → decrypt vault records
-                  └─ index key   → blind database lookups
-```
+- User secret (passphrase, PIN, biometric, or recovery words)
+- scrypt / HKDF-SHA-256 derives the keyslot key
+- AES-256-GCM unwraps the vault data key
+- HKDF-SHA-256 derives:
+  - record key — decrypts vault records
+  - index key — blinds database lookups
 
 ---
 
@@ -91,10 +88,10 @@ Anyone who obtains the phrase can read all messages—store it on paper, offline
 Crow implements **NIP-59 gift-wrap sealing**, which provides sealed-sender
 metadata protection:
 
-1. **Rumor** — the plaintext message, unsigned, with hour-fuzzed timestamp.
+1. **Rumor** — the plaintext message, unsigned, with a fuzzed timestamp.
 2. **Seal** — the rumor is JSON-serialised and encrypted with NIP-44 v2
-   (XChaCha20-Poly1305) under a conversation key derived from the sender's and
-   recipient's identity keys. The seal is signed by the sender.
+   (ChaCha20 + HMAC-SHA256) under a conversation key derived from the sender's
+   and recipient's identity keys. The seal is signed by the sender.
 3. **Gift wrap** — the seal is encrypted again with NIP-44 v2 from a
    single-use **ephemeral key** to the recipient. The wrap is signed by the
    ephemeral key and published to relays as kind 1059.
