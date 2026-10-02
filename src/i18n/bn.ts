@@ -133,6 +133,10 @@ export const bn: Dictionary = {
     unblock: 'আনব্লক', loadEarlier: 'আগের বার্তাগুলো লোড করুন',
     startOfConversation: 'এটি আপনার কথোপকথনের শুরু।',
     encryptedNote: 'বার্তাগুলো এন্ড-টু-এন্ড এনক্রিপ্টেড। অন্য কেউ এগুলো পড়তে পারে না।',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

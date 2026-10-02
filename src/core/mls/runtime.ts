@@ -71,6 +71,7 @@ interface Held {
   hwm: Record<string, number>
   queue: Promise<unknown>
   marksDirty: boolean
+  hybrid?: boolean
 }
 
 export class MlsUnavailableError extends Error {
@@ -291,6 +292,10 @@ export class MlsRuntime {
   async createGroup(opts: {
     members: readonly string[]
     name: string
+    /** Optional 32+ byte seed for the group creation entropy. */
+    entropy?: Uint8Array
+    /** Whether this group was created with a hybrid X25519 + ML-KEM-768 handshake. */
+    hybrid?: boolean
   }): Promise<{ convoId: string; missing: string[] }> {
     const secretKey = this.#requireKey()
     const others = unique(opts.members).filter((p) => p !== this.#host.pubkey)
@@ -304,20 +309,28 @@ export class MlsRuntime {
 
     const route = bytesToHex(crypto.getRandomValues(new Uint8Array(32)))
     const relays = canonicalRelays(this.#host.pool.rankedWriteRelays(4))
-    const group = await MarmotGroup.create(await createKeyPackage(secretKey, this.#host.pubkey), {
-      routing: { nostrGroupId: route, relays },
-      profile: opts.name ? { name: opts.name, description: '' } : null,
-      admins: [this.#host.pubkey],
-    })
+    const group = await MarmotGroup.create(
+      await createKeyPackage(secretKey, this.#host.pubkey),
+      {
+        routing: { nostrGroupId: route, relays },
+        profile: opts.name ? { name: opts.name, description: '' } : null,
+        admins: [this.#host.pubkey],
+      },
+      opts.entropy,
+    )
     const convoId = this.#host.repo.mlsConversationId(route)
     const held = this.#hold(convoId, group, {})
+    held.hybrid = opts.hybrid
     try {
       await this.#serial(held, () => this.#commit(held, { add: available }))
     } catch (err) {
       this.#release(held)
       throw err
     }
-    await this.#refreshConversation(held, { accepted: true })
+    await this.#refreshConversation(held, {
+      accepted: true,
+      protection: { forwardSecrecy: true, hybridPQ: !!opts.hybrid },
+    })
     this.#subscribe()
     return { convoId, missing }
   }
@@ -443,6 +456,7 @@ export class MlsRuntime {
     await this.#refreshConversation(held, {
       accepted: (await this.#host.standing(inviter)) === 'accepted',
       at: rumor.created_at * 1000,
+      protection: { forwardSecrecy: true, hybridPQ: parsed.hybrid },
     })
     this.#subscribe()
     await this.#backfill(held)
@@ -607,7 +621,7 @@ export class MlsRuntime {
       for (const invitee of pending.invited) {
         await this.#host.sendRumor(
           invitee.pubkey,
-          welcomeRumor(secretKey, pending.welcome, invitee.keyPackageEventId, held.relays),
+          welcomeRumor(secretKey, pending.welcome, invitee.keyPackageEventId, held.relays, held.hybrid ?? false),
         )
       }
     }
@@ -698,7 +712,7 @@ export class MlsRuntime {
 
   async #refreshConversation(
     held: Held,
-    opts: { accepted?: boolean; at?: number } = {},
+    opts: { accepted?: boolean; at?: number; protection?: { forwardSecrecy: boolean; hybridPQ: boolean } } = {},
   ): Promise<Conversation> {
     const view = held.group.view()
     const conversation = await this.#host.repo.upsertMlsConversation(held.convoId, {

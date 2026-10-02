@@ -245,6 +245,10 @@ export const ru: Dictionary = {
     loadEarlier: 'Загрузить ранние сообщения',
     startOfConversation: 'Это начало вашей переписки.',
     encryptedNote: 'Сообщения зашифрованы сквозным шифрованием. Никто другой не может их прочитать.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

@@ -23,6 +23,7 @@ import {
   type IdentityRecord,
   type Message,
   type MlsConversation,
+  type ProtectionState,
   type OutboxItem,
   type Reaction,
   type RelayEntry,
@@ -121,7 +122,7 @@ const SEEN_DELETE_BATCH = 2000
 
 /** The sealed half of a conversation row. */
 type ConversationBody = Partial<
-  Pick<Conversation, 'kind' | 'members' | 'subject' | 'subjectAt' | 'accepted' | 'draft' | 'mls' | 'clock'>
+  Pick<Conversation, 'kind' | 'members' | 'subject' | 'subjectAt' | 'accepted' | 'draft' | 'mls' | 'clock' | 'protection'>
 > &
   Pick<Conversation, 'peerPubkey'>
 
@@ -304,6 +305,7 @@ export class VaultRepo {
       accepted: body.accepted ?? true,
       draft: body.draft,
       ...(body.mls ? { mls: body.mls } : {}),
+      ...(body.protection ? { protection: body.protection } : {}),
       ...(body.clock !== undefined ? { clock: body.clock } : {}),
       lastActivity: row.lastActivity,
       unread: row.unread,
@@ -414,7 +416,14 @@ export class VaultRepo {
    */
   async upsertMlsConversation(
     id: string,
-    patch: { members: string[]; subject: string; mls: MlsConversation; accepted?: boolean; at?: number },
+    patch: {
+      members: string[]
+      subject: string
+      mls: MlsConversation
+      protection?: ProtectionState
+      accepted?: boolean
+      at?: number
+    },
   ): Promise<Conversation> {
     return this.vault.transaction(async () => {
       const existing = await this.getConversation(id)
@@ -430,6 +439,7 @@ export class VaultRepo {
         ...(patch.subject ? { subject: patch.subject } : {}),
         accepted: (existing?.accepted ?? false) || patch.accepted === true,
         mls: patch.mls,
+        ...(patch.protection ? { protection: patch.protection } : {}),
       }
       if (!patch.subject) delete next.subject
       await this.writeConversation(next)

@@ -246,6 +246,10 @@ export const ml: Dictionary = {
     loadEarlier: 'മുമ്പത്തെ സന്ദേശങ്ങൾ ലോഡ് ചെയ്യുക',
     startOfConversation: 'ഇതാണ് നിങ്ങളുടെ സംഭാഷണത്തിന്റെ തുടക്കം.',
     encryptedNote: 'സന്ദേശങ്ങൾ എൻഡ്-ടു-എൻഡ് എൻക്രിപ്റ്റ് ചെയ്തിരിക്കുന്നു. മറ്റാർക്കും അവ വായിക്കാൻ കഴിയില്ല.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

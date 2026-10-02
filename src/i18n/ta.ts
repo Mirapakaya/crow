@@ -246,6 +246,10 @@ export const ta: Dictionary = {
     loadEarlier: 'முந்தைய செய்திகளை ஏற்று',
     startOfConversation: 'இது உங்கள் உரையாடலின் தொடக்கம்.',
     encryptedNote: 'செய்திகள் முனையிலிருந்து-முனைக்கு மறைகுறியாக்கப்பட்டுள்ளன. வேறு யாரும் அவற்றைப் படிக்க முடியாது.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

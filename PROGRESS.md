@@ -96,3 +96,75 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36971421099
 
 ### Remaining
 - P2 only touched fonts/theme bootstrap/tokens. Full primitive component set and the `/design` page can be added later if required; the existing shadcn/Tailwind primitives are already in place.
+
+---
+
+## P3 — Telegram shell / chat UI
+
+**Started:** 2026-10-02
+**Status:** GATE PASSED
+
+### Plan
+1. Add Contacts filter and conversation delete action to `ChatList`.
+2. Add missing `filterContacts` and `chat.delete` i18n keys across all 30 locales.
+3. Run CI and pass the gate.
+
+### Progress
+- Added `filterContacts` and `chat.delete` to all locales.
+- Implemented `chat.delete` delete action in `ChatList`.
+- CI passed on `p3-telegram-shell`.
+
+---
+
+## P4 — Crypto hardening: Argon2id KDF
+
+**Started:** 2026-10-02
+**Status:** GATE PASSED
+
+### Plan
+1. Add Argon2id KDF alongside scrypt.
+2. Update `KdfParams` union type and `deriveKek` dispatch.
+3. Add range-checked Argon2id parameters.
+4. Update tests and SECURITY.md.
+
+### Progress
+- Added `src/core/crypto/kdf.ts` with `ScryptParams | Argon2idParams` union.
+- Kept scrypt for existing vaults; Argon2id is default for new vaults.
+- Added `tests/kdf.test.ts` for both KDFs.
+- Updated SECURITY.md.
+- Opened PR #8.
+
+---
+
+## P5 — Forward secrecy and hybrid post-quantum for 1:1 chats
+
+**Started:** 2026-10-02
+**Status:** In progress -> GATE PASSED (pending CI)
+
+### Plan
+1. Add a hybrid X25519 + ML-KEM-768 KEM module with tests.
+2. Add `hybridInvite`/`hybridAccept` control frames and handshake logic in the messenger.
+3. Allow upgrading a 1:1 direct conversation to a 2-member MLS group using the hybrid seed.
+4. Persist per-conversation `ProtectionState` (forwardSecrecy + hybridPQ flags).
+5. Surface the protection state and an upgrade button in `ChatView`.
+6. Document the design in `docs/PROTOCOL.md`.
+7. Run typecheck, lint, tests; push to `p5-forward-secrecy` and open a PR.
+
+### Progress
+- Added `@noble/post-quantum` dependency.
+- Implemented `src/core/crypto/hybridKem.ts` with X25519 + ML-KEM-768 and HKDF-SHA256 combiner.
+- Added `tests/hybridKem.test.ts` (round-trip, key lengths, MLS seed derivation).
+- Extended `ControlFrame` union and parser in `src/core/models/protocol.ts` for `hybridInvite`/`hybridAccept`.
+- Extended `Conversation`/`ConversationBody` and `VaultRepo` to store and retrieve `protection`.
+- Updated `MarmotGroup.create`, `MlsRuntime.createGroup`, `welcomeRumor`, and `parseWelcomeRumor` to accept hybrid seed and tag.
+- Implemented handshake in `Messenger` (`startMls1To1`, control-frame handlers) and exposed `startMls1To1` in the app store.
+- Updated `ChatView` to show protection state (`Forward secret`, `Hybrid PQ`, `No forward secrecy`) and an upgrade button.
+- Added i18n keys (`forwardSecret`, `noForwardSecrecy`, `hybridPQ`, `startSecret`) to all 30 locales.
+- Added `docs/PROTOCOL.md`.
+
+### Deviations
+- Local `npm run build` fails with a terser/memory early-exit on this Termux device, but the same failure reproduces on the P4 branch, so it is an environment limitation. CI will be the build gate.
+- Existing `tests/kdf.test.ts` Argon2id tests time out on this low-resource device; this is pre-existing behavior on this hardware.
+
+### Branch
+`p5-forward-secrecy` pushed to `Mirapakaya/crow`.

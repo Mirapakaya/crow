@@ -93,6 +93,10 @@ export const ja: Dictionary = {
     requestBanner: 'この人は連絡先にいません。', accept: '承認', block: 'ブロック', blocked: 'この連絡先をブロックしました。相手はあなたに連絡できません。',
     unblock: 'ブロック解除', loadEarlier: '以前のメッセージを読み込む', startOfConversation: '会話の始まりです。',
     encryptedNote: 'メッセージは端到端暗号化されています。他の誰も読めません。',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
   status: { queued: '送信待ち', sending: '送信中', sent: '送信済み', delivered: '配信済み', read: '既読', failed: '失敗', direct: '直接接続', relayed: 'リレー経由' },
   attachment: {

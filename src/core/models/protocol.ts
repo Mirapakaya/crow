@@ -36,6 +36,7 @@ import { CALL_END_REASONS, type CallEndReason, type CallMedia } from './call'
 import { readFix, type GeoFix } from './location'
 import { orderTag } from './timeline'
 import { cleanLine } from '../util/text'
+import { b64ToBytes } from '../util/bytes'
 import { LEGACY_ATTACHMENT_TAG } from '../legacy'
 
 export const KIND_CHAT = 14
@@ -298,6 +299,22 @@ export interface LiveFrame extends Partial<GeoFix> {
 /** More updates than a week of sharing, at the fastest they are sent. */
 export const MAX_LIVE_SEQ = 1_000_000
 
+/** Initiate a hybrid X25519 + ML-KEM-768 handshake for a 1:1 secret chat. */
+export interface HybridInviteFrame {
+  v: number
+  t: 'hybridInvite'
+  /** Base64-encoded hybrid public key (X25519 + ML-KEM-768). */
+  pub: string
+}
+
+/** Accept the handshake by returning a ciphertext encapsulating to the initiator's public key. */
+export interface HybridAcceptFrame {
+  v: number
+  t: 'hybridAccept'
+  /** Base64-encoded hybrid KEM ciphertext. */
+  cipher: string
+}
+
 export type ControlFrame =
   | ReceiptFrame
   | TypingFrame
@@ -311,6 +328,8 @@ export type ControlFrame =
   | VoteFrame
   | CheckFrame
   | LiveFrame
+  | HybridInviteFrame
+  | HybridAcceptFrame
 
 /** Frames that are part of the conversation's content rather than its plumbing. */
 export type InteractiveFrame = VoteFrame | CheckFrame
@@ -490,6 +509,28 @@ export function parseControlFrame(json: string): ControlFrame | null {
         ...fix,
         ...(value.end ? { end: true as const } : {}),
       }
+    }
+
+    case 'hybridInvite': {
+      if (!isStr(value.pub, 4096)) return null
+      try {
+        const bytes = b64ToBytes(value.pub)
+        if (bytes.length !== 1216) return null
+      } catch {
+        return null
+      }
+      return { v: PROTOCOL_VERSION, t: 'hybridInvite', pub: value.pub }
+    }
+
+    case 'hybridAccept': {
+      if (!isStr(value.cipher, 4096)) return null
+      try {
+        const bytes = b64ToBytes(value.cipher)
+        if (bytes.length !== 1120) return null
+      } catch {
+        return null
+      }
+      return { v: PROTOCOL_VERSION, t: 'hybridAccept', cipher: value.cipher }
     }
 
     default:

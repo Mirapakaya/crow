@@ -62,6 +62,10 @@ export const ko: Dictionary = {
     deleteBody: '상대방 삭제는 상대방 기기에 요청하는 것이며 보장되지 않습니다. 수정된 앱은 요청을 무시할 수 있습니다.', jumpToLatest: '최신 메시지로 이동', retrySend: '다시 보내기', failed: '전송 실패',
     verifyPromptBody: '안전 번호를 비교하여 중간자가 없는지 확인하세요.', requestBanner: '이 사람은 연락처에 없습니다.', accept: '수락', block: '차단', blocked: '이 연락처를 차단했습니다. 상대방이 연락할 수 없습니다.',
     unblock: '차단 해제', loadEarlier: '이전 메시지 로드', startOfConversation: '대화의 시작입니다.', encryptedNote: '메시지는 종단간 암호화되어 있습니다. 다른 누구도 읽을 수 없습니다.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
   status: { queued: '대기 중', sending: '보내는 중', sent: '보냄', delivered: '배달됨', read: '읽음', failed: '실패', direct: '직접 연결', relayed: '릴레이 경유' },
   attachment: {
