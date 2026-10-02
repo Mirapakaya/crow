@@ -1,6 +1,6 @@
 import { useRef, useState, type PointerEvent } from 'react'
 import { useT } from '../../i18n'
-import { Button } from '../components/ui/button'
+import { Button } from '../../components/ui/button'
 
 const DOTS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 

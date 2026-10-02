@@ -8,8 +8,8 @@ import { Field, Modal, Spinner } from '../components/primitives'
 import { formatCoordinates, formatDistance } from './format'
 import { useLocationText, type LocationTextKey } from './locationText'
 import { MapView, type MapMarker } from './MapView'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
 
 /** Telegram's choices, and the one it added later. */
 const DURATIONS: [seconds: number, label: LocationTextKey][] = [

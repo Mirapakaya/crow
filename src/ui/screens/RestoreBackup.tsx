@@ -8,9 +8,9 @@ import type { SlotEnrolment } from '../../core/vault/vault'
 import type { ExportPayload } from '../../core/vault/exportImport'
 import { useAccessText } from '../access/accessText'
 import { ProtectionChooser } from '../access/protection'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Textarea } from '../components/ui/textarea'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Textarea } from '../../components/ui/textarea'
 
 /**
  * Restore a vault from an encrypted backup file, before any identity exists.

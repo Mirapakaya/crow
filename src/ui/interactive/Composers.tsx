@@ -6,8 +6,8 @@ import { MAX_QUESTION_CHARS } from '../../core/models/interactive'
 import { makeChecklist, makePoll } from '../../core/models/interactiveForms'
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS, MAX_POLL_OPTIONS } from '../../core/models/protocol'
 import { useInteractiveText } from './interactiveText'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
 
 /**
  * Write a poll or a checklist and send it to the open conversation.

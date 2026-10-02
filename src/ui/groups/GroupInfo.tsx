@@ -8,7 +8,7 @@ import { BackIcon, ShieldCheckIcon, TrashIcon } from '../components/Icons'
 import { Skeleton } from '../components/Skeleton'
 import { conversationTitle, displayName } from '../screens/ChatList'
 import { SecureGroupPanel } from './SecureGroupPanel'
-import { Button } from '../components/ui/button'
+import { Button } from '../../components/ui/button'
 
 /**
  * Who is in a group, and what can be done to it here.

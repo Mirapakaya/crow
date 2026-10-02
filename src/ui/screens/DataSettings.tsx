@@ -4,8 +4,8 @@ import { estimateStorage, type StorageEstimate } from '../../crow/storagePersist
 import { useT } from '../../i18n'
 import { Banner, Field, Spinner, Toggle } from '../components/primitives'
 import { DownloadIcon, TrashIcon, UploadIcon } from '../components/Icons'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
 import { SettingsPage } from './SettingsPage'
 import { LAZY_CHUNKS } from '../lazyViews'
 

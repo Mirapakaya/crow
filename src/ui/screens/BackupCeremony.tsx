@@ -3,8 +3,8 @@ import { getRepo, useApp } from '../../crow/store'
 import { useT } from '../../i18n'
 import { Banner, Field } from '../components/primitives'
 import { randomInt } from '../../core/util/bytes'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
 
 /**
  * The recovery-phrase ceremony.

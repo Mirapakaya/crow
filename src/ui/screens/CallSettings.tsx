@@ -5,14 +5,14 @@ import { useCallSettingsText, type CallSettingsTextFn, type CallSettingsTextKey 
 import { Banner, Field, Toggle } from '../components/primitives'
 import { GlobeIcon, PlusIcon, RefreshIcon, TrashIcon } from '../components/Icons'
 import { SettingsPage } from './SettingsPage'
-import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
+import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
 import { hasTurnServer } from '../../core/models/call'
 import { alreadyListed, parseIceServer, serverUrls } from '../../core/calls/iceServers'
 import { probeIce, type IceProbeResult, type IceVerdict } from '../../core/calls/iceProbe'
 import { DEFAULT_ICE_SERVERS } from '../../core/transport/defaultRelays'
 import { supportsWebRtc } from '../../core/transport/webrtc/directManager'
-import { Input } from '../components/ui/input'
+import { Input } from '../../components/ui/input'
 
 const VERDICT: Record<IceVerdict, CallSettingsTextKey> = {
   good: 'iceVerdictGood',

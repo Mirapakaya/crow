@@ -12,7 +12,7 @@ import { QrPlaceholder } from '../components/QrPlaceholder'
 import { safetyNumber } from '../../core/crypto/safetyNumber'
 import { displayName } from './ChatList'
 import { useVerifyText } from './verifyText'
-import { Button } from '../components/ui/button'
+import { Button } from '../../components/ui/button'
 
 /**
  * The safety-number ceremony.

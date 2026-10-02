@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { CloseIcon, ContactsIcon } from './Icons'
 import { useT } from '../../i18n'
-import { Button } from '../components/ui/button'
-import { Checkbox } from '../components/ui/checkbox'
+import { Button } from '../../components/ui/button'
+import { Checkbox } from '../../components/ui/checkbox'
 
 /** Deterministic avatar colour from a public key — stable across devices. */
 export function avatarColor(seed: string): string {

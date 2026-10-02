@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useI18n } from '../../i18n'
 import { goBack } from '../../crow/router'
 import { BackIcon } from '../components/Icons'
-import { Button } from '../components/ui/button'
+import { Button } from '../../components/ui/button'
 
 /**
  * The frame every settings screen sits in: a back button and a title. Its own

@@ -14,7 +14,7 @@ import { locationText, useLocationText } from './locationText'
 import { liveLine, markerFor, spanAround } from './present'
 import { ASPECT, MapView, type MapMarker } from './MapView'
 import { useNow } from './useNow'
-import { Button } from '../components/ui/button'
+import { Button } from '../../components/ui/button'
 
 /** The closest and furthest a map may be drawn: a room, and a province. */
 const SPAN = { min: 30, max: 200_000 }
