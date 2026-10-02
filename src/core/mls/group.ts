@@ -231,9 +231,10 @@ export class MarmotGroup {
   static async create(
     bundle: KeyPackageBundle,
     opts: { routing: Routing; profile: Profile | null; admins: readonly string[] },
+    entropy?: Uint8Array,
   ): Promise<MarmotGroup> {
     const state = await createGroup(
-      crypto.getRandomValues(new Uint8Array(32)),
+      entropy && entropy.length >= 32 ? entropy.subarray(0, 32) : crypto.getRandomValues(new Uint8Array(32)),
       bundle.publicPackage,
       bundle.privatePackage,
       groupContextExtensions(opts),

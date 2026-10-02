@@ -41,7 +41,8 @@ export const ja: Dictionary = {
   chats: {
     title: 'チャット', empty: '会話がありません', emptyBody: '連絡先を追加して最初の暗号化会話を始めましょう。',
     addContact: '連絡先を追加', requests: 'メッセージリクエスト', requestsBody: '連絡先以外からのメッセージ。',
-    draft: '下書き', you: 'あなた：', noMessages: 'メッセージはまだありません', searchPlaceholder: '会話を検索', liveLocation: '📡 現在位置', filterAll: 'すべて', filterUnread: '未読', filterGroups: 'グループ', 
+    draft: '下書き', you: 'あなた：', noMessages: 'メッセージはまだありません', searchPlaceholder: '会話を検索', liveLocation: '📡 現在位置', filterAll: 'すべて', filterUnread: '未読', filterGroups: 'グループ',
+    filterContacts: 'Contacts', 
     filterLabel: 'Filter conversations',
     pin: 'ピン留め', unpin: 'ピン留め解除', pinned: 'ピン留め',
   },
@@ -92,6 +93,10 @@ export const ja: Dictionary = {
     requestBanner: 'この人は連絡先にいません。', accept: '承認', block: 'ブロック', blocked: 'この連絡先をブロックしました。相手はあなたに連絡できません。',
     unblock: 'ブロック解除', loadEarlier: '以前のメッセージを読み込む', startOfConversation: '会話の始まりです。',
     encryptedNote: 'メッセージは端到端暗号化されています。他の誰も読めません。',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
   status: { queued: '送信待ち', sending: '送信中', sent: '送信済み', delivered: '配信済み', read: '既読', failed: '失敗', direct: '直接接続', relayed: 'リレー経由' },
   attachment: {

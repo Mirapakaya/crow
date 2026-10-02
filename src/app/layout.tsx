@@ -1,13 +1,9 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Vazirmatn } from 'next/font/google'
+import { Vazirmatn } from 'next/font/google'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 import { cn } from '@/lib/utils'
 import './globals.css'
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-})
 
 const vazirmatn = Vazirmatn({
   subsets: ['arabic'],
@@ -41,36 +37,13 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
-const themeScript = `
-(function () {
-  try {
-    var raw = localStorage.getItem('crow:display')
-    var stored = raw ? JSON.parse(raw) : {}
-    var theme = stored.theme || 'system'
-    var resolved = theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme
-    document.documentElement.classList.add(resolved)
-    document.documentElement.setAttribute('data-theme', resolved)
-    document.documentElement.lang = stored.locale || 'en'
-  } catch {}
-})()
-`
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      dir="ltr"
-      className={cn(inter.variable, vazirmatn.variable)}
-      suppressHydrationWarning
-    >
+    <html lang="en" dir="ltr" className={cn(GeistSans.variable, GeistMono.variable, vazirmatn.variable)} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script src="/theme.js" />
       </head>
-      <body className="h-dvh flex flex-col overflow-hidden bg-background text-foreground">
+      <body className="h-dvh flex flex-col overflow-hidden bg-background text-foreground font-sans">
         {children}
       </body>
     </html>

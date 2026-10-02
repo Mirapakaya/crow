@@ -105,7 +105,8 @@ export const gu: Dictionary = {
     you: 'તમે: ',
     noMessages: 'હજુ સંદેશા નથી',
     searchPlaceholder: 'સંવાદ શોધો',
-    liveLocation: '📡 લાઈવ સ્થાન', filterAll: 'બધા', filterUnread: 'વંચાયેલા', filterGroups: 'જૂથો', 
+    liveLocation: '📡 લાઈવ સ્થાન', filterAll: 'બધા', filterUnread: 'વંચાયેલા', filterGroups: 'જૂથો',
+    filterContacts: 'Contacts', 
     filterLabel: 'Filter conversations',
     pin: 'પિન', unpin: 'અનપિન', pinned: 'પિન કરેલ',
   },
@@ -245,6 +246,10 @@ export const gu: Dictionary = {
     loadEarlier: 'પહેલાંના સંદેશા લોડ કરો',
     startOfConversation: 'આ તમારા સંવાદની શરૂઆત છે.',
     encryptedNote: 'સંદેશા એન્ડ-ટુ-એન્ડ એનક્રિપ્ટેડ છે. બીજા કોઈ તે વાંચી શકતા નથી.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

@@ -105,7 +105,8 @@ export const uk: Dictionary = {
     you: 'Ви: ',
     noMessages: 'Поки що немає повідомлень',
     searchPlaceholder: 'Пошук розмов',
-    liveLocation: '📡 Трансляція місцезнаходження', filterAll: 'Усі', filterUnread: 'Непрочитані', filterGroups: 'Групи', 
+    liveLocation: '📡 Трансляція місцезнаходження', filterAll: 'Усі', filterUnread: 'Непрочитані', filterGroups: 'Групи',
+    filterContacts: 'Contacts', 
     filterLabel: 'Filter conversations',
     pin: 'Закріпити', unpin: 'Відкріпити', pinned: 'Закріплені',
   },
@@ -244,6 +245,10 @@ export const uk: Dictionary = {
     loadEarlier: 'Завантажити ранні повідомлення',
     startOfConversation: 'Це початок вашої переписки.',
     encryptedNote: 'Повідомлення зашифровані наскрізним шифруванням. Ніхто інший не може їх прочитати.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

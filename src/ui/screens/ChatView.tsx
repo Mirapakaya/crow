@@ -6,7 +6,6 @@ import { Avatar, Banner, EmptyState, GroupAvatar } from '../components/primitive
 import {
   ArrowDownIcon,
   BackIcon,
-  BoltIcon,
   CloseIcon,
   ForwardIcon,
   LockIcon,
@@ -109,6 +108,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
   const saveDraft = useApp((s) => s.saveDraft)
   const settings = useApp((s) => s.settings)
   const startCall = useApp((s) => s.startCall)
+  const startMls1To1 = useApp((s) => s.startMls1To1)
   const sharingHere = useApp((s) => s.liveShares.some((share) => share.address === address))
 
   // Seeded once at mount. The route gives this component a `key` of the peer's
@@ -494,7 +494,8 @@ export function ChatView({ address }: { address: ChatAddress }) {
                 <>
                   {secure ? (
                     <>
-                      <LockIcon size={11} /> {t('groups.secure')} ·{' '}
+                      <LockIcon size={11} /> {t('groups.secure')}
+                      {conversation?.protection?.hybridPQ ? ` · ${t('chat.hybridPQ')}` : ''} ·{' '}
                     </>
                   ) : null}
                   {/* Everyone, counting you: the number the limit is stated in. */}
@@ -502,12 +503,21 @@ export function ChatView({ address }: { address: ChatAddress }) {
                 </>
               ) : typing ? (
                 t('chat.typing')
-              ) : direct ? (
-                <>
-                  <BoltIcon size={11} /> {t('status.direct')}
-                </>
               ) : (
-                t('status.relayed')
+                <>
+                  {conversation?.protection?.forwardSecrecy ? (
+                    <>
+                      <LockIcon size={11} /> {t('chat.forwardSecret')}
+                      {conversation.protection.hybridPQ ? ` · ${t('chat.hybridPQ')}` : ''}
+                    </>
+                  ) : (
+                    <>
+                      <ShieldIcon size={11} /> {t('chat.noForwardSecrecy')}
+                    </>
+                  )}
+                  {' · '}
+                  {direct ? t('status.direct') : t('status.relayed')}
+                </>
               )}
             </span>
           </Button>
@@ -530,6 +540,17 @@ export function ChatView({ address }: { address: ChatAddress }) {
                 <VideoIcon />
               </Button>
             </>
+          ) : null}
+          {!isGroup && !conversation?.protection?.forwardSecrecy ? (
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label={t('chat.startSecret')}
+              title={t('chat.startSecret')}
+              onClick={() => void startMls1To1(peer)}
+            >
+              <ShieldCheckIcon />
+            </Button>
           ) : null}
         </header>
       )}

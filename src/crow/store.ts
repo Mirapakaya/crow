@@ -296,6 +296,8 @@ interface AppState {
   forwardMessages: (ids: readonly string[], to: ChatAddress) => Promise<void>
   setTyping: (active: boolean) => void
 
+  /** Upgrade a 1:1 conversation to a forward-secret MLS group. */
+  startMls1To1: (peer: string) => Promise<void>
   /** Call someone in the address book. */
   startCall: (peer: string, media: CallMedia) => Promise<void>
   /** Answer, decline, hang up, mute and the rest, for the call on screen. */
@@ -957,6 +959,15 @@ export const useApp = create<AppState>((set, get) => ({
   setTyping(active) {
     const address = get().activeChat
     if (address) messenger?.setTyping(address, active)
+  },
+
+  async startMls1To1(peer) {
+    if (!messenger) return
+    try {
+      await messenger.startMls1To1(peer)
+    } catch (err) {
+      log.warn('failed to start MLS 1:1', err)
+    }
   },
 
   async startCall(peer, media) {

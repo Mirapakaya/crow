@@ -1,0 +1,28 @@
+# Caddy reverse proxy for the strfry Nostr relay.
+# Replace the domain below with your real relay domain.
+
+{
+    auto_https off
+    admin off
+}
+
+:80 {
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+
+    header {
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    }
+
+    reverse_proxy / strfry:7777 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {>X-Forwarded-For}
+    }
+}
