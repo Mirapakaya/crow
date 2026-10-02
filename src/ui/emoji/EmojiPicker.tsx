@@ -5,7 +5,7 @@ import { LAZY_CHUNKS } from '../lazyViews'
 import type { Sticker, StickerPack } from '../../core/models/types'
 import { EMOJI_GROUPS } from './emojiSet'
 import './picker.css'
-import { Button } from '../components/ui/button'
+import { Button } from '../../components/ui/button'
 
 /**
  * The emoji and sticker picker.

@@ -1,7 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import { useT } from '../../i18n'
 import { Modal } from './primitives'
-import { Button } from '../components/ui/button'
+import { Button } from '../../components/ui/button'
 
 /**
  * Questions asked in the app's own dialog, never the browser's.

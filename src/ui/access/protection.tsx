@@ -20,8 +20,8 @@ import {
 import { canOpenInstantly, isValidPin, normalizePin } from '../../core/vault/keyslots'
 import type { SlotEnrolment } from '../../core/vault/vault'
 import './access.css'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
 
 export const MIN_PASSPHRASE = 10
 

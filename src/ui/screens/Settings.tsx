@@ -19,8 +19,8 @@ import { SettingsPage } from './SettingsPage'
 import type { LocaleCode, ThemePreference } from '../../core/models/types'
 import { APP_VERSION, SOURCE_URL } from '../../crow/meta'
 import { useAboutText } from './aboutText'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
 
 export function SettingsHome() {
   const { t } = useI18n()

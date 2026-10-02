@@ -23,9 +23,9 @@ import {
   useBiometricEnrolment,
   useBiometricSupport,
 } from '../access/protection'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Textarea } from '../components/ui/textarea'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Textarea } from '../../components/ui/textarea'
 
 const AUTO_LOCK_CHOICES = [0, 1, 5, 15, 30, 60]
 

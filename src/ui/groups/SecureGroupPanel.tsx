@@ -9,9 +9,9 @@ import { confirmDanger } from '../components/dialog'
 import { LockIcon, PlusIcon, RefreshIcon, ShieldCheckIcon, TrashIcon } from '../components/Icons'
 import { displayName } from '../screens/ChatList'
 import { explainFailure, useSecureText } from './secureText'
-import { Button } from '../components/ui/button'
-import { Checkbox } from '../components/ui/checkbox'
-import { Badge } from '../components/ui/badge'
+import { Button } from '../../components/ui/button'
+import { Checkbox } from '../../components/ui/checkbox'
+import { Badge } from '../../components/ui/badge'
 
 /**
  * RFC 9420's epoch authenticator, as people can read it aloud: the first 80

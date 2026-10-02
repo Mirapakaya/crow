@@ -11,7 +11,7 @@ import { Popover } from './Popover'
 import { LazyPicker } from './LazyPicker'
 import { QUICK_REACTIONS } from './quickReactions'
 import { usePress } from './hold'
-import { Button } from '../components/ui/button'
+import { Button } from '../../components/ui/button'
 
 /**
  * Delivery state, rendered the way Telegram's readers already read it

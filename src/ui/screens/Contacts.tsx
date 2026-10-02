@@ -3,12 +3,12 @@ import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../crow/router'
 import { Avatar, EmptyState } from '../components/primitives'
-import { Badge } from '../components/ui/badge'
+import { Badge } from '../../components/ui/badge'
 import { PlusIcon, ShieldCheckIcon } from '../components/Icons'
 import { Skeleton } from '../components/Skeleton'
 import { displayName } from './ChatList'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
 
 export function ContactsList() {
   const { t } = useI18n()

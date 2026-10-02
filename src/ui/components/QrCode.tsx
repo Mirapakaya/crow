@@ -4,7 +4,7 @@ import { frameLoop, frontalCamera, QRCanvas } from 'qr/dom.js'
 import { useT } from '../../i18n'
 import { Banner } from './primitives'
 import { createLogger } from '../../core/util/log'
-import { Button } from '../components/ui/button'
+import { Button } from '../../components/ui/button'
 
 const log = createLogger('qr')
 

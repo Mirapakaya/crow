@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react'
 import { getRepo, useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { Banner, Field } from '../components/primitives'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Badge } from '../../components/ui/badge'
 import { PlusIcon, RefreshIcon, TrashIcon } from '../components/Icons'
 import { SettingsPage } from './SettingsPage'
 import { normalizeRelayUrl, relayLabel } from '../../core/transport/relayUrl'
@@ -13,7 +13,7 @@ import { DEFAULT_DM_RELAYS, SUGGESTED_RELAYS } from '../../core/transport/defaul
 import type { RelayEntry } from '../../core/models/types'
 import { verdictFor } from '../../core/transport/relayHealth'
 import { useAboutText } from './aboutText'
-import { Checkbox } from '../components/ui/checkbox'
+import { Checkbox } from '../../components/ui/checkbox'
 
 export function RelaySettings() {
   const { t, locale } = useI18n()

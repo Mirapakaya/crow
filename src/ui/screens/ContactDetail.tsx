@@ -9,10 +9,10 @@ import { shortNpub, toNpub } from '../../core/identity/keys'
 import { relayLabel } from '../../core/transport/relayUrl'
 import { formatDateTime } from '../format'
 import { displayName } from './ChatList'
-import { Input } from '../components/ui/input'
-import { Badge } from '../components/ui/badge'
-import { Textarea } from '../components/ui/textarea'
-import { Button } from '../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Badge } from '../../components/ui/badge'
+import { Textarea } from '../../components/ui/textarea'
+import { Button } from '../../components/ui/button'
 
 /**
  * One contact: their name and note, their key, verifying and blocking them.

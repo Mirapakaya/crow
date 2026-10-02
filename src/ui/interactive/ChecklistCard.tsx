@@ -3,9 +3,9 @@ import { foldChecklist, type ChecklistSpec, type InteractiveUpdate } from '../..
 import { MAX_CHECKLIST_ITEMS, MAX_ITEM_CHARS } from '../../core/models/protocol'
 import { PlusIcon } from '../components/Icons'
 import { useInteractiveText } from './interactiveText'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Checkbox } from '../components/ui/checkbox'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Checkbox } from '../../components/ui/checkbox'
 
 export interface ChecklistCardProps {
   checklist: ChecklistSpec

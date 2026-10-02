@@ -9,9 +9,9 @@ import { BackIcon, ContactsIcon, LockIcon, ShieldCheckIcon } from '../components
 import { displayName } from '../screens/ChatList'
 import { MAX_GROUP_MEMBERS, MAX_MLS_MEMBERS, MAX_SUBJECT_CHARS } from '../../core/models/protocol'
 import { explainFailure, useSecureText } from './secureText'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Checkbox } from '../components/ui/checkbox'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Checkbox } from '../../components/ui/checkbox'
 
 type Kind = 'small' | 'secure'
 

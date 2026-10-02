@@ -15,8 +15,8 @@ import {
 } from '../../core/identity/invite'
 import { parseProfilePointer } from '../../core/identity/keys'
 import { isValidNpub, isValidNostrAddress } from '../../lib/utils'
-import { Button } from '../components/ui/button'
-import { Textarea } from '../components/ui/textarea'
+import { Button } from '../../components/ui/button'
+import { Textarea } from '../../components/ui/textarea'
 
 type Mode = 'share' | 'scan' | 'paste'
 

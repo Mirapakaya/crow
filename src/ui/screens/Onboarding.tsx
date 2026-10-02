@@ -8,9 +8,9 @@ import { isValidMnemonic, normalizeMnemonic } from '../../core/identity/keys'
 import { useAccessText } from '../access/accessText'
 import { ProtectionChooser } from '../access/protection'
 import { RestoreBackup } from './RestoreBackup'
-import { Input } from '../components/ui/input'
-import { Textarea } from '../components/ui/textarea'
-import { Button } from '../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Textarea } from '../../components/ui/textarea'
+import { Button } from '../../components/ui/button'
 
 type Step = 'welcome' | 'restore' | 'restore-file' | 'name' | 'protect'
 
