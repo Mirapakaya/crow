@@ -1,10 +1,9 @@
 # Crow Deployment Guide
 
-> **Version:** 3.0.0 · **Last updated:** 2026-10-02
+> Version 3.0.0 · Last updated 2026-10-02
 
-Crow is a static Next.js app. Running `npm run build` creates a `dist/` folder
-with plain HTML, CSS, and JS that any web server can host. There is no server
-runtime or database.
+Crow builds as a static Next.js site. `npm run build` outputs a `dist/` folder
+that can be hosted anywhere. There is no server runtime or database.
 
 ## Build
 
@@ -13,36 +12,28 @@ npm install --legacy-peer-deps
 npm run build
 ```
 
-Output goes to `dist/`. For local testing:
+The static files land in `dist/`.
 
-```bash
-npx serve dist
-```
+## Vercel (production)
 
-## Deploy to GitHub Pages
+The production deployment lives on Vercel.
 
-The repo includes `.github/workflows/pages.yml`, which builds and deploys to
-GitHub Pages on every push to `main`. The site is served under `/crow/`, so the
-workflow sets `CROW_BASE_PATH=/crow`.
+- Project: `crow-main`
+- Production domain: `https://crow-main-orpin.vercel.app`
+- Custom domain (pending DNS): `https://crow.w8n.pw`
 
-To enable Pages:
+Vercel auto-deploys every push to `main`. Install command:
+`npm install --legacy-peer-deps`.
 
-1. Go to **Settings → Pages** in the GitHub repo.
-2. Under **Build and deployment**, choose **GitHub Actions**.
-3. Push to `main`. The workflow does the rest.
+## GitHub Pages (public preview)
 
-## Deploy with Docker
+A public preview deploys automatically from `main` using
+`.github/workflows/pages.yml`.
 
-A `Dockerfile` and `nginx.conf` are included in the repo root.
+- URL: `https://mirapakaya.github.io/crow/`
 
-```bash
-docker build -t crow .
-docker run -p 3000:80 crow
-```
-
-The image builds the static export and serves it with nginx. It adds basic
-security headers (`X-Frame-Options`, `Referrer-Policy`, etc.) and an SPA
-fallback so client-side routes keep working on refresh.
+The project site is served under `/crow/`, so the workflow sets
+`CROW_BASE_PATH=/crow` before building.
 
 ## Environment variables
 
@@ -51,7 +42,7 @@ fallback so client-side routes keep working on refresh.
 | `NEXT_PUBLIC_APP_VERSION` | `3.0.0` | Shown in Settings → About |
 | `NEXT_PUBLIC_BUILD_TIME` | build time | ISO timestamp of the build |
 | `NEXT_PUBLIC_SOURCE_URL` | `https://github.com/Mirapakaya/crow` | Source link |
-| `CROW_BASE_PATH` | empty | Path prefix for the static export (e.g. `/crow` for GitHub Pages) |
+| `CROW_BASE_PATH` | empty | Path prefix for the static export |
 
-Never put secrets in `NEXT_PUBLIC_*` variables — they are embedded in the
-client bundle.
+Never put secrets in `NEXT_PUBLIC_*` variables — they end up in the client
+bundle.
