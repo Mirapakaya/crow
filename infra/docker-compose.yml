@@ -1,0 +1,47 @@
+# Self-hosted Nostr relay for Crow.
+#
+# This compose file runs strfry behind Caddy. strfry accepts only the event
+# kinds Crow uses, caps event size, enforces NIP-40 expiration, and rate-limits
+# publishes. Caddy terminates TLS and adds security headers.
+#
+# Usage:
+#   cp .env.example .env
+#   docker compose up -d
+#
+# The relay is reachable at wss://relay.example.com (set your real domain in .env).
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    environment:
+      CROW_RELAY_DOMAIN: ${CROW_RELAY_DOMAIN:?set CROW_RELAY_DOMAIN in .env}
+    depends_on:
+      - strfry
+
+  strfry:
+    image: ghcr.io/hoytech/strfry:latest
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    volumes:
+      - ./strfry.conf:/etc/strfry.conf:ro
+      - strfry-data:/app/db
+    command: ["/app/strfry", "relay", "/etc/strfry.conf"]
+
+volumes:
+  caddy-data:
+  caddy-config:
+  strfry-data:
