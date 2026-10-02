@@ -246,6 +246,10 @@ export const te: Dictionary = {
     loadEarlier: 'మునుపటి సందేశాలు లోడ్ చేయి',
     startOfConversation: 'ఇది మీ సంభాషణ ప్రారంభం.',
     encryptedNote: 'సందేశాలు ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్ట్ చేయబడ్డాయి. వేరే ఎవరూ వాటిని చదవలేరు.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

@@ -239,6 +239,10 @@ export const zh: Dictionary = {
     loadEarlier: '加载更早的消息',
     startOfConversation: '这是您对话的开始。',
     encryptedNote: '消息已端到端加密。其他任何人都无法读取。',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

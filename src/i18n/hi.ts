@@ -245,6 +245,10 @@ export const hi: Dictionary = {
     loadEarlier: 'पहले के संदेश लोड करें',
     startOfConversation: 'यह आपकी वार्तालाप की शुरुआत है।',
     encryptedNote: 'संदेश अंत-से-अंत एन्क्रिप्टेड हैं। कोई और उन्हें पढ़ नहीं सकता।',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

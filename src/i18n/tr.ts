@@ -245,6 +245,10 @@ export const tr: Dictionary = {
     loadEarlier: 'Önceki mesajları yükle',
     startOfConversation: 'Bu sohbetinizin başlangıcı.',
     encryptedNote: 'Mesajlar uçtan uca şifrelidir. Başka kimse okuyamaz.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

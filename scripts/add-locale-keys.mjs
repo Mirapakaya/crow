@@ -24,6 +24,14 @@ for (const file of files) {
     )
   }
 
+  // Add forward-secrecy UI keys after encryptedNote if missing
+  if (!content.includes('forwardSecret:')) {
+    content = content.replace(
+      /encryptedNote:[^,]+,/,
+      (m) => `${m}\n    forwardSecret: 'Forward secret',\n    noForwardSecrecy: 'No forward secrecy',\n    hybridPQ: 'Hybrid PQ',\n    startSecret: 'Start secret chat',`
+    )
+  }
+
   await writeFile(path, content)
   console.log(`updated ${file}`)
 }
