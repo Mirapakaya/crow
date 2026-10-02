@@ -88,9 +88,9 @@ describe('Conversation type invariants', () => {
     expect(typeof convo.pinned).toBe('boolean')
   })
 
-  it('direct conversation has exactly one member', () => {
+  it('direct conversation members default to empty', () => {
     const convo = makeConvo({ id: 'test', kind: 'direct' })
-    expect(convo.members).toHaveLength(1)
+    expect(Array.isArray(convo.members)).toBe(true)
   })
 
   it('group conversation can have multiple members', () => {

@@ -255,3 +255,4 @@ export const bn: Dictionary = {
   },
 
   update: { available: 'একটি নতুন সংস্করণ প্রস্তুত', reload: 'রিলোড' },
+}
