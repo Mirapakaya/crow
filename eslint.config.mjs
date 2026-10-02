@@ -27,6 +27,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ['dist/', 'node_modules/', '.next/', '.qwen/', 'scripts/'],
+    ignores: ['dist/', 'node_modules/', '.next/', '.qwen/', 'scripts/', 'public/'],
   },
 )
