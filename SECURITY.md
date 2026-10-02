@@ -165,8 +165,8 @@ security issue in Crow, please report it responsibly.
 
 | | |
 |---|---|
-| **Email** | **security@[YOUR DOMAIN]** *[PLACEHOLDER — replace with actual address]* |
-| **PGP key** | *[PLACEHOLDER — publish a public key and link it here]* |
+| **Email** | **crow@w8n.pw** |
+| **PGP key** | Contact us by email to request the current key. |
 | **Response time** | We aim to acknowledge within 48 hours and provide a fix timeline within 5 business days. |
 | **Scope** | The Crow web application source code at <https://github.com/Mirapakaya/crow>. Out of scope: relay software you do not control, third-party browser extensions, operating-system-level compromises. |
 | **Disclosure** | We ask for 90 days to address the issue before public disclosure, but will work with you on timing. |
