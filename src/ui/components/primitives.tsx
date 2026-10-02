@@ -255,17 +255,23 @@ export function EmptyState({ title, body, action }: { title: string; body?: stri
 export function CopyButton({
   value,
   label,
-  variant = 'outline' as const,
+  className,
+  variant = 'outline',
+  block,
 }: {
   value: string
   label?: string
   className?: string
+  variant?: 'default' | 'outline' | 'ghost' | 'secondary' | 'link' | 'destructive'
+  block?: boolean
 }) {
   const t = useT()
   const [copied, setCopied] = useCopyState()
   return (
     <Button
       type="button"
+      variant={variant}
+      block={block}
       className={className}
       onClick={async () => {
         try {

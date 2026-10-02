@@ -24,8 +24,8 @@ export interface DisplayPrefs {
 }
 
 const LOCALE_SET = new Set<string>(LOCALE_CODES)
-const isLocale = (value: unknown): value is LocaleCode => typeof value === 'string' && LOCALE_SET.has(value)
-const isTheme = (value: unknown): value is ThemePreference =>
+export const isLocale = (value: unknown): value is LocaleCode => typeof value === 'string' && LOCALE_SET.has(value)
+export const isTheme = (value: unknown): value is ThemePreference =>
   value === 'system' || value === 'light' || value === 'dark'
 
 export function loadDisplayPrefs(): Partial<DisplayPrefs> {

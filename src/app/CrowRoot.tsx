@@ -3,8 +3,9 @@
 import { StrictMode } from 'react'
 import { App } from '@/crow/App'
 import { ErrorBoundary } from '@/crow/ErrorBoundary'
-import { applyDisplayPrefs } from '@/crow/displayPrefs'
+import { applyDisplayPrefs, isLocale, isTheme } from '@/crow/displayPrefs'
 import { detectLocale } from '@/i18n'
+import type { LocaleCode, ThemePreference } from '@/core/models/types'
 
 if (typeof window !== 'undefined' && window.top !== window.self) {
   document.documentElement.textContent = 'Crow refuses to run inside a frame. Open it in its own tab.'
@@ -18,7 +19,10 @@ if (typeof window !== 'undefined') {
   } catch {
     /* storage can be blocked or corrupted; fall back to defaults */
   }
-  applyDisplayPrefs({ locale: stored.locale ?? detectLocale(), theme: stored.theme ?? 'system' })
+  applyDisplayPrefs({
+    locale: (isLocale(stored.locale) ? stored.locale : detectLocale()) as LocaleCode,
+    theme: (isTheme(stored.theme) ? stored.theme : 'system') as ThemePreference,
+  })
 }
 
 export default function CrowRoot() {

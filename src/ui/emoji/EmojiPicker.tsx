@@ -170,7 +170,7 @@ function StickerTab({ packs, onPick }: { packs: StickerPack[]; onPick?: (sticker
         ))
       )}
 
-      <label variant="ghost" size="sm" className="picker-import">
+      <label className="picker-import">
         {busy ? t('emoji.importing') : t('emoji.addPack')}
         <input
           ref={fileRef}

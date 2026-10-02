@@ -118,7 +118,6 @@ export function RelaySettings() {
               <div className="row faint" style={{ flexWrap: 'wrap', gap: 'var(--space-3)' }}>
                 <label className="row" style={{ gap: '0.35rem' }}>
                   <Checkbox
-                    size="sm"
                     checked={entry.read}
                     onCheckedChange={(checked) => void update(entry, { read: !!checked })}
                   />
@@ -126,7 +125,6 @@ export function RelaySettings() {
                 </label>
                 <label className="row" style={{ gap: '0.35rem' }}>
                   <Checkbox
-                    size="sm"
                     checked={entry.write}
                     onCheckedChange={(checked) => void update(entry, { write: !!checked })}
                   />

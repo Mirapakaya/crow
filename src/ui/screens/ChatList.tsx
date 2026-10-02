@@ -3,7 +3,8 @@ import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../crow/router'
 import { Avatar, Banner, EmptyState, GroupAvatar } from '../components/primitives'
-import { ContactsIcon, MoreIcon, PinIcon, PlusIcon, SearchIcon, ShieldCheckIcon } from '../components/Icons'
+import { ContactsIcon, MoreIcon, PinIcon, PlusIcon, ShieldCheckIcon } from '../components/Icons'
+import { Search as SearchIcon } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/dropdown-menu'
 import { formatListTimestamp } from '../format'
 import type { Contact, Conversation } from '../../core/models/types'
@@ -147,7 +148,7 @@ export function ChatList() {
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost" className="convo-row-more" aria-label={t('chats.messageActions')} aria-haspopup="true" title={t('chats.messageActions')}>
+          <Button size="icon" variant="ghost" className="convo-row-more" aria-label={t('chat.messageActions')} aria-haspopup="true" title={t('chat.messageActions')}>
             <MoreIcon size={16} />
           </Button>
         </DropdownMenuTrigger>

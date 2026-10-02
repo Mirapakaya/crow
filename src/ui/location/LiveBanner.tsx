@@ -3,6 +3,7 @@ import { useNavigate } from '../../crow/router'
 import { useI18n } from '../../i18n'
 import { isGroupAddress } from '../../core/models/types'
 import { conversationTitle, displayName } from '../screens/ChatList'
+import { Button } from '../../components/ui/button'
 import { useLocationText } from './locationText'
 
 /**
@@ -54,7 +55,7 @@ export function LiveBanner({ address }: { address?: string }) {
           {label}
         </button>
       )}
-      <button
+      <Button
         type="button"
         variant="ghost" size="sm" className="danger-text"
         onClick={() => {
@@ -62,7 +63,7 @@ export function LiveBanner({ address }: { address?: string }) {
         }}
       >
         {text('stop')}
-      </button>
+      </Button>
     </div>
   )
 }

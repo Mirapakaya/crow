@@ -5,6 +5,7 @@ import { formatDuration } from '../format'
 import type { Attachment } from '../../core/models/attachment'
 import { blobRef, blobRefKey } from '../../core/crypto/blobCrypto'
 import { DownloadIcon, AlertIcon } from './Icons'
+import { Button } from '../../components/ui/button'
 
 /**
  * Which transfer a bubble shows, remembered per descriptor: a hash of the key,
@@ -339,9 +340,11 @@ function FileAttachment({ attachment }: { attachment: Attachment }) {
         <span className="faint">{formatBytes(attachment.size, locale)}</span>
       </span>
       {url ? (
-        <a variant="outline" size="sm" href={url} download={name}>
-          {t('attachment.save')}
-        </a>
+        <Button variant="outline" size="sm" asChild>
+          <a href={url} download={name}>
+            {t('attachment.save')}
+          </a>
+        </Button>
       ) : (
         <span className="faint small">{t('attachment.transferring')}</span>
       )}

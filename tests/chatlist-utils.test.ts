@@ -3,15 +3,20 @@ import { displayName, listNames, conversationTitle, isRequest } from '../src/ui/
 import type { Contact, Conversation } from '../src/core/models/types'
 
 function makeContact(overrides: Partial<Contact> & { pubkey: string }): Contact {
+  const { pubkey, ...rest } = overrides
   return {
-    pubkey: overrides.pubkey,
-    name: null,
-    remoteName: null,
-    avatar: null,
+    id: pubkey,
+    pubkey,
+    npub: 'npub1' + pubkey.slice(0, 6),
+    name: '',
     accepted: true,
     blocked: false,
-    verification: 'none',
-    ...overrides,
+    verification: 'unverified',
+    source: 'manual',
+    relays: [],
+    addedAt: Date.now(),
+    lastSeenAt: Date.now(),
+    ...rest,
   }
 }
 
@@ -20,7 +25,6 @@ function makeConvo(overrides: Partial<Conversation> & { id: string }): Conversat
     kind: 'direct',
     peerPubkey: 'pk-' + overrides.id,
     members: [],
-    subject: null,
     accepted: true,
     lastActivity: Date.now(),
     unread: 0,
@@ -102,7 +106,7 @@ describe('conversationTitle', () => {
     const a = makeContact({ pubkey: 'a', name: 'Alice' })
     const b = makeContact({ pubkey: 'b', name: 'Bob' })
     const contacts = new Map([['a', a], ['b', b]])
-    const convo = makeConvo({ id: '1', kind: 'group', subject: null, members: ['a', 'b'] })
+    const convo = makeConvo({ id: '1', kind: 'group', members: ['a', 'b'] })
 
     const title = conversationTitle(convo, contacts, 'en')
     expect(title).toContain('Alice')

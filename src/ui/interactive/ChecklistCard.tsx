@@ -55,7 +55,6 @@ export function ChecklistCard({
               title={entry.by ? text('tickedBy', { name: nameOf(entry.by) }) : undefined}
             >
               <Checkbox
-                size="sm"
                 checked={entry.done}
                 onCheckedChange={(checked) => onCheck(entry.id, !!checked)}
               />

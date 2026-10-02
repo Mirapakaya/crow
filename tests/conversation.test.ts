@@ -16,7 +16,6 @@ function makeConvo(overrides: Partial<Conversation> & { id: string }): Conversat
     kind: 'direct',
     peerPubkey: 'pk-' + overrides.id,
     members: [],
-    subject: null,
     accepted: true,
     lastActivity: Date.now(),
     unread: 0,
