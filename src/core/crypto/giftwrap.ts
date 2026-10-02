@@ -57,6 +57,31 @@ export interface WrapOptions {
 
 const fuzzedNow = (): number => nowSec() - randomInt(FUZZ_WINDOW_SEC)
 
+/** Size buckets to pad encrypted content to. Relays see only the bucketed
+ * length, not the original message length. The largest bucket is below the
+ * 512 KB frame cap. */
+const PADDING_BUCKETS = [
+  256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288,
+]
+
+/**
+ * Pad a string to the next fixed bucket size. The unpad side strips trailing
+ * null bytes, so the payload must never intentionally end with a null byte.
+ * NIP-44 ciphertexts are base64-like strings and never do.
+ */
+export function padToBucket(plaintext: string): string {
+  if (plaintext.length > PADDING_BUCKETS[PADDING_BUCKETS.length - 1]) return plaintext
+  const target = PADDING_BUCKETS.find((b) => b >= plaintext.length) ?? plaintext.length
+  if (target === plaintext.length) return plaintext
+  return plaintext.padEnd(target, '\0')
+}
+
+export function unpadBucket(padded: string): string {
+  let end = padded.length
+  while (end > 0 && padded[end - 1] === '\0') end -= 1
+  return padded.slice(0, end)
+}
+
 /** Build an unsigned rumor carrying the real timestamp. */
 export function createRumor(template: Partial<UnsignedEvent>, senderSk: Uint8Array): Rumor {
   const rumor = {
@@ -82,17 +107,23 @@ function encryptTo(payload: unknown, sk: Uint8Array, recipientPk: string): strin
 function decryptFrom(content: string, sk: Uint8Array, senderPk: string): unknown {
   const conversationKey = nip44.getConversationKey(sk, senderPk)
   try {
-    return JSON.parse(nip44.decrypt(content, conversationKey))
+    return JSON.parse(nip44.decrypt(unpadBucket(content), conversationKey))
   } finally {
     wipe(conversationKey)
   }
+}
+
+/** Pad the NIP-44 ciphertext so the gift-wrap or seal content length is one
+ * of a small set of buckets rather than the raw message length. */
+function padCipher(ciphertext: string): string {
+  return padToBucket(ciphertext)
 }
 
 export function createSeal(rumor: Rumor, senderSk: Uint8Array, recipientPk: string, at?: number): NostrEvent {
   return finalizeEvent(
     {
       kind: KIND_SEAL,
-      content: encryptTo(rumor, senderSk, recipientPk),
+      content: padCipher(encryptTo(rumor, senderSk, recipientPk)),
       created_at: at ?? fuzzedNow(),
       tags: [],
     },
@@ -112,7 +143,7 @@ export function createWrap(seal: NostrEvent, recipientPk: string, opts: WrapOpti
     return finalizeEvent(
       {
         kind: KIND_GIFT_WRAP,
-        content: encryptTo(seal, ephemeralSk, recipientPk),
+        content: padCipher(encryptTo(seal, ephemeralSk, recipientPk)),
         created_at: opts.fuzzedAt ?? fuzzedNow(),
         tags,
       },

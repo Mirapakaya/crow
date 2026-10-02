@@ -49,3 +49,19 @@ upgrade later.
   before the upgrade.
 - Metadata (recipient public key, timing, approximate size) is still visible to
   relays even when message contents are encrypted.
+
+## Metadata padding
+
+NIP-44 already rounds plaintext length to the next power-of-two boundary. Crow
+adds a second layer of fixed-size bucket padding to the encrypted content of
+every gift wrap and seal, so the payload seen by a relay falls into one of a
+small set of sizes (256 B, 512 B, 1 KB, 2 KB, 4 KB, ... 512 KB). Trailing null
+bytes are stripped before decryption. The padding hides the exact length of the
+original message from relays that observe frame sizes.
+
+## Publish jitter
+
+The relay pool applies a small, uniformly random delay (up to 200 ms) before
+sending each event to a relay. This decorrelates the publish timestamp visible
+to a relay from the exact moment the user pressed send, reducing the precision
+of timing metadata.
