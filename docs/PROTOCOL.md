@@ -34,7 +34,7 @@ temporary group entropy and marks the conversation `hybridPQ: true`.
 
 The shared secret is not persisted; only the `hybridPQ` flag on the
 conversation is. Breaking either the X25519 DH or ML-KEM-768 would not be
-enough to recover the seed, because both are mixed by HKDF-SHA256.
+enough to recover the seed, because both are mixed by HKDF-SHA-256.
 
 ## NIP-17 fallback
 
