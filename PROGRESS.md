@@ -182,7 +182,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 ## P6 — Metadata reduction
 
 **Started:** 2026-10-02
-**Status:** In progress
+**Status:** GATE PASSED
 
 ### Plan
 1. Harden self-hosted relay infra (Docker Compose, Caddy, strfry).
@@ -213,7 +213,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 ## P7 — Extension and leakage defense
 
 **Started:** 2026-10-02
-**Status:** In progress
+**Status:** GATE PASSED
 
 ### Plan
 1. Centralize CSP string in `src/core/util/csp.ts` so Next.js headers and the static-export meta tag match.
@@ -236,7 +236,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 ## P8 — Deployment targets
 
 **Started:** 2026-10-02
-**Status:** In progress
+**Status:** GATE PASSED
 
 ### Plan
 1. Add a root `Dockerfile` for static-export nginx image.
@@ -258,7 +258,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 ## P9 — Pen-test / release gate
 
 **Started:** 2026-10-02
-**Status:** In progress
+**Status:** GATE PASSED
 
 ### Plan
 1. Run `npm audit` and document findings.
@@ -278,4 +278,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 - Fixes require major upgrades (Next.js 16, next-pwa 10) and are deferred to a follow-up release.
 
 ### Branch
-`p9-pen-test-release-gate` pushed to `Mirapakaya/crow`.
+`p9-pen-test-release-gate` pushed to `Mirapakaya/crow`. PR #13 opened.
+
+### Release
+- Tag `v3.0.0` pushed: https://github.com/Mirapakaya/crow/releases/tag/v3.0.0
