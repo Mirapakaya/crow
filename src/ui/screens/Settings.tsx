@@ -1,7 +1,6 @@
 import { useApp } from '../../crow/store'
 import { useI18n, LOCALE_NAMES } from '../../i18n'
 import { useNavigate, useRoute, type Route } from '../../crow/router'
-import { Skeleton } from '../components/Skeleton'
 import { Avatar, Banner, Field, Toggle } from '../components/primitives'
 import {
   ChevronIcon,
