@@ -103,7 +103,8 @@ export const zh: Dictionary = {
     you: '您：',
     noMessages: '暂无消息',
     searchPlaceholder: '搜索对话',
-    liveLocation: '📡 实时位置', filterAll: '全部', filterUnread: '未读', filterGroups: '群组', 
+    liveLocation: '📡 实时位置', filterAll: '全部', filterUnread: '未读', filterGroups: '群组',
+    filterContacts: 'Contacts', 
     filterLabel: 'Filter conversations',
     pin: '置顶', unpin: '取消置顶', pinned: '已置顶',
   },
@@ -238,6 +239,10 @@ export const zh: Dictionary = {
     loadEarlier: '加载更早的消息',
     startOfConversation: '这是您对话的开始。',
     encryptedNote: '消息已端到端加密。其他任何人都无法读取。',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

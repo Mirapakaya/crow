@@ -183,6 +183,19 @@ Over time, a relay operator can build a partial social graph and infer
 communication patterns. This is an inherent limitation of the Nostr relay model;
 mitigations (sealed sender, hour-fuzzing) reduce but do not eliminate it.
 
+The table below lists what a relay currently observes for a gift-wrapped 1:1
+message and which code mitigations apply. "FS" means the item changes once a
+conversation has been upgraded to MLS forward secrecy.
+
+| Relay-visible item | Mitigation in code | Notes |
+|---|---|---|
+| Recipient public key (kind 1059 `p` tag) | Ephemeral gift-wrap key; recipient inbox key is public by design | No way to hide the recipient of a delivery |
+| Sender public key | Sealed sender: kind 1059 is signed by a one-time key | NIP-59 hides the real sender from relays |
+| Timestamp | Fuzzed up to 2 days backward (`giftwrap.ts`) | Hides exact send time |
+| Payload size | NIP-44 power-of-two-ish padding; no extra bucket padding yet | Reveals approximate content length |
+| Call media path | `callRelayOnly` forces WebRTC through TURN | Direct calls expose both IPs |
+| 1:1 conversation forward secrecy | MLS upgrade via `startMls1To1` | Upgraded chats use epoch-ratcheted MLS keys |
+
 ### 6.2 IP exposure on direct WebRTC connections
 
 When the user enables "Use direct connections when possible" (Settings →

@@ -683,6 +683,7 @@ export function welcomeRumor(
   welcome: Welcome,
   keyPackageEventId: string,
   relays: readonly string[],
+  hybrid = false,
 ): Rumor {
   return createRumor(
     {
@@ -691,6 +692,7 @@ export function welcomeRumor(
       tags: [
         ['e', keyPackageEventId],
         ['relays', ...relays],
+        ...(hybrid ? [['hybrid', '1']] : []),
       ],
     },
     secretKey,
@@ -701,6 +703,7 @@ export function parseWelcomeRumor(rumor: Pick<Rumor, 'kind' | 'tags' | 'content'
   welcome: Welcome
   keyPackageEventId: string
   relays: string[]
+  hybrid: boolean
 } {
   if (rumor.kind !== KIND_WELCOME) throw new MarmotError('not a Welcome')
   const keyPackageEventId = singleton(rumor, 'e')
@@ -709,7 +712,8 @@ export function parseWelcomeRumor(rumor: Pick<Rumor, 'kind' | 'tags' | 'content'
   if (!relays.every(isRelayUrl)) throw new MarmotError('relays tag holds something that is not a relay URL')
   const decoded = decodeMlsMessage(b64ToBytes(rumor.content), 0)?.[0]
   if (decoded?.wireformat !== 'mls_welcome') throw new MarmotError('content is not a Welcome')
-  return { welcome: decoded.welcome, keyPackageEventId, relays }
+  const hybrid = rumor.tags.some((tag) => tag[0] === 'hybrid' && tag[1] === '1')
+  return { welcome: decoded.welcome, keyPackageEventId, relays, hybrid }
 }
 
 // --- group messages (kind 445) ---------------------------------------------------------

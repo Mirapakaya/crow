@@ -105,7 +105,8 @@ export const ta: Dictionary = {
     you: 'நீங்கள்: ',
     noMessages: 'இன்னும் செய்திகள் இல்லை',
     searchPlaceholder: 'உரையாடல்களைத் தேடு',
-    liveLocation: '📡 நேரடி இடம்', filterAll: 'அனைத்தும்', filterUnread: 'படிக்காதவை', filterGroups: 'குழுக்கள்', 
+    liveLocation: '📡 நேரடி இடம்', filterAll: 'அனைத்தும்', filterUnread: 'படிக்காதவை', filterGroups: 'குழுக்கள்',
+    filterContacts: 'Contacts', 
     filterLabel: 'Filter conversations',
     pin: 'பின்', unpin: 'அன்பின்', pinned: 'பின் செய்யப்பட்டவை',
   },
@@ -245,6 +246,10 @@ export const ta: Dictionary = {
     loadEarlier: 'முந்தைய செய்திகளை ஏற்று',
     startOfConversation: 'இது உங்கள் உரையாடலின் தொடக்கம்.',
     encryptedNote: 'செய்திகள் முனையிலிருந்து-முனைக்கு மறைகுறியாக்கப்பட்டுள்ளன. வேறு யாரும் அவற்றைப் படிக்க முடியாது.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

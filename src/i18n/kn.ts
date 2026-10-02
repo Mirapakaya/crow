@@ -105,7 +105,8 @@ export const kn: Dictionary = {
     you: 'ನೀವು: ',
     noMessages: 'ಇನ್ನೂ ಸಂದೇಶಗಳಿಲ್ಲ',
     searchPlaceholder: 'ಸಂಭಾಷಣೆಗಳನ್ನು ಹುಡುಕು',
-    liveLocation: '📡 ಲೈವ್ ಸ್ಥಾನ', filterAll: 'ಎಲ್ಲಾ', filterUnread: 'ಓದದ', filterGroups: 'ಗುಂಪುಗಳು', 
+    liveLocation: '📡 ಲೈವ್ ಸ್ಥಾನ', filterAll: 'ಎಲ್ಲಾ', filterUnread: 'ಓದದ', filterGroups: 'ಗುಂಪುಗಳು',
+    filterContacts: 'Contacts', 
     filterLabel: 'Filter conversations',
     pin: 'ಪಿನ್', unpin: 'ಅನ್‌ಪಿನ್', pinned: 'ಪಿನ್ ಮಾಡಲಾದ',
   },
@@ -245,6 +246,10 @@ export const kn: Dictionary = {
     loadEarlier: 'ಹಿಂದಿನ ಸಂದೇಶಗಳನ್ನು ಲೋಡ್ ಮಾಡು',
     startOfConversation: 'ಇದು ನಿಮ್ಮ ಸಂಭಾಷಣೆಯ ಆರಂಭ.',
     encryptedNote: 'ಸಂದೇಶಗಳು ಎಂಡ್-ಟು-ಎಂಡ್ ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿವೆ. ಬೇರೆ ಯಾರೂ ಅವುಗಳನ್ನು ಓದಲಾಗುವುದಿಲ್ಲ.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

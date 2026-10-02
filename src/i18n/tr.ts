@@ -105,7 +105,8 @@ export const tr: Dictionary = {
     you: 'Siz: ',
     noMessages: 'Henüz mesaj yok',
     searchPlaceholder: 'Sohbetlerde ara',
-    liveLocation: '📡 Canlı konum', filterAll: 'Tümü', filterUnread: 'Okunmamış', filterGroups: 'Gruplar', 
+    liveLocation: '📡 Canlı konum', filterAll: 'Tümü', filterUnread: 'Okunmamış', filterGroups: 'Gruplar',
+    filterContacts: 'Contacts', 
     filterLabel: 'Filter conversations',
     pin: 'Sabitle', unpin: 'Sabitlemeyi kaldır', pinned: 'Sabitlendi',
   },
@@ -244,6 +245,10 @@ export const tr: Dictionary = {
     loadEarlier: 'Önceki mesajları yükle',
     startOfConversation: 'Bu sohbetinizin başlangıcı.',
     encryptedNote: 'Mesajlar uçtan uca şifrelidir. Başka kimse okuyamaz.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

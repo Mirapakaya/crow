@@ -153,6 +153,8 @@ export interface IRelayPool {
 
 /** How long a publish may take, connection included, before it counts as failed. */
 const PUBLISH_TIMEOUT_MS = 10_000
+/** Random delay before each publish, to decorrelate timing metadata at relays. */
+const PUBLISH_JITTER_MS = 200
 /** A pre-warmed relay is kept connected this long without being used. */
 const PREWARM_HOLD_MS = 5 * 60_000
 /** An unconfigured relay's socket lingers this long after last use. */
@@ -595,23 +597,30 @@ export class RelayPool implements IRelayPool {
       pending += 1
       const socket = this.#socket(url)
       const urgent = circuitState(this.#healthFor(url), this.#now()) !== 'open'
-      void socket.publish(event, PUBLISH_TIMEOUT_MS, urgent).then((result: PublishResult) => {
-        answered.add(url)
-        this.#recordPublish(url, result)
-        outcomes.push(result.ok ? { url, ok: true, ms: result.ms } : { url, ok: false, error: result.error })
-        if (result.ok) acked += 1
-        pending -= 1
-        if (acked >= quorum) reachQuorum()
-        if (pending > 0) {
-          maybeFailover()
-          return
-        }
-        // Every relay tried so far has answered. Short of quorum, spend the
-        // standbys before giving up rather than after a retry backoff.
-        if (acked < quorum && !quorumResolved && standbys.length > 0 && launchStandbys()) return
-        reachQuorum()
-        resolveSettled([...outcomes])
-      })
+      const send = (): void => {
+        void socket.publish(event, PUBLISH_TIMEOUT_MS, urgent).then((result: PublishResult) => {
+          answered.add(url)
+          this.#recordPublish(url, result)
+          outcomes.push(result.ok ? { url, ok: true, ms: result.ms } : { url, ok: false, error: result.error })
+          if (result.ok) acked += 1
+          pending -= 1
+          if (acked >= quorum) reachQuorum()
+          if (pending > 0) {
+            maybeFailover()
+            return
+          }
+          // Every relay tried so far has answered. Short of quorum, spend the
+          // standbys before giving up rather than after a retry backoff.
+          if (acked < quorum && !quorumResolved && standbys.length > 0 && launchStandbys()) return
+          reachQuorum()
+          resolveSettled([...outcomes])
+        })
+      }
+      // Jitter spreads out the moment each relay sees the publish, making it
+      // harder for a single relay to correlate sends times with user actions.
+      const jitter = Math.floor(Math.random() * PUBLISH_JITTER_MS)
+      if (jitter <= 0) send()
+      else setTimeout(send, jitter)
     }
 
     if (targets.length === 0) {

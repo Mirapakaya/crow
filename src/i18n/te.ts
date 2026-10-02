@@ -105,7 +105,8 @@ export const te: Dictionary = {
     you: 'మీరు: ',
     noMessages: 'ఇంకా సందేశాలు లేవు',
     searchPlaceholder: 'సంభాషణలను వెతకండి',
-    liveLocation: '📡 ప్రత్యక్ష స్థానం', filterAll: 'అన్నీ', filterUnread: 'చదవని', filterGroups: 'సమూహాలు', 
+    liveLocation: '📡 ప్రత్యక్ష స్థానం', filterAll: 'అన్నీ', filterUnread: 'చదవని', filterGroups: 'సమూహాలు',
+    filterContacts: 'Contacts', 
     filterLabel: 'Filter conversations',
     pin: 'పిన్', unpin: 'అన్‌పిన్', pinned: 'పిన్ చేసినవి',
   },
@@ -245,6 +246,10 @@ export const te: Dictionary = {
     loadEarlier: 'మునుపటి సందేశాలు లోడ్ చేయి',
     startOfConversation: 'ఇది మీ సంభాషణ ప్రారంభం.',
     encryptedNote: 'సందేశాలు ఎండ్-టు-ఎండ్ ఎన్‌క్రిప్ట్ చేయబడ్డాయి. వేరే ఎవరూ వాటిని చదవలేరు.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {
