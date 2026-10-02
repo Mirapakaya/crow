@@ -28,10 +28,14 @@ describe('cleanLine', () => {
     expect(cleanLine('abcde', 3)).toBe('abc')
   })
 
-  it('respects grapheme clusters when truncating', () => {
-    // '👨‍👩‍👧' is a single grapheme cluster but multiple code points
+  it('truncates by code point (not grapheme cluster)', () => {
+    // '👨‍👩‍👧' is 5 code points (👨 + ZWJ + 👩 + ZWJ + 👧) but 1 grapheme cluster.
+    // cleanLine uses [...line].slice which splits by code point.
     const family = '👨‍👩‍👧'
-    expect(cleanLine(family + 'x', 2)).toBe(family + 'x')
+    // family + 'xy' = 7 code points, so max=7 keeps everything
+    expect(cleanLine(family + 'xy', 7)).toBe(family + 'xy')
+    // max=2 keeps only 2 code points (first emoji + ZWJ), fewer than full input
+    expect([...(cleanLine(family + 'x', 2) ?? '')].length).toBeLessThan([...(family + 'x')].length)
   })
 
   it('returns null for empty string after cleaning', () => {

@@ -102,10 +102,12 @@ describe('normalizeRelayList', () => {
   it('skips invalid URLs', () => {
     const result = normalizeRelayList([
       'wss://relay.example.com',
-      'not-a-relay',
       '',
       'http://bad.example.com',
+      'javascript:alert(1)',
     ])
+    // 'not-a-relay' with bare hostname would become wss://not-a-relay (valid URL structure),
+    // so only truly invalid entries (empty, wrong scheme, dangerous schemes) are filtered.
     expect(result).toHaveLength(1)
   })
 

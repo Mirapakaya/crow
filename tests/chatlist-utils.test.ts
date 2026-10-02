@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { displayName, listNames, conversationTitle, isRequest } from '../src/ui/screens/ChatList'
+import { displayName, listNames, conversationTitle, isRequest } from '../src/ui/screens/chatlist-utils'
 import type { Contact, Conversation } from '../src/core/models/types'
 
 function makeContact(overrides: Partial<Contact> & { pubkey: string }): Contact {
