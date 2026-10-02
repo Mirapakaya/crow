@@ -142,3 +142,19 @@ import { Inter, Vazirmatn } from 'next/font/google'
 **Finding:** TypeScript check is skipped. Also uses `npm install --legacy-peer-deps` instead of `npm ci`.
 
 **Required fix (P0):** Update CI to `npm ci`, add `npm run typecheck`, and run on `feature/*` branches too.
+
+---
+
+## 11. Static export ignores Next.js `headers()`
+
+**Code:** `next.config.ts`
+
+```ts
+async headers() { ... }
+```
+
+with `output: 'export'`.
+
+**Finding:** Next.js build warning: "rewrites, redirects, and headers are not applied when exporting your application, detected (headers)." The CSP and security headers configured in `next.config.ts` are dropped during static export.
+
+**Required fix (P7/P8):** Move the CSP and security headers into a `<meta http-equiv>` tag in `src/app/layout.tsx` and/or generate per-host header files (`vercel.json`, `_headers`, etc.) via `scripts/gen-headers.mjs`.
