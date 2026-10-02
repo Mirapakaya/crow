@@ -3,6 +3,7 @@ import { Vazirmatn } from 'next/font/google'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { cn } from '@/lib/utils'
+import { CROW_CSP } from '@/core/util/csp'
 import './globals.css'
 
 const vazirmatn = Vazirmatn({
@@ -41,7 +42,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" dir="ltr" className={cn(GeistSans.variable, GeistMono.variable, vazirmatn.variable)} suppressHydrationWarning>
       <head>
-        <script src="/theme.js" />
+        <meta httpEquiv="Content-Security-Policy" content={CROW_CSP} />
+        <script src="/theme.js" integrity="sha256-T6APF+Z4HSG3c0/+CrvEFHMPoRymk7sOSwS7QDDmerg=" crossOrigin="anonymous" />
       </head>
       <body className="h-dvh flex flex-col overflow-hidden bg-background text-foreground font-sans">
         {children}

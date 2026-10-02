@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next'
 import withPWA from '@ducanh2912/next-pwa'
+import { CROW_CSP } from './src/core/util/csp'
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -20,21 +21,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob:",
-              "media-src 'self' blob:",
-              "connect-src wss: https:",
-              "font-src 'self'",
-              "manifest-src 'self'",
-              "worker-src 'self'",
-              "frame-src 'none'",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "form-action 'none'",
-            ].join('; '),
+            value: CROW_CSP,
           },
           {
             key: 'X-Content-Type-Options',
