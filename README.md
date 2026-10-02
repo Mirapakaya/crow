@@ -1,65 +1,45 @@
 # Crow
 
-A private, end-to-end-encrypted messenger that runs entirely in the browser. No accounts, no phone numbers, no server we control — your identity is a key on your device and your messages are encrypted before they leave it.
+A private, end-to-end encrypted messenger that runs in the browser. No accounts,
+no phone numbers, no server we control — your identity is a key on your device
+and your messages are encrypted before they leave it.
 
-## Architecture
+## What Crow is
 
-```
-                    CROW WEB APP
-                         │
-                  Next.js / React
-                         │
-                 Crow UI / shadcn
-                         │
-             Application Service Layer
-                         │
-          ┌──────────────┼──────────────┐
-          │              │              │
-       Storage         Crypto        Messaging
-          │              │              │
-       IndexedDB     E2EE sessions   Protocol
-       (encrypted)      │              │
-                         └──────┬───────┘
-                                │
-                            Transport
-                                │
-                    ┌───────────┴───────────┐
-                    │                       │
-                 Relays                  WebRTC
-               (Nostr NIP-17)         (P2P calls)
-```
+- **Static web app**: one HTML/JS bundle, served from anywhere, no backend.
+- **No accounts**: identity is a locally generated secp256k1 key pair.
+- **Encrypted by default**: every message is end-to-end encrypted.
+- **No telemetry**: no analytics, no tracking, no phone-home.
 
-### Core Systems
+## Core parts
 
-- **Identity**: Locally generated secp256k1 key pairs, BIP-39 mnemonic recovery
-- **E2EE**: NIP-17/NIP-59 gift-wrap protocol, sealed-sender envelopes, ChaCha20-Poly1305
-- **Forward secrecy**: MLS (RFC 9420) for group conversations with key ratcheting
-- **Vault**: LUKS-style keyslots — passphrase, PIN, pattern, biometric, or recovery phrase unlock
-- **Storage**: IndexedDB via Dexie, all rows encrypted under vault key, blinded index keys
-- **Transport**: Nostr relay pool (WebSocket) for encrypted message delivery, WebRTC for calls
-- **PWA**: Static export, installable, offline shell via service worker
+- **Identity**: locally generated secp256k1 key pair, 12-word BIP-39 recovery.
+- **1:1 messages**: NIP-17/NIP-59 gift-wrap protocol with sealed-sender envelopes.
+- **Groups**: NIP-17 direct messages to every member, or forward-secret MLS groups.
+- **Forward secrecy**: MLS (RFC 9420) groups with per-epoch key ratcheting.
+- **Vault**: passphrase, PIN, biometric, or recovery phrase unlock via keyslots.
+- **Storage**: IndexedDB through Dexie, encrypted per record, blinded index keys.
+- **Calls**: WebRTC with DTLS-SRTP, signalling through NIP-59 gift wraps.
+- **PWA**: static export, installable, offline shell via service worker.
 
-### Cryptographic Primitives
+## Cryptographic primitives
 
 | Purpose | Implementation |
 |---|---|
-| Key agreement | secp256k1 ECDH (via @noble/curves) |
-| Symmetric encryption | XChaCha20-Poly1305 (via @noble/ciphers) |
-| Key derivation | scrypt, HKDF-SHA-512 (via @noble/hashes) |
-| Hashing | SHA-256, SHA-512 (via @noble/hashes) |
+| Key agreement | secp256k1 ECDH (@noble/curves) |
+| Symmetric encryption | XChaCha20-Poly1305 and ChaCha20 + HMAC-SHA256 (@noble/ciphers) |
+| Key derivation | scrypt, Argon2id, HKDF-SHA-256 (@noble/hashes) |
+| Hashing | SHA-256, SHA-512 (@noble/hashes) |
 | Group key management | MLS / ts-mls (RFC 9420) |
-| Post-quantum (Stage 2) | ML-KEM-768 + ML-DSA-65 (via @noble/post-quantum) |
+| Hybrid key exchange | X25519 + ML-KEM-768 (@noble/post-quantum) |
 
-## Tech Stack
+## Tech stack
 
-- **Framework**: Next.js 15 (App Router, static export)
-- **UI**: React 19, shadcn/ui, Radix primitives, Tailwind CSS
-- **Language**: TypeScript (strict mode)
-- **Fonts**: Geist Sans, Geist Mono
-- **State**: Zustand
-- **Database**: Dexie (IndexedDB)
-- **Relay**: nostr-tools (NIP-17/59 gift-wrap protocol)
-- **Testing**: Vitest
+- Next.js 15 App Router, static export
+- React 19, shadcn/ui, Radix, Tailwind CSS
+- TypeScript strict
+- Geist Sans / Geist Mono
+- Zustand, Dexie (IndexedDB), nostr-tools, ts-mls
 
 ## Development
 
@@ -68,43 +48,29 @@ npm install --legacy-peer-deps
 npm run dev
 ```
 
-## Build & Verify
+## Build and verify
 
 ```bash
 npm run typecheck   # TypeScript check
 npm run lint        # ESLint
 npm run test        # Vitest
-npm run build       # Production build (static export to dist/)
-npm run verify      # All checks combined
+npm run build       # Static export to dist/
+npm run verify      # All of the above
 ```
 
 ## Deployment
 
-Crow is a static web application compatible with any standard hosting platform. See [DEPLOYMENT.md](./DEPLOYMENT.md) for platform-specific instructions.
+Crow is a static site. See [DEPLOYMENT.md](./DEPLOYMENT.md) for Vercel and
+GitHub Pages instructions.
 
-**Quick start (Vercel):** Connect the GitHub repo, set framework to Next.js, and deploy.
+## Security and privacy
 
-## Security
-
-All messages are end-to-end encrypted. No plaintext leaves the device. Private keys never leave the browser. See [SECURITY.md](./SECURITY.md) and [THREAT-MODEL.md](./THREAT-MODEL.md) for details.
-
-## Privacy
-
-No accounts. No analytics. No telemetry. No tracking. The only data that leaves your device is encrypted envelopes addressed to your contacts, delivered through relays that cannot read them. See [PRIVACY.md](./PRIVACY.md) for a full breakdown.
-
-## Internationalization
-
-Crow supports 30+ languages including English, Persian, and Indic scripts, with full RTL support. Language and theme preferences are cached outside the encrypted vault so they apply before unlock.
-
-## Legal
-
-- [Terms of Service](https://crow.w8n.pw/legal/terms/)
-- [Privacy Policy](https://crow.w8n.pw/legal/privacy/)
-- [Acceptable Use Policy](https://crow.w8n.pw/legal/acceptable-use/)
-- [Cookie Policy](https://crow.w8n.pw/legal/cookies/)
-- [Open Source Licenses](https://crow.w8n.pw/legal/licenses/)
-- [Security Disclosure](https://crow.w8n.pw/legal/security/)
+- [SECURITY.md](./SECURITY.md) — architecture and cryptography
+- [THREAT-MODEL.md](./THREAT-MODEL.md) — adversaries and residual risks
+- [PRIVACY.md](./PRIVACY.md) — what data leaves the device and when
+- [LEGAL.md](./LEGAL.md) — licensing and legal overview
 
 ## License
 
-AGPL-3.0-or-later — see [LICENSE](./LICENSE) for details. The Crow name and visual identity are not licensed under AGPL.
+AGPL-3.0-or-later — see [LICENSE](./LICENSE). The Crow name and visual
+identity are not licensed under AGPL.
