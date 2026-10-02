@@ -7,9 +7,12 @@
  *
  * Generates icons at 72, 96, 128, 144, 152, 192, 384, 512 px
  * Plus maskable variants (80% safe area) at 192 and 512 px.
+ *
+ * If the SVG source is missing, falls back to a generated "C" brand mark
+ * on the dark background (#0a0a0a) with the accent colour (#e5e5e5).
  */
 
-import { readFileSync, mkdirSync, existsSync } from 'fs'
+import { readFileSync, mkdirSync, existsSync, writeFileSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -19,15 +22,34 @@ const ROOT = resolve(__dirname, '..')
 const SVG_PATH = resolve(ROOT, 'public/crow.svg')
 const ICONS_DIR = resolve(ROOT, 'public/icons')
 
+const BG = '#0a0a0a'
+const BG_RGB = { r: 10, g: 10, b: 10, alpha: 1 }
+const ACCENT = '#e5e5e5'
+
 const SIZES = [72, 96, 128, 144, 152, 192, 384, 512]
 const MASKABLE_SIZES = [192, 512]
+
+/**
+ * Build a simple SVG with a stylised "C" as a fallback brand mark when
+ * the main crow.svg is not available (e.g. in CI without the asset).
+ */
+function fallbackSvg() {
+  return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="96" fill="${BG}"/>
+  <text x="256" y="340" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="700" font-size="320" fill="${ACCENT}">C</text>
+</svg>`)
+}
 
 async function main() {
   if (!existsSync(ICONS_DIR)) {
     mkdirSync(ICONS_DIR, { recursive: true })
   }
 
-  const svgBuffer = readFileSync(SVG_PATH)
+  const hasSvg = existsSync(SVG_PATH)
+  const svgBuffer = hasSvg ? readFileSync(SVG_PATH) : fallbackSvg()
+  if (!hasSvg) {
+    console.warn('⚠ crow.svg not found; using fallback "C" brand mark')
+  }
 
   // Dynamic import so the script fails gracefully if sharp isn't installed
   let sharp
@@ -67,7 +89,7 @@ async function main() {
         width: size,
         height: size,
         channels: 4,
-        background: { r: 9, g: 9, b: 11, alpha: 1 }, // #09090b
+        background: BG_RGB,
       },
     })
       .composite([{ input: innerPng, left: padding, top: padding }])
@@ -75,6 +97,16 @@ async function main() {
       .toFile(outPath)
     console.log(`✓ ${outPath} (${size}x${size}, maskable)`)
   }
+
+  // Generate a 180×180 Apple Touch Icon (not in the web manifest but needed
+  // by iOS when saved to home screen). Placed at the public root where iOS
+  // looks for it by convention.
+  const applePath = resolve(ROOT, 'public', 'apple-touch-icon.png')
+  await sharp(svgBuffer)
+    .resize(180, 180)
+    .png()
+    .toFile(applePath)
+  console.log(`✓ ${applePath} (180×180, apple-touch-icon)`)
 
   console.log('\nAll icons generated.')
 }

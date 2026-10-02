@@ -4,8 +4,8 @@
   "description": "Private, end-to-end-encrypted messaging that runs entirely in your browser.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#09090b",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
   "orientation": "portrait-primary",
   "categories": ["social", "utilities"],
   "icons": [

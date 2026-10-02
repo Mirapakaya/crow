@@ -241,7 +241,7 @@ export function ChatList() {
       ) : null}
 
       {conversations.length > 2 ? (
-        <div className="segmented" style={{ margin: 'var(--space-2) var(--space-3)' }} role="tablist" aria-label={t('chats.filterLabel')}>
+        <div className="segmented" style={{ margin: 'var(--space-2) var(--space-3)' }} role="tablist" aria-label={t('chats.filterLabel')} aria-controls="chat-list-panel">
           <Button role="tab" aria-selected={filter === 'all'} onClick={() => setFilter('all')}>{t('chats.filterAll')}</Button>
           <Button role="tab" aria-selected={filter === 'unread'} onClick={() => setFilter('unread')}>{t('chats.filterUnread')}</Button>
           <Button role="tab" aria-selected={filter === 'groups'} onClick={() => setFilter('groups')}>{t('chats.filterGroups')}</Button>
@@ -251,16 +251,16 @@ export function ChatList() {
       {conversations.length > 4 ? (
         <div style={{ padding: 'var(--space-2) var(--space-3)' }}>
           <Input
-            
             type="search"
             placeholder={t('chats.searchPlaceholder')}
+            aria-label={t('chats.searchPlaceholder')}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
         </div>
       ) : null}
 
-      <div className="screen-scroll" role="list" aria-label={t('chats.title')}>
+      <div className="screen-scroll" role="list" aria-label={t('chats.title')} id="chat-list-panel">
         {!conversationsLoaded ? (
           <ChatListSkeleton />
         ) : conversations.length === 0 ? (
