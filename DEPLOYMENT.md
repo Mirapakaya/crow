@@ -195,6 +195,18 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
+A `Dockerfile` and `nginx.conf` are included in the repository root:
+
+```bash
+docker build -t crow .
+docker run -p 3000:80 crow
+```
+
+The image serves the static export from `dist/` with the same security headers
+emitted by the Next.js config (CSP is in the HTML meta tag, but `X-Frame-Options`,
+`Referrer-Policy`, `Permissions-Policy`, and `X-Content-Type-Options` are added
+by nginx for completeness).
+
 **Option B — Next.js SSR (nixpacks):**
 
 If you prefer server-side rendering (not required for Crow):
