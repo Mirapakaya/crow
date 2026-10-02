@@ -139,7 +139,15 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36971421099
 ## P5 — Forward secrecy and hybrid post-quantum for 1:1 chats
 
 **Started:** 2026-10-02
-**Status:** In progress -> GATE PASSED (pending CI)
+**Status:** GATE PASSED
+
+### Baseline result
+GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
+- `npm install --legacy-peer-deps` succeeded
+- `npm run typecheck` succeeded
+- `npm run lint` succeeded
+- `npm run test` succeeded
+- `npm run build` succeeded
 
 ### Plan
 1. Add a hybrid X25519 + ML-KEM-768 KEM module with tests.
