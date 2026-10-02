@@ -59,7 +59,7 @@ Specifically:
   unless expressly authorised.
 
 For branding and trademark enquiries:
-**[CONTACT EMAIL — PLACEHOLDER]**
+**crow@w8n.pw**
 
 ---
 
@@ -166,10 +166,10 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 | Enquiry type | Contact |
 |---|---|
-| General legal | [CONTACT EMAIL — PLACEHOLDER] |
-| Trademark / branding | [CONTACT EMAIL — PLACEHOLDER] |
-| Vulnerability reporting | security@[YOUR DOMAIN] (see [SECURITY.md](./SECURITY.md)) |
-| Privacy | privacy@[YOUR DOMAIN] (see [PRIVACY.md](./PRIVACY.md)) |
+| General legal | crow@w8n.pw |
+| Trademark / branding | crow@w8n.pw |
+| Vulnerability reporting | crow@w8n.pw (see [SECURITY.md](./SECURITY.md)) |
+| Privacy | crow@w8n.pw (see [PRIVACY.md](./PRIVACY.md)) |
 
 ---
 
