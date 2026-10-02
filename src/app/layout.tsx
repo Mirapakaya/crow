@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Vazirmatn } from 'next/font/google'
+import { GeistSans, GeistMono } from 'geist/font/sans'
 import { cn } from '@/lib/utils'
 import './globals.css'
 
@@ -37,7 +38,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" dir="ltr" className={cn(vazirmatn.variable)} suppressHydrationWarning>
+    <html lang="en" dir="ltr" className={cn(GeistSans.variable, GeistMono.variable, vazirmatn.variable)} suppressHydrationWarning>
       <head>
         <script src="/theme.js" />
       </head>
