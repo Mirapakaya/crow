@@ -100,9 +100,9 @@ import { Inter, Vazirmatn } from 'next/font/google'
 
 ---
 
-## 7. Stack mismatch with QWEN.md default
+## 7. Stack mismatch with master spec default
 
-**Claim (QWEN.md §1):** Default stack is Vite + React 19 + TS strict.
+**Claim (MASTER-SPEC.md §1):** Default stack is Vite + React 19 + TS strict.
 
 **Actual:** Next.js 15 App Router static export + React 19 + TS strict + shadcn/ui + Tailwind CSS.
 
