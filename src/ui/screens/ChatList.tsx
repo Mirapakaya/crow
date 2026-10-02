@@ -161,7 +161,7 @@ export function ChatList() {
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => deleteConversation(conversation.id)}>
             <TrashIcon size={16} />
-            {t('chats.delete')}
+            {t('chat.delete')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
