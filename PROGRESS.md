@@ -206,4 +206,27 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 - Optional cover traffic is a research item; not implemented in this phase.
 
 ### Branch
-`p6-metadata-reduction` pushed to `Mirapakaya/crow`.
+`p6-metadata-reduction` pushed to `Mirapakaya/crow`. PR #10 opened.
+
+---
+
+## P7 — Extension and leakage defense
+
+**Started:** 2026-10-02
+**Status:** GATE PASSED
+
+### Plan
+1. Centralize CSP string in `src/core/util/csp.ts` so Next.js headers and the static-export meta tag match.
+2. Add a `<meta http-equiv="Content-Security-Policy" ...>` to `src/app/layout.tsx` so the static export actually enforces the policy.
+3. Add Subresource Integrity hash to `public/theme.js`.
+4. Clean up unused imports reported by ESLint.
+5. Run typecheck and lint; push to `p7-extension-leakage` and open a PR.
+
+### Progress
+- Extracted `CROW_CSP` to `src/core/util/csp.ts` and imported it from `next.config.ts` and `src/app/layout.tsx`.
+- Added CSP `<meta>` tag to `src/app/layout.tsx`.
+- Added `integrity` attribute to `theme.js`.
+- Removed unused `Skeleton`, `Contact`, `LocaleCode`, and `displayName` imports flagged by lint in six UI files.
+
+### Branch
+`p7-extension-leakage` pushed to `Mirapakaya/crow`. PR #11 opened.
