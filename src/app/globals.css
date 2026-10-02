@@ -1,3 +1,6 @@
+@import 'geist/font/sans.css';
+@import 'geist/font/mono.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
