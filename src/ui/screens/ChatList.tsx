@@ -3,7 +3,7 @@ import { useApp } from '../../crow/store'
 import { useI18n } from '../../i18n'
 import { useNavigate, useRoute } from '../../crow/router'
 import { Avatar, Banner, EmptyState, GroupAvatar } from '../components/primitives'
-import { ContactsIcon, MoreIcon, PinIcon, PlusIcon, ShieldCheckIcon } from '../components/Icons'
+import { ContactsIcon, MoreIcon, PinIcon, PlusIcon, ShieldCheckIcon, TrashIcon } from '../components/Icons'
 import { Search as SearchIcon } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/dropdown-menu'
 import { formatListTimestamp } from '../format'
@@ -29,7 +29,8 @@ export function ChatList() {
   const previews = useApp((s) => s.previews)
   const sharing = useApp((s) => s.liveShares.length > 0)
   const togglePin = useApp((s) => s.togglePin)
-  const [filter, setFilter] = useState<'all' | 'unread' | 'groups'>('all')
+  const deleteConversation = useApp((s) => s.deleteConversation)
+  const [filter, setFilter] = useState<'all' | 'unread' | 'groups' | 'contacts'>('all')
   const [query, setQuery] = useState('')
   // The conversation open beside this list, on a wide window.
   const route = useRoute()
@@ -54,6 +55,7 @@ export function ChatList() {
     let filtered = matched
     if (filter === 'unread') filtered = filtered.filter((c) => c.unread > 0)
     if (filter === 'groups') filtered = filtered.filter((c) => c.kind === 'group')
+    if (filter === 'contacts') filtered = filtered.filter((c) => c.kind === 'direct')
     return {
       accepted: filtered.filter((c) => !isRequest(c, contacts)),
       requests: matched.filter((c) => isRequest(c, contacts)),
@@ -157,6 +159,10 @@ export function ChatList() {
             <PinIcon size={16} />
             {conversation.pinned ? t('chats.unpin') : t('chats.pin')}
           </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => deleteConversation(conversation.id)}>
+            <TrashIcon size={16} />
+            {t('chats.delete')}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -207,6 +213,7 @@ export function ChatList() {
           <Button role="tab" aria-selected={filter === 'all'} onClick={() => setFilter('all')}>{t('chats.filterAll')}</Button>
           <Button role="tab" aria-selected={filter === 'unread'} onClick={() => setFilter('unread')}>{t('chats.filterUnread')}</Button>
           <Button role="tab" aria-selected={filter === 'groups'} onClick={() => setFilter('groups')}>{t('chats.filterGroups')}</Button>
+          <Button role="tab" aria-selected={filter === 'contacts'} onClick={() => setFilter('contacts')}>{t('chats.filterContacts')}</Button>
         </div>
       ) : null}
 
