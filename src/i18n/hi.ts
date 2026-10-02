@@ -105,7 +105,8 @@ export const hi: Dictionary = {
     you: 'आप: ',
     noMessages: 'अभी कोई संदेश नहीं',
     searchPlaceholder: 'वार्तालाप खोजें',
-    liveLocation: '📡 लाइव स्थान', filterAll: 'सभी', filterUnread: 'अपठित', filterGroups: 'समूह', 
+    liveLocation: '📡 लाइव स्थान', filterAll: 'सभी', filterUnread: 'अपठित', filterGroups: 'समूह',
+    filterContacts: 'Contacts', 
     filterLabel: 'Filter conversations',
     pin: 'पिन', unpin: 'अनपिन', pinned: 'पिन किए गए',
   },
@@ -244,6 +245,10 @@ export const hi: Dictionary = {
     loadEarlier: 'पहले के संदेश लोड करें',
     startOfConversation: 'यह आपकी वार्तालाप की शुरुआत है।',
     encryptedNote: 'संदेश अंत-से-अंत एन्क्रिप्टेड हैं। कोई और उन्हें पढ़ नहीं सकता।',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

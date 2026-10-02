@@ -70,6 +70,12 @@ export const isGroupAddress = (address: string): boolean => /^[0-9a-f]{32}$/.tes
 
 export type ConversationKind = 'direct' | 'group'
 
+/** Protection state surfaced in the chat header. */
+export interface ProtectionState {
+  forwardSecrecy: boolean
+  hybridPQ: boolean
+}
+
 export interface Conversation {
   id: string
   kind: ConversationKind
@@ -109,6 +115,12 @@ export interface Conversation {
    * it, and keys that move on with every change (ADR-049).
    */
   mls?: MlsConversation
+  /**
+   * Forward-secrecy and post-quantum protection flags, surfaced in the UI.
+   * For a direct NIP-17 conversation this is absent (no forward secrecy).
+   * For an MLS 1:1 or group it indicates how the group was created.
+   */
+  protection?: ProtectionState
 }
 
 export interface MlsConversation {

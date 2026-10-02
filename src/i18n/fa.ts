@@ -113,7 +113,8 @@ export const fa: Dictionary = {
     you: 'شما: ',
     noMessages: 'هنوز پیامی نیست',
     searchPlaceholder: 'جستجوی گفتگوها',
-    liveLocation: '📡 موقعیت زنده', filterAll: 'همه', filterUnread: 'خوانده‌نشده', filterGroups: 'گروه‌ها', 
+    liveLocation: '📡 موقعیت زنده', filterAll: 'همه', filterUnread: 'خوانده‌نشده', filterGroups: 'گروه‌ها',
+    filterContacts: 'Contacts', 
     filterLabel: 'Filter conversations',
     pin: 'سنجاق', unpin: 'برداشتن سنجاق', pinned: 'سنجاق‌شده',
   },
@@ -252,6 +253,10 @@ export const fa: Dictionary = {
     loadEarlier: 'بارگذاری پیام‌های قبلی',
     startOfConversation: 'اینجا آغاز گفتگوی شماست.',
     encryptedNote: 'پیام‌ها سرتاسر رمزگذاری شده‌اند. هیچ‌کس دیگری نمی‌تواند آن‌ها را بخواند.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

@@ -3,6 +3,7 @@ import { hkdf } from '@noble/hashes/hkdf.js'
 import { hmac } from '@noble/hashes/hmac.js'
 import { sha256 } from '@noble/hashes/sha2.js'
 import { bytesToHex, bytesToUtf8, concatBytes, randomBytes, utf8ToBytes, wipe } from '../util/bytes'
+import { LEGACY_VAULT_INFO } from '../legacy'
 
 /**
  * At-rest encryption for the local vault.
@@ -36,9 +37,9 @@ export interface VaultKeys {
 
 /** Legacy HKDF info strings; changing them would break existing vaults. */
 const INFO = {
-  record: 'textor/vault/record/v1',
-  index: 'textor/vault/index/v1',
-  identity: 'textor/vault/identity/v1',
+  record: LEGACY_VAULT_INFO.record,
+  index: LEGACY_VAULT_INFO.index,
+  identity: LEGACY_VAULT_INFO.identity,
 } as const
 
 function subkey(dataKey: Uint8Array, info: string): Uint8Array {

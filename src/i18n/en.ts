@@ -108,6 +108,7 @@ export const en = {
     filterAll: 'All',
     filterUnread: 'Unread',
     filterGroups: 'Groups',
+    filterContacts: 'Contacts',
     filterLabel: 'Filter conversations',
     pin: 'Pin',
     unpin: 'Unpin',
@@ -248,6 +249,10 @@ export const en = {
     loadEarlier: 'Load earlier messages',
     startOfConversation: 'This is the beginning of your conversation.',
     encryptedNote: 'Messages are end-to-end encrypted. Nobody else can read them.',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {

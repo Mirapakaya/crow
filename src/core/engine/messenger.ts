@@ -6,6 +6,17 @@ import { createLogger } from '../util/log'
 import { coalesce, Mutex } from '../util/mutex'
 import { createRumor, giftWrap, unwrapGift, type Rumor } from '../crypto/giftwrap'
 import {
+  decodeHybridBytes,
+  decapsulateHybrid,
+  deriveMlsSeed,
+  encodeHybridBytes,
+  encapsulateHybrid,
+  generateHybridKeyPair,
+  isValidHybridCipherText,
+  isValidHybridPublicKey,
+  type HybridKeyPair,
+} from '../crypto/hybridKem'
+import {
   ACCEPTED_RUMOR_KINDS,
   cleanLine,
   KIND_MLS_WELCOME,
@@ -351,6 +362,8 @@ export class Messenger {
 
   /** Peer pubkey -> timer clearing a stale "typing" indicator. */
   #typingTimers = new Map<string, ReturnType<typeof setTimeout>>()
+  /** Peer pubkey -> pending hybrid handshake state (initiator only). */
+  #hybridPending = new Map<string, HybridKeyPair>()
   /** Peer pubkey -> rumor ids awaiting a batched delivery receipt. */
   #pendingReceipts = new Map<string, Set<string>>()
   /** Conversations whose authors are owed a read receipt, batched on the same timer. */
@@ -1119,6 +1132,44 @@ export class Messenger {
         }
         break
       }
+
+      case 'hybridInvite': {
+        const pub = decodeHybridBytes(frame.pub)
+        if (!isValidHybridPublicKey(pub)) break
+        try {
+          const enc = encapsulateHybrid(pub)
+          await this.#sendControl(
+            peerPubkey,
+            { v: PROTOCOL_VERSION, t: 'hybridAccept', cipher: encodeHybridBytes(enc.cipherText) },
+            { durable: true },
+          )
+        } catch (err) {
+          log.warn('failed to respond to hybrid invite', err)
+        }
+        break
+      }
+
+      case 'hybridAccept': {
+        const pending = this.#hybridPending.get(peerPubkey)
+        if (!pending) break
+        this.#hybridPending.delete(peerPubkey)
+        const cipher = decodeHybridBytes(frame.cipher)
+        if (!isValidHybridCipherText(cipher)) break
+        try {
+          const sharedSecret = decapsulateHybrid(cipher, pending.secretKey)
+          const seed = deriveMlsSeed(sharedSecret)
+          const runtime = await this.#loadMls()
+          await runtime.createGroup({
+            members: [this.#pubkey, peerPubkey],
+            name: '',
+            entropy: seed,
+            hybrid: true,
+          })
+        } catch (err) {
+          log.warn('failed to create hybrid MLS 1:1 group', err)
+        }
+        break
+      }
     }
   }
 
@@ -1206,6 +1257,29 @@ export class Messenger {
   }
 
   // --- sending --------------------------------------------------------------
+
+  /**
+   * Try to upgrade a 1:1 direct conversation to a forward-secret MLS group.
+   *
+   * The handshake is a single round trip:
+   *   1. We send a hybridInvite with our X25519+ML-KEM-768 public key.
+   *   2. The peer replies with a hybridAccept ciphertext.
+   *   3. We decapsulate, derive the MLS group seed, and create a 2-member MLS group.
+   * Returns the new group conversation id, or null if the peer has no KeyPackage.
+   */
+  async startMls1To1(peerPubkey: string): Promise<string | null> {
+    if (!this.#secretKey) throw new Error('messenger is not running')
+    if (peerPubkey === this.#pubkey) return null
+    const runtime = await this.#loadMls()
+    const ready = await runtime.readiness([peerPubkey])
+    if (ready.missing.length > 0) return null
+    const existing = this.#hybridPending.get(peerPubkey)
+    if (existing) return null
+    const keyPair = generateHybridKeyPair()
+    this.#hybridPending.set(peerPubkey, keyPair)
+    await this.#sendControl(peerPubkey, { v: PROTOCOL_VERSION, t: 'hybridInvite', pub: encodeHybridBytes(keyPair.publicKey) }, { durable: true })
+    return 'pending'
+  }
 
   async sendMessage(address: ChatAddress, text: string, replyTo?: string): Promise<Message> {
     if (!this.#secretKey) throw new Error('messenger is not running')

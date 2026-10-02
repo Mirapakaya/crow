@@ -2,7 +2,7 @@
 
 ## Current Status
 
-The project source is ready for a production build. The rebrand from Textor to Crow has been completed and all source changes are committed to `main`.
+The project source is ready for a production build. The Crow rebrand is active and all source changes are committed to `main`.
 
 ## Environment Blocker
 

@@ -61,7 +61,8 @@ export const bn: Dictionary = {
     addContact: 'একজন পরিচিতি যোগ করুন', requests: 'বার্তার অনুরোধ',
     requestsBody: 'আপনার পরিচিতির বাইরে থেকে যারা আপনার সাথে যোগাযোগ করেছেন।',
     draft: 'খসড়া', you: 'আপনি: ', noMessages: 'এখনও কোনো বার্তা নেই',
-    searchPlaceholder: 'কথোপকথন অনুসন্ধান', liveLocation: '📡 লাইভ লোকেশন', filterAll: 'সব', filterUnread: 'অপঠিত', filterGroups: 'গ্রুপ', 
+    searchPlaceholder: 'কথোপকথন অনুসন্ধান', liveLocation: '📡 লাইভ লোকেশন', filterAll: 'সব', filterUnread: 'অপঠিত', filterGroups: 'গ্রুপ',
+    filterContacts: 'Contacts', 
     filterLabel: 'Filter conversations',
     pin: 'পিন', unpin: 'আনপিন', pinned: 'পিন করা',
   },
@@ -132,6 +133,10 @@ export const bn: Dictionary = {
     unblock: 'আনব্লক', loadEarlier: 'আগের বার্তাগুলো লোড করুন',
     startOfConversation: 'এটি আপনার কথোপকথনের শুরু।',
     encryptedNote: 'বার্তাগুলো এন্ড-টু-এন্ড এনক্রিপ্টেড। অন্য কেউ এগুলো পড়তে পারে না।',
+    forwardSecret: 'Forward secret',
+    noForwardSecrecy: 'No forward secrecy',
+    hybridPQ: 'Hybrid PQ',
+    startSecret: 'Start secret chat',
   },
 
   status: {
