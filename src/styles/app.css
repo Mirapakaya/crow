@@ -1555,11 +1555,11 @@ time,
 .pattern-dot {
   display: grid;
   place-items: center;
-  padding: 0;
+  padding: 0 !important;
   color: inherit;
-  background: none;
-  border: 0;
-  border-radius: var(--radius-full);
+  background: none !important;
+  border: 0 !important;
+  border-radius: var(--radius-full) !important;
   cursor: pointer;
 }
 

@@ -8,9 +8,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-[var(--accent)] text-[var(--accent-fg)] hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)]',
+        default: 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] active:bg-[var(--surface-3)]',
+        solid: 'bg-[var(--accent)] text-[var(--accent-fg)] hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)]',
         destructive: 'bg-[var(--danger)] text-[var(--danger-fg)] hover:bg-[var(--danger-hover)]',
-        outline: 'border-[var(--border-strong)] bg-transparent text-[var(--text)] hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] active:bg-[var(--surface-3)]',
+        outline: 'border-[var(--border-strong)] bg-transparent text-[var(--text)] hover:bg-[var(--surface-2)] active:bg-[var(--surface-3)]',
         secondary: 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]',
         ghost: 'bg-transparent text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] active:bg-[var(--surface-3)]',
         link: 'text-[var(--accent-text)] underline-offset-4 hover:underline',
