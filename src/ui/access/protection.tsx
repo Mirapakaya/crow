@@ -452,7 +452,7 @@ export function ProtectionChooser({
 
       <div className="choice-list" role="radiogroup" aria-label={text('protectTitle')}>
         {options.map((option) => (
-          <Button
+          <button
             key={option.value}
             type="button"
             role="radio"
@@ -463,7 +463,7 @@ export function ProtectionChooser({
           >
             <span className="choice-title">{option.title}</span>
             <span className="small muted">{option.body}</span>
-          </Button>
+          </button>
         ))}
       </div>
 

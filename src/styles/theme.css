@@ -191,14 +191,14 @@
   --text-faint: var(--n-500);
   --text-inverse: var(--n-0);
 
-  --accent: var(--n-950);
-  --accent-hover: #171717;
-  --accent-active: #262626;
+  --accent: var(--n-800);
+  --accent-hover: var(--n-850);
+  --accent-active: var(--n-900);
   --accent-fg: var(--n-0);
   --accent-soft: var(--n-100);
   --accent-soft-hover: var(--n-150);
   --accent-border: var(--n-200);
-  --accent-text: var(--n-700);
+  --accent-text: var(--n-800);
   --ring: var(--n-950);
 
   --success: var(--green-600);
@@ -242,9 +242,9 @@
   --text-faint: var(--n-dark-600);
   --text-inverse: var(--n-dark-50);
 
-  --accent: var(--n-dark-950);
-  --accent-hover: #e6e6e6;
-  --accent-active: #dedede;
+  --accent: var(--n-dark-600);
+  --accent-hover: var(--n-dark-700);
+  --accent-active: var(--n-dark-800);
   --accent-fg: var(--n-dark-0);
   --accent-soft: var(--n-dark-300);
   --accent-soft-hover: var(--n-dark-350);
