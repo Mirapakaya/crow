@@ -1,6 +1,5 @@
 import type { LocaleCode, ThemePreference } from '../core/models/types'
 import { LOCALE_DIRECTION, LOCALE_CODES } from '../i18n'
-import { LEGACY_DISPLAY_PREFS_KEY } from '../core/legacy'
 
 /**
  * Language and theme, cached outside the vault.
@@ -17,7 +16,7 @@ import { LEGACY_DISPLAY_PREFS_KEY } from '../core/legacy'
  */
 const KEY = 'crow:display'
 /** Legacy key; read once more so existing users keep their language and theme. */
-const LEGACY_KEY = LEGACY_DISPLAY_PREFS_KEY
+const LEGACY_KEY = 'crow:display-legacy'
 
 export interface DisplayPrefs {
   locale: LocaleCode

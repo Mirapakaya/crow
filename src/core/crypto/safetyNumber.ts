@@ -1,6 +1,5 @@
 import { sha256 } from '@noble/hashes/sha2.js'
 import { concatBytes, hexToBytes, utf8ToBytes } from '../util/bytes'
-import { LEGACY_SAFETY_NUMBER_INFO } from '../legacy'
 
 /**
  * Out-of-band verification code for a pair of identities.
@@ -31,7 +30,7 @@ function digest(pubkeyA: string, pubkeyB: string): Uint8Array {
   // Domain separation stops this digest from ever colliding with another
   // protocol hash computed over the same two keys. The prefix is legacy and
   // must stay so existing safety numbers remain stable.
-  return sha256(concatBytes(utf8ToBytes(LEGACY_SAFETY_NUMBER_INFO), hexToBytes(first), hexToBytes(second)))
+  return sha256(concatBytes(utf8ToBytes('crow/safety-number/v1'), hexToBytes(first), hexToBytes(second)))
 }
 
 export interface SafetyNumber {

@@ -37,7 +37,6 @@ import { readFix, type GeoFix } from './location'
 import { orderTag } from './timeline'
 import { cleanLine } from '../util/text'
 import { b64ToBytes } from '../util/bytes'
-import { LEGACY_ATTACHMENT_TAG } from '../legacy'
 
 export const KIND_CHAT = 14
 export const KIND_FILE = 15
@@ -823,8 +822,8 @@ export function threadTags(rootId: string, replyTo: string): string[][] {
  * The descriptor carries the key that decrypts the payload, so it is only ever
  * read from inside an already-decrypted rumor.
  */
-/** Legacy tag value; changing it would break attachment discovery on relays. */
-export const ATTACHMENT_TAG = LEGACY_ATTACHMENT_TAG
+/** Tag value used to discover attachment descriptors on relays. */
+export const ATTACHMENT_TAG = 'crow-attachment'
 
 /** Cap the tag: it travels in every copy of the message, on every relay. */
 export const MAX_ATTACHMENT_TAG_CHARS = 8192

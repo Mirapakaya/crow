@@ -19,17 +19,15 @@ import { orderOf } from '../models/timeline'
 import { recoveryKey } from './keyslots'
 import type { VaultRepo } from './repo'
 
-import { LEGACY_EXPORT_FORMAT, LEGACY_EXPORT_AAD_V1, LEGACY_EXPORT_AAD_V2 } from '../legacy'
-
 const log = createLogger('export')
 
-/** Legacy format identifier; kept for compatibility with existing backups. */
-export const EXPORT_FORMAT = LEGACY_EXPORT_FORMAT
+/** Format identifier for Crow vault exports. */
+export const EXPORT_FORMAT = 'crow-vault-export'
 export const EXPORT_VERSION = 2
 
-/** Legacy AAD labels; changing them would invalidate older backups. */
-const AAD_EXPORT_V1 = LEGACY_EXPORT_AAD_V1
-const AAD_EXPORT_V2 = LEGACY_EXPORT_AAD_V2
+/** AAD labels for backup encryption; must remain stable to open existing backups. */
+const AAD_EXPORT_V1 = 'crow/export/v1'
+const AAD_EXPORT_V2 = 'crow/export/v2'
 const slotAad = (type: ExportSlot['type']): string => `${AAD_EXPORT_V2}|${type}`
 
 /**

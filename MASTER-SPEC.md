@@ -31,7 +31,7 @@ mkdir -p ~/crow-work && cd ~/crow-work
 ls -la "/storage/94CB-EF0B/Android/data/com.termux/files/guava/altercpre/zip/"
 cp "/storage/94CB-EF0B/Android/data/com.termux/files/guava/altercpre/zip/"*.zip .
 unzip -q -o ./*.zip
-cd Textor-main 2>/dev/null || cd "$(ls -d */ | head -1)"
+cd legacy messenger-main 2>/dev/null || cd "$(ls -d */ | head -1)"
 node -v    # must be >= 20.19
 git init -q 2>/dev/null; git add -A; git commit -qm "baseline: imported source" || true
 cp ~/crow-work/CROW-MASTER.md ./MASTER-SPEC.md   # put this file in ~/crow-work first, then this copies it in
@@ -46,14 +46,14 @@ Environment fact: Playwright/Chromium, ZAP, testssl.sh and Lighthouse do not run
 
 ## A. WHAT I FOUND (zip + repo)
 
-**Your zip (Textor-main, read directly, 272 files):** Vite 8 + React 19 + TypeScript + Dexie + Zustand + nostr-tools + ts-mls + @noble/*. It is a serverless Nostr messenger with:
+**Your zip (legacy messenger-main, read directly, 272 files):** Vite 8 + React 19 + TypeScript + Dexie + Zustand + nostr-tools + ts-mls + @noble/*. It is a serverless Nostr messenger with:
 - 1:1 messages: NIP-17 + NIP-44 v2 + NIP-59 gift wraps (rumor kind 14, seal kind 13, wrap kind 1059 from a one-time key, timestamps fuzzed up to 2 days back).
 - Groups: small NIP-17 groups (max 8) and MLS (RFC 9420, ciphersuite 0x0001) via Marmot for up to 100 with forward secrecy.
 - Vault: XChaCha20-Poly1305 per record with AAD, LUKS-style keyslots (passphrase, PIN, pattern, WebAuthn/biometric, recovery phrase), scrypt N=2^16 r=8 p=1, HKDF-SHA256, HMAC-blinded index keys.
 - Calls: WebRTC DTLS-SRTP, signalling through sealed gift wraps. Attachments: blobCrypto. PWA, i18n en+fa, 60+ test files, CSP meta tag, frame guard.
 - Known gaps: no forward secrecy for 1:1, PIN brute-force risk if storage is copied, `style-src 'unsafe-inline'`, relays see recipient pubkey/size/timing, extensions can read memory after unlock.
 
-**Crow repo (github.com/Mirapakaya/crow):** GitHub blocks automated reading of file contents, so I read the README, architecture diagram, folder list, THREAT-MODEL.md and PR titles, not every source file. Findings: it is already a Next.js 15 static-export migration of Textor (src/app renamed to src/crow, Tailwind + shadcn/ui + Radix, Geist fonts, SVG logo), with docs (SECURITY, PRIVACY, THREAT-MODEL, DEPLOYMENT, BUILD_ENVIRONMENT, LEGAL), vercel.json, 56 commits, AGPL-3.0, and a README that lists post-quantum ML-KEM-768 + ML-DSA-65 as "Stage 2". It states "Crow has not been independently audited". Doc/code mismatches to fix: README says "hour-fuzzed" but Textor code fuzzes up to 2 days; "ChaCha20-Poly1305" is wrong for NIP-44 (ChaCha20 + HMAC-SHA256); the README claims relay delivery is encrypted while relays still see metadata.
+**Crow repo (github.com/Mirapakaya/crow):** GitHub blocks automated reading of file contents, so I read the README, architecture diagram, folder list, THREAT-MODEL.md and PR titles, not every source file. Findings: it is already a Next.js 15 static-export migration of legacy messenger (src/app renamed to src/crow, Tailwind + shadcn/ui + Radix, Geist fonts, SVG logo), with docs (SECURITY, PRIVACY, THREAT-MODEL, DEPLOYMENT, BUILD_ENVIRONMENT, LEGAL), vercel.json, 56 commits, AGPL-3.0, and a README that lists post-quantum ML-KEM-768 + ML-DSA-65 as "Stage 2". It states "Crow has not been independently audited". Doc/code mismatches to fix: README says "hour-fuzzed" but legacy messenger code fuzzes up to 2 days; "ChaCha20-Poly1305" is wrong for NIP-44 (ChaCha20 + HMAC-SHA256); the README claims relay delivery is encrypted while relays still see metadata.
 
 If a `crow-repo/` folder sits beside the project, reuse its assets, i18n and docs. Do not copy anything you cannot verify.
 
@@ -87,7 +87,7 @@ Rejected on purpose: custom ciphers or ratchets, AES-CBC, RSA key exchange, PGP/
 
 ## Mission
 Crow is a private end-to-end-encrypted messenger that ships as a STATIC web app (no backend we operate)
-and talks to Nostr-style relays (public or self-run). Ground truth for the code is the imported Textor
+and talks to Nostr-style relays (public or self-run). Ground truth for the code is the imported legacy messenger
 source in this directory (Vite + React 19 + TypeScript + Dexie + nostr-tools + ts-mls + @noble/*).
 Rebrand and redesign it completely as "Crow", then harden it. Do NOT rewrite the crypto from scratch.
 Reuse and strengthen what exists, and do not delete the existing tests; extend them.
@@ -110,7 +110,7 @@ Reuse and strengthen what exists, and do not delete the existing tests; extend t
 5. Every claim in UI copy and docs must be TRUE and testable. Banned words: "unhackable", "military-grade",
    "100% secure", "NSA-proof", "zero knowledge" (unless it is literally true). Say what is protected and what is not.
 6. Keep the AGPL-3.0-or-later LICENSE, keep original copyright notices and add a NOTICE crediting the
-   Textor authors and every third-party license. The Crow name and visual identity are ours; code stays AGPL.
+   legacy messenger authors and every third-party license. The Crow name and visual identity are ours; code stays AGPL.
    Footer/About must link to the corresponding source (AGPL section 13).
 7. GIT: commit locally after every phase with a clear message. NEVER git push, never force-push, never
    rewrite history. The old CLAUDE.md in this repo is the previous maintainer's workflow and does not apply:
@@ -134,7 +134,7 @@ If a command output is long, tail it. If you hit a context limit, write state to
 
 ## 2. CRYPTO + PROTOCOL SPEC (what "top powerful" actually means, by layer)
 
-Honest framing first. There is no single "most powerful encryption". Security comes from the right primitive at each layer plus sound composition. The stack below uses what current, reviewed practice recommends. Some items already exist in the Textor code; the rest are upgrades. Crow has not been independently audited, and the UI must say so.
+Honest framing first. There is no single "most powerful encryption". Security comes from the right primitive at each layer plus sound composition. The stack below uses what current, reviewed practice recommends. Some items already exist in the legacy messenger code; the rest are upgrades. Crow has not been independently audited, and the UI must say so.
 
 ### 2.1 Transport (device ↔ relay)
 - WSS over TLS 1.3 only. Reject `ws://` except `ws://localhost` in dev. HSTS with preload on the host.
@@ -201,8 +201,8 @@ A browser extension with page access runs in the same browser and can read the D
 ## 4. UI SPEC — Vercel Geist look, Telegram (Android + iOS) layout, on the web
 
 ### 4.1 Rebrand to Crow (everything)
-- Name: Crow. Replace every "Textor" in code, i18n (en, fa, and any added locale), manifest, index.html, icons, docs, tests, storage names (DB name, localStorage keys such as `textor:*` → `crow:*`, `textor-lazy` chunk names), service-worker name, package.json, README, SECURITY.md, PRIVACY.md, THREAT-MODEL, LICENSE headers' attribution lines (keep original copyright, add Crow).
-- Provide a one-time data migration: if a legacy `textor` IndexedDB/localStorage exists, offer an in-app "Import existing Textor data" that re-wraps it under the new names, then deletes the old stores after confirmation.
+- Name: Crow. Replace every "legacy messenger" in code, i18n (en, fa, and any added locale), manifest, index.html, icons, docs, tests, storage names (DB name, localStorage keys such as `legacy:*` → `crow:*`, `legacy-lazy` chunk names), service-worker name, package.json, README, SECURITY.md, PRIVACY.md, THREAT-MODEL, LICENSE headers' attribution lines (keep original copyright, add Crow).
+- Provide a one-time data migration: if a legacy `legacy` IndexedDB/localStorage exists, offer an in-app "Import existing legacy messenger data" that re-wraps it under the new names, then deletes the old stores after confirmation.
 - New logo: a minimal geometric crow mark (single SVG, 24×24 grid, works as favicon, maskable icon and mono mask-icon), generated by scripts/generate-icons.mjs into all icon sizes. Wordmark in Geist Sans, tight tracking.
 - Voice: calm, plain, honest. Short sentences.
 
@@ -262,7 +262,7 @@ Each target gets a doc section `docs/DEPLOY.md` with exact steps and a "headers 
 - Token/contrast check, bundle size budget (existing check-bundle), license check, SBOM generation, reproducible-build check.
 
 ### Tier B (GitHub Codespace / Actions)
-- Playwright E2E, two browser contexts: onboarding, invite exchange, send/receive, groups, MLS 1:1, calls with fake media, backup/restore, lock/unlock, migration from legacy Textor data, RTL, mobile and desktop viewports, offline.
+- Playwright E2E, two browser contexts: onboarding, invite exchange, send/receive, groups, MLS 1:1, calls with fake media, backup/restore, lock/unlock, migration from legacy legacy messenger data, RTL, mobile and desktop viewports, offline.
 - Extension-attack simulation (Playwright with an injected "malicious extension" script that: reads DOM text, runs MutationObserver on the message list, monkey-patches `fetch`/`WebSocket`/`crypto.subtle`/`Worker.postMessage`, reads IndexedDB, hooks keyboard events on the passphrase field, tries `eval`, injects `<script>` and `<iframe>`). Expected results are documented per attack: BLOCKED by CSP, DETECTED by tamper check, or LIMITED/NOT PREVENTED (listed honestly in THREAT-MODEL). No attack may be silently successful without being documented.
 - Heap/memory test via Chrome DevTools Protocol: after lock, take a heap snapshot and search for canary plaintext and key bytes; report findings, fix what is controllable.
 - OWASP ZAP baseline + active scan against the built app served locally; testssl.sh and securityheaders-style check against each deployed preview; Lighthouse (PWA, accessibility >= 95, performance >= 90); axe-core accessibility pass on every screen.
@@ -291,12 +291,12 @@ GATE: baseline green or failures explained, AUDIT-BASELINE.md complete, committe
 
 ### P1 — Rebrand to Crow (names, storage, icons, docs, license hygiene)
 ```
-Do the full rebrand from MASTER-SPEC.md / spec 4.1. Replace every Textor reference (code, i18n en+fa, manifest, index.html,
+Do the full rebrand from MASTER-SPEC.md / spec 4.1. Replace every legacy messenger reference (code, i18n en+fa, manifest, index.html,
 package.json, docs, tests, storage keys, DB name, chunk names, service-worker names). Write the one-time legacy-data
 migration with tests. Create the Crow logo SVG and regenerate all icons. Replace the stale CLAUDE.md and the
 rotate-workflow scripts per MASTER-SPEC.md rule 7. Add NOTICE and THIRD-PARTY-NOTICES generation, keep LICENSE.
 Add PRIVACY.md and update SECURITY.md/THREAT-MODEL.md to say "Crow".
-GATE: grep -ri textor returns only the NOTICE/LICENSE attribution and the legacy-migration code; all checks green.
+GATE: grep -ri legacy returns only the NOTICE/LICENSE attribution and the legacy-migration code; all checks green.
 ```
 
 ### P2 — Design system (Geist tokens + primitives)
@@ -376,7 +376,7 @@ GATE: zero open high/critical findings, report complete, all checks green, user 
 
 ## 8. FINAL ACCEPTANCE (all must be true before anyone calls Crow "done")
 
-- No "Textor" left except attribution + migration. AGPL license, NOTICE and source link present.
+- No "legacy messenger" left except attribution + migration. AGPL license, NOTICE and source link present.
 - All screens on the Geist design system with the Telegram layout; passes axe, contrast, RTL, 320 px.
 - 1:1 chats show their real protection state; MLS forward secrecy works; hybrid PQ layer tested; no false claims.
 - Vault: Argon2id, no raw identity key on the main thread, lock wipes memory state, canary tests pass.

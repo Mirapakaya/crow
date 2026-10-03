@@ -1,7 +1,6 @@
 import { xchacha20poly1305 } from '@noble/ciphers/chacha.js'
 import { sha256 } from '@noble/hashes/sha2.js'
 import { bytesToHex, concatBytes, hexToBytes, randomBytes, utf8ToBytes } from '../util/bytes'
-import { LEGACY_BLOB_AAD, LEGACY_BLOB_COPY_LABEL } from '../legacy'
 
 /**
  * Chunked authenticated encryption for attachment payloads.
@@ -93,8 +92,8 @@ function nonceFor(salt: Uint8Array, index: number): Uint8Array {
  * rather than a silently corrupt file.
  */
 const aadFor = (id: string, index: number, total: number): Uint8Array =>
-  // Legacy AAD prefix; changing it would break opening existing attachments.
-  utf8ToBytes(LEGACY_BLOB_AAD(BLOB_CRYPTO_VERSION, id, index, total))
+  // AAD prefix for attachment chunks; must remain stable to open existing attachments.
+  utf8ToBytes(`crow/blob/v${BLOB_CRYPTO_VERSION}|${id}|${index}|${total}`)
 
 export const blobId = (plaintext: Uint8Array): string => bytesToHex(sha256(plaintext))
 
@@ -113,7 +112,8 @@ export interface BlobRef {
   copy: string
 }
 
-const COPY_LABEL = utf8ToBytes(LEGACY_BLOB_COPY_LABEL)
+// AAD label for blob copy identifiers; must remain stable to open existing attachments.
+const COPY_LABEL = utf8ToBytes('crow/blob/copy|')
 
 /**
  * Which copy an envelope seals. A hash of its key and salt: it names the copy

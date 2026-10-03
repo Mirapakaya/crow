@@ -7,7 +7,6 @@ import {
   seenEventId,
   withdrawnId,
 } from '../crypto/vaultCrypto'
-import { LEGACY_REPO_AAD } from '../legacy'
 import type { InteractiveUpdate } from '../models/interactive'
 import { byTimeline, nextOrder, orderOf } from '../models/timeline'
 import { coarsenMs, DAY, HOUR } from '../util/time'
@@ -55,8 +54,8 @@ const BLOB_STORE_ID = 'blobstore'
  */
 const SWEEP_GRACE_MS = HOUR
 
-// Legacy AAD template; changing it would break existing sealed rows.
-const aad = (table: string, id: string): string => LEGACY_REPO_AAD(table, id)
+// AAD template for sealed rows; must remain stable to open existing vaults.
+const aad = (table: string, id: string): string => `crow/${table}/${id}`
 
 /**
  * Delivery state only ever moves forward. Without this ordering, a late

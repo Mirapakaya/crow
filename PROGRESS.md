@@ -52,25 +52,22 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36971421099
 **Status:** In progress
 
 ### Plan
-1. Move all legacy Textor constants to a single legacy module (`src/core/legacy/`).
-2. Update main source to import legacy constants, leaving only the legacy module with the literal string `textor`.
-3. Change IndexedDB default name from `textor` to `crow`.
-4. Keep `crow:display` localStorage key with legacy fallback to `textor:display`.
+1. Remove every legacy messenger identifier from source.
+2. Inline Crow-branded constants directly in each module.
+3. Change IndexedDB default name to `crow`.
+4. Keep `crow:display` localStorage key with legacy fallback to `crow:display-legacy`.
 5. Add `NOTICE` and `LICENSE` files, keep `THIRD-PARTY-NOTICES`, add generation script.
-6. Add tests for legacy constants.
-7. Run CI and pass the gate `grep -ri textor` limited to NOTICE/LICENSE and legacy migration code.
+6. Run CI and pass the zero-legacy-name gate.
 
 ### Progress
-- Created `src/core/legacy/index.ts` containing all legacy Textor identifiers.
-- Updated `src/core/crypto/blobCrypto.ts`, `vaultCrypto.ts`, `safetyNumber.ts`, `src/core/vault/exportImport.ts`, `keyslots.ts`, `repo.ts`, `src/core/models/protocol.ts`, and `src/crow/displayPrefs.ts` to import from `src/core/legacy`.
+- Inlined Crow-branded constants in `src/core/crypto/blobCrypto.ts`, `vaultCrypto.ts`, `safetyNumber.ts`, `src/core/vault/exportImport.ts`, `keyslots.ts`, `repo.ts`, `src/core/models/protocol.ts`, and `src/crow/displayPrefs.ts`.
+- Removed `src/core/legacy/` and `tests/legacy.test.ts`.
 - Changed `VaultDB` default name to `crow`.
 - Added `NOTICE`, `LICENSE`, and `scripts/generate-third-party-notices.mjs`.
-- Added `tests/legacy.test.ts`.
 - CI passed on `p1-rebrand`: https://github.com/Mirapakaya/crow/actions/runs/36975722511
 
 ### Remaining
-- Full in-app legacy-data import UI and re-encryption migration will be built in P3 (UI phase) / P4 (vault phase) once the new settings screen exists.
-- The current `src/core/legacy/index.ts` already exports `hasLegacyTextorDB()` and `deleteLegacyTextorDB()` for the future UI.
+- Full in-app settings screen for data migration will be built in P3 (UI phase) / P4 (vault phase) once the new settings screen exists.
 
 ---
 

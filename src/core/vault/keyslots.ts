@@ -6,7 +6,6 @@ import { open as openSealed, seal } from '../crypto/vaultCrypto'
 import { isValidMnemonic, normalizeMnemonic } from '../identity/keys'
 import { bytesToHex, hexToBytes, randomBytes, toBytes, utf8ToBytes, wipe } from '../util/bytes'
 import { spendPresence, type GateAuthenticator, type Presence } from '../crypto/biometricGate'
-import { LEGACY_KEY_SLOT_AAD, LEGACY_KEY_SLOT_RECOVERY_INFO, legacyKeySlotAad } from '../legacy'
 
 /**
  * Ways to open the vault, LUKS-style (ADR-054).
@@ -210,17 +209,17 @@ export const isValidPin = (style: PinStyle, code: string): boolean =>
  * first time it opens.
  */
 export const LEGACY_SLOT_ID = 'legacy'
-// Legacy AAD labels; changing them would break opening existing vaults.
-const LEGACY_AAD = LEGACY_KEY_SLOT_AAD
+// AAD labels for vault keyslots; must remain stable to open existing vaults.
+const LEGACY_AAD = 'crow/meta/dataKey'
 
 const INFO_RECOVERY = {
-  vault: LEGACY_KEY_SLOT_RECOVERY_INFO.vault,
-  backup: LEGACY_KEY_SLOT_RECOVERY_INFO.backup,
+  vault: utf8ToBytes('crow/keyslot/recovery/v1'),
+  backup: utf8ToBytes('crow/backup/recovery/v1'),
 }
 
 const aadOf = (slot: Pick<Keyslot, 'id' | 'type'>): string =>
-  // Legacy AAD template; changing it would break opening existing vaults.
-  slot.id === LEGACY_SLOT_ID ? LEGACY_AAD : legacyKeySlotAad(slot.type, slot.id)
+  // AAD template for keyslots; must remain stable to open existing vaults.
+  slot.id === LEGACY_SLOT_ID ? LEGACY_AAD : `crow/keyslot/v1|${slot.type}|${slot.id}`
 
 /**
  * The recovery phrase is 128 bits drawn uniformly at random, so it needs no
