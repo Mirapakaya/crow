@@ -191,15 +191,15 @@
   --text-faint: var(--n-500);
   --text-inverse: var(--n-0);
 
-  --accent: var(--blue-700);
-  --accent-hover: var(--blue-800);
-  --accent-active: var(--blue-900);
+  --accent: var(--n-950);
+  --accent-hover: #171717;
+  --accent-active: #262626;
   --accent-fg: var(--n-0);
-  --accent-soft: var(--blue-100);
-  --accent-soft-hover: var(--blue-200);
-  --accent-border: var(--blue-200);
-  --accent-text: var(--blue-800);
-  --ring: var(--blue-700);
+  --accent-soft: var(--n-100);
+  --accent-soft-hover: var(--n-150);
+  --accent-border: var(--n-200);
+  --accent-text: var(--n-700);
+  --ring: var(--n-950);
 
   --success: var(--green-600);
   --success-soft: var(--green-100);
@@ -210,7 +210,7 @@
   --danger-fg: var(--n-0);
   --danger-soft: var(--red-100);
 
-  --bubble-out: var(--blue-700);
+  --bubble-out: var(--n-950);
   --bubble-out-text: var(--n-0);
   --bubble-in: var(--n-0);
   --bubble-in-text: var(--n-950);
@@ -242,15 +242,15 @@
   --text-faint: var(--n-dark-600);
   --text-inverse: var(--n-dark-50);
 
-  --accent: var(--blue-700);
-  --accent-hover: var(--blue-600);
-  --accent-active: var(--blue-500);
-  --accent-fg: var(--n-0);
-  --accent-soft: var(--blue-900);
-  --accent-soft-hover: var(--blue-800);
-  --accent-border: var(--blue-800);
-  --accent-text: var(--blue-400);
-  --ring: var(--blue-400);
+  --accent: var(--n-dark-950);
+  --accent-hover: #e6e6e6;
+  --accent-active: #dedede;
+  --accent-fg: var(--n-dark-0);
+  --accent-soft: var(--n-dark-300);
+  --accent-soft-hover: var(--n-dark-350);
+  --accent-border: var(--n-dark-500);
+  --accent-text: var(--n-dark-800);
+  --ring: var(--n-dark-950);
 
   --success: var(--green-500);
   --success-soft: var(--green-950);
@@ -261,8 +261,8 @@
   --danger-fg: var(--n-dark-950);
   --danger-soft: var(--red-950);
 
-  --bubble-out: var(--blue-800);
-  --bubble-out-text: #eef6ff;
+  --bubble-out: var(--n-dark-950);
+  --bubble-out-text: var(--n-dark-0);
   --bubble-in: var(--n-dark-300);
   --bubble-in-text: var(--n-dark-950);
 
@@ -292,15 +292,15 @@
     --text-faint: var(--n-dark-600);
     --text-inverse: var(--n-dark-50);
 
-    --accent: var(--blue-700);
-    --accent-hover: var(--blue-600);
-    --accent-active: var(--blue-500);
-    --accent-fg: var(--n-0);
-    --accent-soft: var(--blue-900);
-    --accent-soft-hover: var(--blue-800);
-    --accent-border: var(--blue-800);
-    --accent-text: var(--blue-400);
-    --ring: var(--blue-400);
+    --accent: var(--n-dark-950);
+    --accent-hover: #e6e6e6;
+    --accent-active: #dedede;
+    --accent-fg: var(--n-dark-0);
+    --accent-soft: var(--n-dark-300);
+    --accent-soft-hover: var(--n-dark-350);
+    --accent-border: var(--n-dark-500);
+    --accent-text: var(--n-dark-800);
+    --ring: var(--n-dark-950);
 
     --success: var(--green-500);
     --success-soft: var(--green-950);
@@ -311,8 +311,8 @@
     --danger-fg: var(--n-dark-950);
     --danger-soft: var(--red-950);
 
-    --bubble-out: var(--blue-800);
-    --bubble-out-text: #eef6ff;
+    --bubble-out: var(--n-dark-950);
+    --bubble-out-text: var(--n-dark-0);
     --bubble-in: var(--n-dark-300);
     --bubble-in-text: var(--n-dark-950);
 
