@@ -1,21 +1,21 @@
-# CROW — COMPLETE MASTER SPEC (one file, give it to Qwen Code CLI as-is)
+# CROW — COMPLETE MASTER SPEC (one file, give it to assistant Code CLI as-is)
 
 This single file is the whole job: research answer, repo findings, crypto spec, UI spec, deploy, tests, pen-test, and the phase-by-phase instructions. You do three things:
 
 1. Run the setup block (section 0).
-2. Save this file as `QWEN.md` in the project root.
-3. Paste ONE line into Qwen (below). It reads this file and runs every phase itself.
+2. Save this file as `MASTER-SPEC.md` in the project root.
+3. Paste ONE line into assistant (below). It reads this file and runs every phase itself.
 
-## THE ONE LINE TO PASTE INTO QWEN
-
-```
-Read QWEN.md completely, it is your full spec. Execute phases P0 through P9 in order without asking me questions. Keep state in PROGRESS.md and resume from it if the context resets. Commit locally after each phase, never push. Stop only at the P9 step that needs my Codespace results, or if something is truly impossible.
-```
-
-If Qwen loses context (free models have small windows), paste this instead and it picks up where it stopped:
+## THE ONE LINE TO PASTE INTO MASTER-SPEC
 
 ```
-Re-read QWEN.md sections 1 and 7, then read PROGRESS.md and continue from the first phase whose GATE is not marked passed.
+Read MASTER-SPEC.md completely, it is your full spec. Execute phases P0 through P9 in order without asking me questions. Keep state in PROGRESS.md and resume from it if the context resets. Commit locally after each phase, never push. Stop only at the P9 step that needs my Codespace results, or if something is truly impossible.
+```
+
+If assistant loses context (free models have small windows), paste this instead and it picks up where it stopped:
+
+```
+Re-read MASTER-SPEC.md sections 1 and 7, then read PROGRESS.md and continue from the first phase whose GATE is not marked passed.
 ```
 
 ---
@@ -34,8 +34,8 @@ unzip -q -o ./*.zip
 cd Textor-main 2>/dev/null || cd "$(ls -d */ | head -1)"
 node -v    # must be >= 20.19
 git init -q 2>/dev/null; git add -A; git commit -qm "baseline: imported source" || true
-cp ~/crow-work/CROW-MASTER.md ./QWEN.md   # put this file in ~/crow-work first, then this copies it in
-qwen                                       # start Qwen Code, then paste the one line above
+cp ~/crow-work/CROW-MASTER.md ./MASTER-SPEC.md   # put this file in ~/crow-work first, then this copies it in
+assistant                                       # start assistant Code, then paste the one line above
 ```
 
 Environment fact: Playwright/Chromium, ZAP, testssl.sh and Lighthouse do not run properly in Termux. Work is split in two tiers:
@@ -279,10 +279,10 @@ Before each phase: re-read sections 1 and the sections it references. After each
 
 ### P0 — Recon, baseline, stack decision
 ```
-Read QWEN.md. Inventory the project: package.json, vite.config.ts, index.html, src/main.tsx, src/app/*,
+Read MASTER-SPEC.md. Inventory the project: package.json, vite.config.ts, index.html, src/main.tsx, src/app/*,
 src/core/* (crypto, vault, transport, mls, calls, engine), docs/*, tests/*.
 1) Run npm ci (or npm install if ci fails), then npm run typecheck, lint, test, build. Record the baseline in PROGRESS.md.
-2) Make and record the stack decision per QWEN.md. 3) Write docs/AUDIT-BASELINE.md: for each security claim
+2) Make and record the stack decision per MASTER-SPEC.md. 3) Write docs/AUDIT-BASELINE.md: for each security claim
 in README/SECURITY/THREAT-MODEL compare it to the actual code and list mismatches (example already known:
 fuzz window size vs docs, ChaCha20+HMAC vs "Poly1305" wording, style-src 'unsafe-inline' in the CSP).
 4) Create .npmrc with ignore-scripts=true and make sure install and build still work.
@@ -291,10 +291,10 @@ GATE: baseline green or failures explained, AUDIT-BASELINE.md complete, committe
 
 ### P1 — Rebrand to Crow (names, storage, icons, docs, license hygiene)
 ```
-Do the full rebrand from QWEN.md / spec 4.1. Replace every Textor reference (code, i18n en+fa, manifest, index.html,
+Do the full rebrand from MASTER-SPEC.md / spec 4.1. Replace every Textor reference (code, i18n en+fa, manifest, index.html,
 package.json, docs, tests, storage keys, DB name, chunk names, service-worker names). Write the one-time legacy-data
 migration with tests. Create the Crow logo SVG and regenerate all icons. Replace the stale CLAUDE.md and the
-rotate-workflow scripts per QWEN.md rule 7. Add NOTICE and THIRD-PARTY-NOTICES generation, keep LICENSE.
+rotate-workflow scripts per MASTER-SPEC.md rule 7. Add NOTICE and THIRD-PARTY-NOTICES generation, keep LICENSE.
 Add PRIVACY.md and update SECURITY.md/THREAT-MODEL.md to say "Crow".
 GATE: grep -ri textor returns only the NOTICE/LICENSE attribution and the legacy-migration code; all checks green.
 ```
@@ -389,7 +389,7 @@ GATE: zero open high/critical findings, report complete, all checks green, user 
 
 ## APPENDIX B. TIER B BASH BLOCK (paste in a GitHub Codespace, in the project folder)
 
-Qwen adjusts test file names to what it actually created. Run, then paste the outputs back to Qwen for P9.
+assistant adjusts test file names to what it actually created. Run, then paste the outputs back to assistant for P9.
 
 ```bash
 npm ci && npm run build
