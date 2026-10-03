@@ -31,6 +31,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# generated PWA icons
+public/icons/icon-*.png
+public/icons/icon-maskable-*.png
+public/apple-touch-icon.png
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

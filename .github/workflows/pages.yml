@@ -25,6 +25,7 @@ jobs:
         with:
           node-version: 20
       - run: npm install --legacy-peer-deps
+      - run: npm run generate:icons
       - run: npm run build
         env:
           CROW_BASE_PATH: /crow
