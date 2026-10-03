@@ -20,6 +20,7 @@ import { APP_VERSION, SOURCE_URL } from '../../crow/meta'
 import { useAboutText } from './aboutText'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 
 export function SettingsHome() {
   const { t } = useI18n()
@@ -145,17 +146,18 @@ export function SettingsHome() {
           <div className="card-section">
             <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
               <Field label={t('settings.language')}>
-                <select
-                  aria-label={t('settings.language')}
-                  value={settings.locale}
-                  onChange={(event) => void saveSettings({ locale: event.target.value as LocaleCode })}
-                >
-                  {(Object.keys(LOCALE_NAMES) as LocaleCode[]).map((code) => (
-                    <option key={code} value={code}>
-                      {LOCALE_NAMES[code]}
-                    </option>
-                  ))}
-                </select>
+                <Select value={settings.locale} onValueChange={(next) => void saveSettings({ locale: next as LocaleCode })}>
+                  <SelectTrigger aria-label={t('settings.language')}>
+                    <SelectValue placeholder={LOCALE_NAMES[settings.locale]} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(LOCALE_NAMES) as LocaleCode[]).map((code) => (
+                      <SelectItem key={code} value={code}>
+                        {LOCALE_NAMES[code]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
             </div>
             <div style={{ padding: 'var(--space-3) var(--space-4)' }}>
@@ -316,34 +318,34 @@ export function PrivacySettings() {
 
       <div className="card stack-sm">
         <Field label={t('settings.retention')}>
-          <select
-            aria-label={t('settings.retention')}
-            value={settings.retention}
-            onChange={(event) =>
-              void saveSettings({ retention: event.target.value as typeof settings.retention })
-            }
-          >
-            <option value="forever">{t('settings.retentionForever')}</option>
-            <option value="90d">{t('settings.retentionDays', { n: 90 })}</option>
-            <option value="30d">{t('settings.retentionDays', { n: 30 })}</option>
-            <option value="7d">{t('settings.retentionDays', { n: 7 })}</option>
-          </select>
+          <Select value={settings.retention} onValueChange={(next) => void saveSettings({ retention: next as typeof settings.retention })}>
+            <SelectTrigger aria-label={t('settings.retention')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="forever">{t('settings.retentionForever')}</SelectItem>
+              <SelectItem value="90d">{t('settings.retentionDays', { n: 90 })}</SelectItem>
+              <SelectItem value="30d">{t('settings.retentionDays', { n: 30 })}</SelectItem>
+              <SelectItem value="7d">{t('settings.retentionDays', { n: 7 })}</SelectItem>
+            </SelectContent>
+          </Select>
         </Field>
       </div>
 
       <div className="card stack-sm">
         <Field label={t('settings.messageExpiry')} hint={t('settings.messageExpiryBody')}>
-          <select
-            aria-label={t('settings.messageExpiry')}
-            value={String(settings.messageExpirationDays)}
-            onChange={(event) => void saveSettings({ messageExpirationDays: Number(event.target.value) })}
-          >
-            {[7, 30, 90, 365].map((days) => (
-              <option key={days} value={days}>
-                {t('settings.retentionDays', { n: days })}
-              </option>
-            ))}
-          </select>
+          <Select value={String(settings.messageExpirationDays)} onValueChange={(next) => void saveSettings({ messageExpirationDays: Number(next) })}>
+            <SelectTrigger aria-label={t('settings.messageExpiry')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[7, 30, 90, 365].map((days) => (
+                <SelectItem key={days} value={String(days)}>
+                  {t('settings.retentionDays', { n: days })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </Field>
       </div>
 

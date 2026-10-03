@@ -2,6 +2,7 @@ import { useApp } from '../../crow/store'
 import { LOCALE_CODES, LOCALE_NAMES, LOCALE_SHORT_NAMES, useT } from '../../i18n'
 import type { LocaleCode, ThemePreference } from '../../core/models/types'
 import { SegmentedControl, type Segment } from './SegmentedControl'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { MonitorIcon, MoonIcon, SunIcon } from './Icons'
 
 /**
@@ -56,18 +57,18 @@ function LanguageSwitch({ value, onChange }: { value: LocaleCode; onChange: (nex
 
   if (LOCALE_CODES.length > SEGMENT_LIMIT) {
     return (
-      <select
-        className="select select-compact"
-        aria-label={t('settings.language')}
-        value={value}
-        onChange={(event) => onChange(event.target.value as LocaleCode)}
-      >
-        {LOCALE_CODES.map((code) => (
-          <option key={code} value={code}>
-            {LOCALE_NAMES[code]}
-          </option>
-        ))}
-      </select>
+      <Select value={value} onValueChange={(next) => onChange(next as LocaleCode)}>
+        <SelectTrigger className="select select-compact" aria-label={t('settings.language')}>
+          <SelectValue placeholder={LOCALE_NAMES[value]} />
+        </SelectTrigger>
+        <SelectContent>
+          {LOCALE_CODES.map((code) => (
+            <SelectItem key={code} value={code}>
+              {LOCALE_NAMES[code]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     )
   }
 
