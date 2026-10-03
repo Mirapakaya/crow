@@ -17,51 +17,53 @@
 
   /* Neutral — Geist Gray / Gray Dark. Light ramp 100-1000, dark ramp
      100-1000, plus pure black/white endpoints. */
+  /* Geist Gray (light). */
   --n-0: #ffffff;
   --n-25: #fafafa;
   --n-50: #f2f2f2;
-  --n-100: #ebebeb;
+  --n-100: #f8f8f8;
   --n-150: #e6e6e6;
-  --n-200: #dedede;
-  --n-300: #c9c9c9;
-  --n-350: #b3b3b3;
-  --n-400: #a8a8a8;
-  --n-450: #999999;
-  --n-500: #8f8f8f;
-  --n-600: #7d7d7d;
-  --n-700: #666666;
-  --n-800: #525252;
-  --n-850: #404040;
-  --n-900: #262626;
-  --n-950: #171717;
+  --n-200: #d5d5d5;
+  --n-300: #b1b1b1;
+  --n-350: #a1a1a1;
+  --n-400: #909090;
+  --n-450: #878787;
+  --n-500: #6d6d6d;
+  --n-600: #555555;
+  --n-700: #464646;
+  --n-800: #222222;
+  --n-850: #1a1a1a;
+  --n-900: #151515;
+  --n-950: #0a0a0a;
 
+  /* Geist Gray (dark). */
   --n-dark-0: #000000;
   --n-dark-50: #0a0a0a;
-  --n-dark-100: #111111;
-  --n-dark-150: #171717;
-  --n-dark-200: #1a1a1a;
-  --n-dark-250: #1f1f1f;
-  --n-dark-300: #262626;
-  --n-dark-350: #292929;
-  --n-dark-400: #2e2e2e;
-  --n-dark-500: #454545;
+  --n-dark-100: #151515;
+  --n-dark-150: #1a1a1a;
+  --n-dark-200: #222222;
+  --n-dark-250: #2a2a2a;
+  --n-dark-300: #2e2e2e;
+  --n-dark-350: #363636;
+  --n-dark-400: #464646;
+  --n-dark-500: #6d6d6d;
   --n-dark-600: #878787;
-  --n-dark-700: #8f8f8f;
-  --n-dark-800: #999999;
-  --n-dark-900: #a1a1a1;
+  --n-dark-700: #909090;
+  --n-dark-800: #b1b1b1;
+  --n-dark-900: #d5d5d5;
   --n-dark-950: #ededed;
 
   /* Accent — Geist Blue. */
-  --blue-100: #eef6ff;
-  --blue-200: #e6f1ff;
-  --blue-300: #d9e8ff;
-  --blue-400: #b3d9ff;
-  --blue-500: #80c3ff;
-  --blue-600: #4da6ff;
-  --blue-700: #0070f3;
-  --blue-800: #0068e6;
-  --blue-900: #005cc8;
-  --blue-950: #003a8c;
+  --blue-100: #e0f2ff;
+  --blue-200: #cae8ff;
+  --blue-300: #b5deff;
+  --blue-400: #96cefd;
+  --blue-500: #78bbfa;
+  --blue-600: #59a7f6;
+  --blue-700: #3892f3;
+  --blue-800: #147af3;
+  --blue-900: #0265dc;
+  --blue-950: #0054b6;
 
   /* Semantic — Geist Green / Amber / Red. */
   --green-100: #e6f7ed;
@@ -191,15 +193,15 @@
   --text-faint: var(--n-500);
   --text-inverse: var(--n-0);
 
-  --accent: var(--n-800);
-  --accent-hover: var(--n-850);
-  --accent-active: var(--n-900);
+  --accent: var(--blue-700);
+  --accent-hover: var(--blue-800);
+  --accent-active: var(--blue-900);
   --accent-fg: var(--n-0);
-  --accent-soft: var(--n-100);
-  --accent-soft-hover: var(--n-150);
-  --accent-border: var(--n-200);
-  --accent-text: var(--n-800);
-  --ring: var(--n-950);
+  --accent-soft: var(--blue-100);
+  --accent-soft-hover: var(--blue-200);
+  --accent-border: var(--blue-200);
+  --accent-text: var(--blue-900);
+  --ring: var(--blue-700);
 
   --success: var(--green-600);
   --success-soft: var(--green-100);
@@ -210,7 +212,7 @@
   --danger-fg: var(--n-0);
   --danger-soft: var(--red-100);
 
-  --bubble-out: var(--n-950);
+  --bubble-out: var(--blue-700);
   --bubble-out-text: var(--n-0);
   --bubble-in: var(--n-0);
   --bubble-in-text: var(--n-950);
@@ -242,15 +244,15 @@
   --text-faint: var(--n-dark-600);
   --text-inverse: var(--n-dark-50);
 
-  --accent: var(--n-dark-600);
-  --accent-hover: var(--n-dark-700);
-  --accent-active: var(--n-dark-800);
+  --accent: var(--blue-600);
+  --accent-hover: var(--blue-500);
+  --accent-active: var(--blue-400);
   --accent-fg: var(--n-dark-0);
-  --accent-soft: var(--n-dark-300);
-  --accent-soft-hover: var(--n-dark-350);
-  --accent-border: var(--n-dark-500);
-  --accent-text: var(--n-dark-800);
-  --ring: var(--n-dark-950);
+  --accent-soft: var(--blue-900);
+  --accent-soft-hover: var(--blue-800);
+  --accent-border: var(--blue-800);
+  --accent-text: var(--blue-400);
+  --ring: var(--blue-400);
 
   --success: var(--green-500);
   --success-soft: var(--green-950);
@@ -261,8 +263,8 @@
   --danger-fg: var(--n-dark-950);
   --danger-soft: var(--red-950);
 
-  --bubble-out: var(--n-dark-950);
-  --bubble-out-text: var(--n-dark-0);
+  --bubble-out: var(--blue-800);
+  --bubble-out-text: #e0f2ff;
   --bubble-in: var(--n-dark-300);
   --bubble-in-text: var(--n-dark-950);
 
