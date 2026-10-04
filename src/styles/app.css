@@ -138,11 +138,12 @@ a:hover {
  * a 1px clipped element. Draw it on the part the user can see, so tabbing never
  * lands on something that looks unfocused.
  */
-/* :has() is not supported by the cssnano version in this Next.js build; use a class instead. */
-/* *:is(.btn, .list-row):has(> input:focus-visible) {
+/* :has() is not supported by the cssnano version in this Next.js build; use :focus-within instead. */
+.btn:focus-within,
+.list-row:focus-within {
   outline: var(--ring-width) solid var(--ring);
   outline-offset: var(--ring-offset);
-} */
+}
 
 *::selection {
   background: var(--accent-soft);
