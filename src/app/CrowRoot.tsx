@@ -5,6 +5,7 @@ import { App } from '@/crow/App'
 import { ErrorBoundary } from '@/crow/ErrorBoundary'
 import { applyDisplayPrefs, isLocale, isTheme } from '@/crow/displayPrefs'
 import { detectLocale } from '@/i18n'
+import { bootstrap } from '@/core/bootstrap'
 import type { LocaleCode, ThemePreference } from '@/core/models/types'
 
 if (typeof window !== 'undefined' && window.top !== window.self) {
@@ -13,6 +14,14 @@ if (typeof window !== 'undefined' && window.top !== window.self) {
 }
 
 if (typeof window !== 'undefined') {
+  bootstrap(() => {
+    // Bootstrap detected a possible tamper; lock the vault if it is loaded.
+    const app = (window as unknown as Record<string, unknown>).__crowApp as
+      | { lock?: () => void }
+      | undefined
+    app?.lock?.()
+  })
+
   let stored: { locale?: string; theme?: string } = {}
   try {
     stored = JSON.parse(localStorage.getItem('crow:display') || '{}')
