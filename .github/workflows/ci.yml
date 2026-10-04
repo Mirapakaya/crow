@@ -20,3 +20,7 @@ jobs:
       - run: npm run test
       - run: npm run generate:icons
       - run: npm run build
+      - run: npm run gen:headers
+      - run: npm run check:headers
+      - name: Build Docker image
+        run: docker build -t crow:latest .

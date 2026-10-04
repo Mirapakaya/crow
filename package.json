@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "private": false,
   "license": "AGPL-3.0-or-later",
-  "description": "Crow — a private, end-to-end-encrypted messenger that runs entirely as a static web app.",
+  "description": "Crow \u2014 a private, end-to-end-encrypted messenger that runs entirely as a static web app.",
   "type": "module",
   "engines": {
     "node": ">=20.19"
@@ -22,7 +22,10 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" \"*.{json,md}\" \"docs/*.md\"",
     "generate:icons": "node scripts/generate-icons.mjs",
     "check:tokens": "node scripts/check-tokens.mjs",
-    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run check:tokens"
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run check:tokens",
+    "gen:headers": "node scripts/gen-headers.mjs",
+    "check:headers": "node scripts/check-headers.mjs",
+    "postbuild": "node scripts/postbuild-sri.mjs"
   },
   "dependencies": {
     "@hpke/chacha20poly1305": "^1.8.0",
