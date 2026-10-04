@@ -1,16 +1,10 @@
-/**
- * Main-thread handle to the identity worker.
- *
- * This object is the only thing the main thread stores. It does not contain
- * the secret key, only a reference to the worker. The worker itself is
- * terminated on lock.
- */
-
 import type { Event as NostrEvent, UnsignedEvent } from 'nostr-tools/core'
 import type { IdentityRequest, IdentityResponse } from './identity.worker'
 
 export interface IdentityHandle {
   sign(event: UnsignedEvent): Promise<NostrEvent>
+  nip44Encrypt(plaintext: string, recipientPubkeyHex: string): Promise<string>
+  nip44Decrypt(ciphertext: string, senderPubkeyHex: string): Promise<string>
   getPubkey(): Promise<string>
   lock(): void
 }
@@ -38,6 +32,20 @@ export function createIdentityHandle(init: { secretKeyHex: string }): IdentityHa
         event: NostrEvent
       }
       return res.event
+    },
+    async nip44Encrypt(plaintext: string, recipientPubkeyHex: string) {
+      const res = (await postMessage(worker, { type: 'nip44Encrypt', plaintext, recipientPubkeyHex } as IdentityRequest)) as {
+        type: 'nip44Encrypt'
+        ciphertext: string
+      }
+      return res.ciphertext
+    },
+    async nip44Decrypt(ciphertext: string, senderPubkeyHex: string) {
+      const res = (await postMessage(worker, { type: 'nip44Decrypt', ciphertext, senderPubkeyHex } as IdentityRequest)) as {
+        type: 'nip44Decrypt'
+        plaintext: string
+      }
+      return res.plaintext
     },
     async getPubkey() {
       const res = (await postMessage(worker, { type: 'getPubkey' } as IdentityRequest)) as {
