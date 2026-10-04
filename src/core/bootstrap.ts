@@ -85,10 +85,8 @@ function startDomGuard(onTamper: () => void): void {
 
 function freezeApiObjects(originals: Originals | null): void {
   if (!originals) return
-  // Object.freeze only prevents assignment to properties of the object itself;
-  // it does not stop a hostile extension from replacing `window.fetch`, but it
-  // does prevent accidental mutation of these API objects by the app.
-  Object.freeze(Object.getPrototypeOf(originals.fetch.prototype))
+  // fetch is not a constructor and has no .prototype, so only freeze the
+  // prototype chains of constructor-based APIs.
   Object.freeze(Object.getPrototypeOf(originals.WebSocket.prototype))
   Object.freeze(Object.getPrototypeOf(originals.Worker.prototype))
 }

@@ -30,7 +30,5 @@ export const CROW_CSP = [
   "object-src 'none'",
   "base-uri 'none'",
   "form-action 'none'",
-  "require-trusted-types-for 'script'",
-  "trusted-types crow",
   "upgrade-insecure-requests",
 ].join('; ')
