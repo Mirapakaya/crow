@@ -21,7 +21,8 @@ Resume rule: read QWEN.md, continue from the first open phase below.
 - `npm run typecheck` — passes
 - `npm run test -- --run` — 232 passed, 10 skipped (vault KDF too slow on device)
 - `npm run check:tokens` — passes
-- Pushed to `S1011H`: identity-worker integration + test fixes
+- `npm run build` — gets past CSS optimization; fails later on terser memory on this device (expected in CI)
+- Pushed to `S1011H`: identity-worker integration + test fixes + CSS fixes
 
 ## Remaining open work
 
