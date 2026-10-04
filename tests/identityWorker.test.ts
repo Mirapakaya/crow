@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { generateSecretKey, getPublicKey } from 'nostr-tools/pure'
-import { bytesToHex } from '@noble/hashes/utils'
+import { bytesToHex } from '../src/core/util/bytes'
 import { createIdentityHandle } from '../src/core/identity/identityHandle'
 
 describe('identity worker', () => {

@@ -16,7 +16,7 @@ export function withBase(path: string): string {
   if (/^https?:\/\//.test(path) || path.startsWith('//')) {
     return path
   }
-  const base = CROW_BASE_PATH.replace(/\/$/, '')
+  const base = (process.env.NEXT_PUBLIC_CROW_BASE_PATH ?? CROW_BASE_PATH).replace(/\/$/, '')
   const normalized = path.startsWith('/') ? path : `/${path}`
   return base ? `${base}${normalized}` : normalized
 }

@@ -12,9 +12,16 @@ Resume rule: read QWEN.md, continue from the first open phase below.
 - [x] F4 Metadata — partial (giftwrap plaintext padding)
 - [x] F5 Calls and relay-input fixes — partial (no default STUN, fingerprint before SDP, future offers rejected, profile frames gated, relay host validation)
 - [x] F6 Extension and leak defense — partial (bootstrap tamper guard, usePrivacyBlur hook, Security Center placeholder)
-- [x] F7 UI rebuild — partial (blue primary removed, tokens.css, /design page)
-- [x] F8 Tests — partial (giftwrap, csp, withBase, identityWorker, relayUrl, headers, legacyImport)
-- [x] F9 Pen-test and release — partial (PENTEST-REPORT.md skeleton)
+- [x] F7 UI rebuild — in progress (single Geist token source; background agent working)
+- [x] F8 Tests — in progress (Argon2id timeouts + missing coverage; background agent working)
+- [x] F9 Pen-test and release — in progress (npm audit run, report updated; semgrep/osv-scanner/gitleaks to run in Codespace)
+
+## Active work
+
+- Identity handle integration: background agent refactoring `Messenger` to use `IdentityHandle` instead of raw `secretKey`.
+- Geist UI rebuild: background agent rebuilding `tokens.css` and migrating UI to single token source.
+- Test coverage: background agent adding missing tests and fixing Argon2id timeouts.
+- PENTEST-REPORT.md updated with local `npm audit --omit=dev` result and tool instructions.
 
 ## Notes
 
