@@ -12,16 +12,27 @@
 
 const TRUSTED_POLICY_NAME = 'crow'
 
-const originals = {
-  fetch: window.fetch,
-  WebSocket: window.WebSocket,
-  crypto: window.crypto,
-  Worker: window.Worker,
-  postMessage: window.postMessage.bind(window),
-} as const
+type Originals = {
+  fetch: typeof window.fetch
+  WebSocket: typeof window.WebSocket
+  crypto: typeof window.crypto
+  Worker: typeof window.Worker
+  postMessage: typeof window.postMessage
+}
+
+function getOriginals(): Originals | null {
+  if (typeof window === 'undefined') return null
+  return {
+    fetch: window.fetch,
+    WebSocket: window.WebSocket,
+    crypto: window.crypto,
+    Worker: window.Worker,
+    postMessage: window.postMessage.bind(window),
+  }
+}
 
 function createTrustedTypesPolicy(): void {
-  if (typeof window.trustedTypes === 'undefined') return
+  if (typeof window === 'undefined' || typeof window.trustedTypes === 'undefined') return
   try {
     window.trustedTypes.createPolicy(TRUSTED_POLICY_NAME, {
       createHTML: (input: string) => input,
@@ -33,7 +44,8 @@ function createTrustedTypesPolicy(): void {
   }
 }
 
-function checkIntegrity(): boolean {
+function checkIntegrity(originals: Originals | null): boolean {
+  if (!originals) return true
   if (window.fetch !== originals.fetch) return false
   if (window.WebSocket !== originals.WebSocket) return false
   if (window.crypto !== originals.crypto) return false
@@ -41,9 +53,10 @@ function checkIntegrity(): boolean {
   return true
 }
 
-function startTamperCheck(onTamper: () => void): void {
+function startTamperCheck(onTamper: () => void, originals: Originals | null): void {
+  if (!originals || typeof window === 'undefined') return
   setInterval(() => {
-    if (!checkIntegrity()) {
+    if (!checkIntegrity(originals)) {
       console.warn('[crow] tamper check failed')
       onTamper()
     }
@@ -51,7 +64,7 @@ function startTamperCheck(onTamper: () => void): void {
 }
 
 function startDomGuard(onTamper: () => void): void {
-  if (typeof MutationObserver === 'undefined') return
+  if (typeof window === 'undefined' || typeof MutationObserver === 'undefined' || !document.documentElement) return
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
@@ -70,7 +83,8 @@ function startDomGuard(onTamper: () => void): void {
   observer.observe(document.documentElement, { childList: true, subtree: true })
 }
 
-function freezeApiObjects(): void {
+function freezeApiObjects(originals: Originals | null): void {
+  if (!originals) return
   // Object.freeze only prevents assignment to properties of the object itself;
   // it does not stop a hostile extension from replacing `window.fetch`, but it
   // does prevent accidental mutation of these API objects by the app.
@@ -80,8 +94,10 @@ function freezeApiObjects(): void {
 }
 
 export function bootstrap(onTamper: () => void): void {
+  const originals = getOriginals()
+  if (!originals) return
   createTrustedTypesPolicy()
-  freezeApiObjects()
-  startTamperCheck(onTamper)
+  freezeApiObjects(originals)
+  startTamperCheck(onTamper, originals)
   startDomGuard(onTamper)
 }
