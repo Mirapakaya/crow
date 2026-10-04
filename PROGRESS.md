@@ -3,7 +3,7 @@
 ## P0 — Recon, baseline, stack decision
 
 **Started:** 2026-10-02
-**Status:** GATE PASSED
+**Status:** REOPENED — claims reset during F0 fix pass
 
 ### Plan
 1. Inventory repository and existing docs.
@@ -74,7 +74,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36971421099
 ## P2 — Design system (Geist tokens + primitives)
 
 **Started:** 2026-10-02
-**Status:** GATE PASSED
+**Status:** REOPENED — claims reset during F0 fix pass
 
 ### Plan
 1. Replace Inter (Google Fonts) with self-hosted Geist Sans/Mono.
@@ -99,7 +99,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36971421099
 ## P3 — Telegram shell / chat UI
 
 **Started:** 2026-10-02
-**Status:** GATE PASSED
+**Status:** REOPENED — claims reset during F0 fix pass
 
 ### Plan
 1. Add Contacts filter and conversation delete action to `ChatList`.
@@ -116,7 +116,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36971421099
 ## P4 — Crypto hardening: Argon2id KDF
 
 **Started:** 2026-10-02
-**Status:** GATE PASSED
+**Status:** REOPENED — claims reset during F0 fix pass
 
 ### Plan
 1. Add Argon2id KDF alongside scrypt.
@@ -136,7 +136,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36971421099
 ## P5 — Forward secrecy and hybrid post-quantum for 1:1 chats
 
 **Started:** 2026-10-02
-**Status:** GATE PASSED
+**Status:** REOPENED — claims reset during F0 fix pass
 
 ### Baseline result
 GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
@@ -179,7 +179,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 ## P6 — Metadata reduction
 
 **Started:** 2026-10-02
-**Status:** GATE PASSED
+**Status:** REOPENED — claims reset during F0 fix pass
 
 ### Plan
 1. Harden self-hosted relay infra (Docker Compose, Caddy, strfry).
@@ -210,7 +210,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 ## P7 — Extension and leakage defense
 
 **Started:** 2026-10-02
-**Status:** GATE PASSED
+**Status:** REOPENED — claims reset during F0 fix pass
 
 ### Plan
 1. Centralize CSP string in `src/core/util/csp.ts` so Next.js headers and the static-export meta tag match.
@@ -233,7 +233,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 ## P8 — Deployment targets
 
 **Started:** 2026-10-02
-**Status:** GATE PASSED
+**Status:** REOPENED — claims reset during F0 fix pass
 
 ### Plan
 1. Add a root `Dockerfile` for static-export nginx image.
@@ -255,7 +255,7 @@ GitHub Actions run: https://github.com/Mirapakaya/crow/actions/runs/36995147214
 ## P9 — Pen-test / release gate
 
 **Started:** 2026-10-02
-**Status:** GATE PASSED
+**Status:** REOPENED — claims reset during F0 fix pass
 
 ### Plan
 1. Run `npm audit` and document findings.
