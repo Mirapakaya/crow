@@ -57,23 +57,65 @@ export interface WrapOptions {
 
 const fuzzedNow = (): number => nowSec() - randomInt(FUZZ_WINDOW_SEC)
 
-/** Size buckets to pad encrypted content to. Relays see only the bucketed
- * length, not the original message length. The largest bucket is below the
- * 512 KB frame cap. */
-const PADDING_BUCKETS = [
-  256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288,
-]
-
 /**
- * Pad a string to the next fixed bucket size. The unpad side strips trailing
- * null bytes, so the payload must never intentionally end with a null byte.
- * NIP-44 ciphertexts are base64-like strings and never do.
+ * Wire-length buckets for NIP-44 ciphertexts.
+ *
+ * The plaintext is wrapped as `{r: rumor, p: pad}` and padded so that the
+ * resulting base64 ciphertext length falls into one of these buckets. This
+ * hides the true message length from relays and observers.
+ *
+ * The padding string is random alphanumeric ASCII so that a relay cannot
+ * strip meaningful trailing bytes.
  */
-export function padToBucket(plaintext: string): string {
-  if (plaintext.length > PADDING_BUCKETS[PADDING_BUCKETS.length - 1]) return plaintext
-  const target = PADDING_BUCKETS.find((b) => b >= plaintext.length) ?? plaintext.length
-  if (target === plaintext.length) return plaintext
-  return plaintext.padEnd(target, '\0')
+const PADDING_BUCKETS = [1024, 4096, 16384, 65536]
+
+interface RumorWrapper {
+  r: unknown
+  p: string
+}
+
+function isRumorWrapper(value: unknown): value is RumorWrapper {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'r' in value &&
+    'p' in value &&
+    typeof (value as Record<string, unknown>).p === 'string'
+  )
+}
+
+function randomPad(length: number): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
+}
+
+/** Build a padded wrapper object whose JSON string hits the next bucket. */
+function buildWrapper(plaintext: string): { wrapper: RumorWrapper; bucket: number } {
+  const target = PADDING_BUCKETS.find((b) => b >= plaintext.length) ?? PADDING_BUCKETS[PADDING_BUCKETS.length - 1]
+  // Account for the JSON overhead: {"r":...,"p":""}
+  const overhead = JSON.stringify({ r: 0, p: '' }).length - 1
+  const needed = target - plaintext.length - overhead
+  const pad = needed > 0 ? randomPad(needed) : ''
+  return { wrapper: { r: JSON.parse(plaintext), p: pad }, bucket: target }
+}
+
+/** Extract the inner plaintext from a wrapper, accepting the old format. */
+function unwrapWrapper(value: unknown): string {
+  if (isRumorWrapper(value)) {
+    return JSON.stringify(value.r)
+  }
+  return JSON.stringify(value)
+}
+
+/** Pad the NIP-44 plaintext so the gift-wrap or seal content length is one
+ * of a small set of buckets rather than the raw message length. */
+function padPlaintext(plaintext: string): string {
+  const { wrapper } = buildWrapper(plaintext)
+  return JSON.stringify(wrapper)
 }
 
 export function unpadBucket(padded: string): string {
@@ -98,7 +140,7 @@ export function createRumor(template: Partial<UnsignedEvent>, senderSk: Uint8Arr
 function encryptTo(payload: unknown, sk: Uint8Array, recipientPk: string): string {
   const conversationKey = nip44.getConversationKey(sk, recipientPk)
   try {
-    return nip44.encrypt(JSON.stringify(payload), conversationKey)
+    return nip44.encrypt(padPlaintext(JSON.stringify(payload)), conversationKey)
   } finally {
     wipe(conversationKey)
   }
@@ -107,23 +149,24 @@ function encryptTo(payload: unknown, sk: Uint8Array, recipientPk: string): strin
 function decryptFrom(content: string, sk: Uint8Array, senderPk: string): unknown {
   const conversationKey = nip44.getConversationKey(sk, senderPk)
   try {
-    return JSON.parse(nip44.decrypt(unpadBucket(content), conversationKey))
+    const plaintext = nip44.decrypt(content, conversationKey)
+    try {
+      // New format: {r: rumor, p: pad}
+      return JSON.parse(unwrapWrapper(JSON.parse(plaintext)))
+    } catch {
+      // Legacy format: padded rumor JSON with trailing null bytes
+      return JSON.parse(unpadBucket(plaintext))
+    }
   } finally {
     wipe(conversationKey)
   }
-}
-
-/** Pad the NIP-44 ciphertext so the gift-wrap or seal content length is one
- * of a small set of buckets rather than the raw message length. */
-function padCipher(ciphertext: string): string {
-  return padToBucket(ciphertext)
 }
 
 export function createSeal(rumor: Rumor, senderSk: Uint8Array, recipientPk: string, at?: number): NostrEvent {
   return finalizeEvent(
     {
       kind: KIND_SEAL,
-      content: padCipher(encryptTo(rumor, senderSk, recipientPk)),
+      content: encryptTo(rumor, senderSk, recipientPk),
       created_at: at ?? fuzzedNow(),
       tags: [],
     },
@@ -143,7 +186,7 @@ export function createWrap(seal: NostrEvent, recipientPk: string, opts: WrapOpti
     return finalizeEvent(
       {
         kind: KIND_GIFT_WRAP,
-        content: padCipher(encryptTo(seal, ephemeralSk, recipientPk)),
+        content: encryptTo(seal, ephemeralSk, recipientPk),
         created_at: opts.fuzzedAt ?? fuzzedNow(),
         tags,
       },
