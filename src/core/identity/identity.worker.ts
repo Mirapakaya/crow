@@ -18,6 +18,7 @@
 import { getPublicKey, type UnsignedEvent } from 'nostr-tools/pure'
 import * as nip44 from 'nostr-tools/nip44'
 import { finalizeEvent } from 'nostr-tools/pure'
+import { schnorr } from '@noble/curves/secp256k1.js'
 
 export interface IdentityWorkerInit {
   secretKeyHex: string
@@ -29,6 +30,7 @@ export type IdentityRequest =
   | { type: 'nip44Decrypt'; ciphertext: string; senderPubkeyHex: string }
   | { type: 'getPubkey' }
   | { type: 'getConversationKey'; pubkeyHex: string }
+  | { type: 'schnorrSign'; hashHex: string }
   | { type: 'lock' }
 
 export type IdentityResponse =
@@ -37,6 +39,7 @@ export type IdentityResponse =
   | { type: 'nip44Decrypt'; plaintext: string }
   | { type: 'getPubkey'; pubkey: string }
   | { type: 'getConversationKey'; keyHex: string }
+  | { type: 'schnorrSign'; signatureHex: string }
   | { type: 'lock' }
   | { type: 'error'; message: string }
 
@@ -100,6 +103,11 @@ function handle(req: IdentityRequest): IdentityResponse {
       } finally {
         key.fill(0)
       }
+    }
+    case 'schnorrSign': {
+      const hash = hexToBytes(req.hashHex)
+      const signature = schnorr.sign(hash, ensureKey())
+      return { type: 'schnorrSign', signatureHex: bytesToHex(signature) }
     }
     case 'lock':
       wipeKey()

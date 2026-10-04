@@ -10,7 +10,8 @@ export type { MessageDirection, MessageStatus }
 export interface IdentityRecord {
   pubkey: string
   npub: string
-  secretKeyHex: string
+  /** Stored encrypted in the vault, but never kept in the Zustand store state. */
+  secretKeyHex?: string
   name: string
   about: string
   avatar?: string

@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useApp } from '../../crow/store'
 import { useT } from '../../i18n'
 import { goBack, useNavigate } from '../../crow/router'
@@ -48,7 +48,17 @@ export function AddContact() {
    * for the first second or two.
    */
   const inviteRelays = useApp((s) => s.inviteRelays)
-  const invite = useMemo(() => (identity ? myInvite(inviteRelays) : null), [myInvite, identity, inviteRelays])
+  const [invite, setInvite] = useState<string | null>(null)
+  useEffect(() => {
+    if (!identity) return
+    let cancelled = false
+    myInvite(inviteRelays).then((encoded) => {
+      if (!cancelled) setInvite(encoded)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [myInvite, identity, inviteRelays])
   const link = invite ? inviteLink(invite) : ''
 
   const accept = useCallback(

@@ -8,6 +8,8 @@ export interface IdentityHandle {
   getPubkey(): Promise<string>
   /** Derive a NIP-44 conversation key for a peer. The key leaves the worker, but it is not the master secret. */
   getConversationKey(pubkeyHex: string): Promise<Uint8Array>
+  /** Sign a 32-byte digest with the identity's Schnorr key. */
+  schnorrSign(hash: Uint8Array): Promise<Uint8Array>
   lock(): void
 }
 
@@ -31,6 +33,10 @@ function hexToBytes(hex: string): Uint8Array {
     bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
   }
   return bytes
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 export function createIdentityHandle(init: { secretKeyHex: string }): IdentityHandle {
@@ -82,6 +88,16 @@ export function createIdentityHandle(init: { secretKeyHex: string }): IdentityHa
         keyHex: string
       }
       return hexToBytes(res.keyHex)
+    },
+    async schnorrSign(hash: Uint8Array) {
+      const res = (await postMessage(worker, {
+        type: 'schnorrSign',
+        hashHex: bytesToHex(hash),
+      } as IdentityRequest)) as {
+        type: 'schnorrSign'
+        signatureHex: string
+      }
+      return hexToBytes(res.signatureHex)
     },
     lock() {
       worker.postMessage({ type: 'lock' } as IdentityRequest)

@@ -24,8 +24,8 @@ import {
   shortNpub,
   toNpub,
 } from '../core/identity/keys'
-import { createInvite, decodeInvite, type Invite } from '../core/identity/invite'
-import { createIdentityHandle } from '../core/identity/identityHandle'
+import { createInviteAsync, decodeInvite, type Invite } from '../core/identity/invite'
+import { createIdentityHandle, type IdentityHandle } from '../core/identity/identityHandle'
 import { bytesToHex, wipe } from '../core/util/bytes'
 import { createLogger } from '../core/util/log'
 import { DEFAULT_DM_RELAYS } from '../core/transport/defaultRelays'
@@ -147,7 +147,10 @@ interface AppState {
    */
   passkeyRetired: boolean
 
-  identity: IdentityRecord | null
+  /** Public identity fields only — secretKeyHex is stripped on load. */
+  identity: Omit<IdentityRecord, 'secretKeyHex'> | null
+  /** Handle to the identity worker; lives only in memory. */
+  identityHandle: IdentityHandle | null
   settings: AppSettings
 
   conversations: Conversation[]
@@ -320,7 +323,7 @@ interface AppState {
    */
   setDisplayPreference: (patch: Partial<Pick<AppSettings, 'locale' | 'theme'>>) => Promise<void>
   updateProfile: (patch: Partial<IdentityRecord>) => Promise<void>
-  myInvite: (relays: string) => string | null
+  myInvite: (relays: string) => Promise<string | null>
   setPendingInvite: (invite: Invite | null) => void
 
   deferBackup: () => void
@@ -375,6 +378,7 @@ export const useApp = create<AppState>((set, get) => ({
   passkeyRetired: false,
 
   identity: null,
+  identityHandle: null,
   // Seeded from the pre-unlock cache so the lock screen already speaks the
   // user's language; the encrypted record overwrites this on unlock.
   settings: { ...DEFAULT_SETTINGS, locale: detectLocale(), ...loadDisplayPrefs() },
@@ -453,6 +457,7 @@ export const useApp = create<AppState>((set, get) => ({
         set({
           phase: 'locked',
           identity: null,
+          identityHandle: null,
           messages: [],
           activeChat: null,
           conversations: [],
@@ -538,6 +543,7 @@ export const useApp = create<AppState>((set, get) => ({
       // Dropped by the unlock that came before this lock.
       passkeyRetired: false,
       identity: null,
+      identityHandle: null,
       messages: [],
       activeChat: null,
       conversations: [],
@@ -1057,22 +1063,16 @@ export const useApp = create<AppState>((set, get) => ({
     }
   },
 
-  myInvite(relays) {
-    const identity = get().identity
-    if (!identity || !messenger) return null
-    const secretKey = hexToBytesSafe(identity.secretKeyHex)
-    if (!secretKey) return null
-    try {
-      return createInvite(secretKey, {
-        name: identity.name,
-        // Best-ranked, not first-stored (see `inviteRelays`): whoever scans
-        // this reaches us through these, and storage order once put two dead
-        // relays in every invite.
-        relays: relays ? relays.split(' ') : messenger.pool.rankedReadRelays(4),
-      })
-    } finally {
-      wipe(secretKey)
-    }
+  async myInvite(relays) {
+    const { identity, identityHandle } = get()
+    if (!identity || !identityHandle || !messenger) return null
+    return createInviteAsync(identityHandle, {
+      name: identity.name,
+      // Best-ranked, not first-stored (see `inviteRelays`): whoever scans
+      // this reaches us through these, and storage order once put two dead
+      // relays in every invite.
+      relays: relays ? relays.split(' ') : messenger.pool.rankedReadRelays(4),
+    })
   },
 
   setPendingInvite(invite) {
@@ -1230,8 +1230,13 @@ async function startSession(set: Setter, get: Getter): Promise<void> {
 
   messenger.events.on('callSignal', (signal) => routeCallSignal(signal, set, get))
 
-  const identityHandle = createIdentityHandle({ secretKeyHex: identity.secretKeyHex })
-  await messenger.start(identity.secretKeyHex, identity.pubkey, identityHandle)
+  const secretKeyHex = identity.secretKeyHex
+  if (!secretKeyHex) throw new Error('identity secret missing from vault')
+  const identityHandle = createIdentityHandle({ secretKeyHex })
+  await messenger.start(secretKeyHex, identity.pubkey, identityHandle)
+
+  // Strip the secret before it can reach the Zustand store state.
+  const { secretKeyHex: _, ...publicIdentity } = identity
 
   // Live locations that were going when the vault last closed go on, or end
   // if their time ran out meanwhile (ADR-064).
@@ -1242,7 +1247,7 @@ async function startSession(set: Setter, get: Getter): Promise<void> {
     })
     .catch((err: unknown) => log.warn('could not take up live locations', err))
 
-  set({ phase: 'ready', identity, settings, pendingDisplayPrefs: null })
+  set({ phase: 'ready', identity: publicIdentity, identityHandle, settings, pendingDisplayPrefs: null })
   saveDisplayPrefs({ locale: settings.locale, theme: settings.theme })
   await Promise.all([
     get().refreshConversations(),

@@ -157,6 +157,22 @@ export function createInvite(
   return bytesToB64url(concatBytes(body, signature))
 }
 
+export async function createInviteAsync(
+  handle: { getPubkey(): Promise<string>; schnorrSign(hash: Uint8Array): Promise<Uint8Array> },
+  opts: { name: string; relays: string[]; createdAt?: number },
+): Promise<string> {
+  const invite: Invite = {
+    version: INVITE_VERSION,
+    pubkey: await handle.getPubkey(),
+    name: truncateUtf8(opts.name.trim(), MAX_NAME_BYTES),
+    relays: normalizeRelayList(opts.relays, MAX_RELAYS),
+    createdAt: opts.createdAt ?? nowSec(),
+  }
+  const body = serializeBody(invite)
+  const signature = await handle.schnorrSign(sha256(body))
+  return bytesToB64url(concatBytes(body, signature))
+}
+
 export class InviteError extends Error {
   constructor(message: string) {
     super(message)
