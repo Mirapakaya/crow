@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import encodeQR from 'qr'
-import { frameLoop, frontalCamera, QRCanvas } from 'qr/dom.js'
+import { frontalCamera, frameLoop, QRCanvas } from 'qr/dom.js'
 import { useT } from '../../i18n'
 import { Banner } from './primitives'
 import { createLogger } from '../../core/util/log'
@@ -14,22 +14,32 @@ const log = createLogger('qr')
  * Every hosted QR generator would mean sending an invite — which contains a
  * public key and relay hints — to a third party. The `qr` package encodes in
  * a few kilobytes of dependency-free JavaScript, so there is no reason to.
+ *
+ * The SVG is rendered as a blob: URL instead of using dangerouslySetInnerHTML,
+ * which keeps the CSP strict and avoids parsing unsanitised markup.
  */
 export function QrCode({ value, label }: { value: string; label?: string }) {
-  const svg = useMemo(() => {
+  const [url, setUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    let objectUrl: string | null = null
     try {
-      // Error level M survives a fingerprint or a slight fold and still scans.
-      return encodeQR(value, 'svg', { ecc: 'medium', border: 2 })
+      const svg = encodeQR(value, 'svg', { ecc: 'medium', border: 2 })
+      const blob = new Blob([svg], { type: 'image/svg+xml' })
+      objectUrl = URL.createObjectURL(blob)
+      setUrl(objectUrl)
     } catch (err) {
       log.warn('failed to encode QR', err)
-      return null
+    }
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
   }, [value])
 
-  if (!svg) return null
+  if (!url) return null
   return (
     <div className="qr-frame" role="img" aria-label={label ?? 'QR code'}>
-      <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <img src={url} alt={label ?? 'QR code'} />
     </div>
   )
 }
