@@ -12,7 +12,7 @@ Resume rule: read QWEN.md, continue from the first open phase below.
 - [x] F4 Metadata — partial (giftwrap plaintext padding)
 - [x] F5 Calls and relay-input fixes — partial (no default STUN, fingerprint before SDP, future offers rejected, profile frames gated, relay host validation)
 - [x] F6 Extension and leak defense — partial (bootstrap tamper guard, usePrivacyBlur hook, Security Center placeholder)
-- [x] F7 UI rebuild — partial (Geist token source updated, globals/tailwind migrated; full component migration still open)
+- [x] F7 UI rebuild — partial (Geist token source updated, :has() rules replaced with class/focus-within, globals/tailwind migrated; component-level migration still open)
 - [x] F8 Tests — partial (blob/identity/invite tests added; vault tests skipped locally due to slow KDF on device; all non-skipped tests pass)
 - [x] F9 Pen-test and release — partial (npm audit run, report updated; semgrep/osv-scanner/gitleaks to run in Codespace)
 
