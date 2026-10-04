@@ -97,9 +97,9 @@
   padding-block: var(--space-4);
 }
 
-.message-stream:has(> .empty) {
+/* .message-stream:has(> .empty) {
   margin-block: auto;
-}
+} */
 
 .message-stream > .btn,
 .message-stream > .faint {
@@ -873,10 +873,10 @@ button.call-bubble-back:active {
  * held finger would otherwise start one; the menu copies the text instead.
  */
 @media (hover: none) {
-  .bubble:not(:has(:focus-visible)) .bubble-actions {
+  /* .bubble:not(:has(:focus-visible)) .bubble-actions {
     opacity: 0;
     pointer-events: none;
-  }
+  } */
 
   .bubble {
     -webkit-touch-callout: none;

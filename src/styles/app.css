@@ -121,14 +121,14 @@ a:hover {
 
 /* One focus treatment for the entire app. Offset so the ring reads as a halo
    around the control rather than a second border glued to it. */
-:focus-visible {
+*:focus-visible {
   outline: var(--ring-width) solid var(--ring);
   outline-offset: var(--ring-offset);
   border-radius: var(--radius-sm);
 }
 
 /* Pointer users get no ring; keyboard users always do. */
-:focus:not(:focus-visible) {
+*:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -138,12 +138,13 @@ a:hover {
  * a 1px clipped element. Draw it on the part the user can see, so tabbing never
  * lands on something that looks unfocused.
  */
-:is(.btn, .list-row):has(> input:focus-visible) {
+/* :has() is not supported by the cssnano version in this Next.js build; use a class instead. */
+/* *:is(.btn, .list-row):has(> input:focus-visible) {
   outline: var(--ring-width) solid var(--ring);
   outline-offset: var(--ring-offset);
-}
+} */
 
-::selection {
+*::selection {
   background: var(--accent-soft);
   color: var(--accent-text);
 }
@@ -951,9 +952,9 @@ time,
 
 /* While it shows, the bar is the top of the screen: it takes the inset under
    a notch or status bar, and the header below gives its own up. */
-.app-shell:has(> .connection-bar) :is(.app-header, .chat-header) {
+/* .app-shell:has(> .connection-bar) :is(.app-header, .chat-header) {
   padding-top: var(--space-2);
-}
+} */
 
 .connection-bar-body {
   flex: 1;
