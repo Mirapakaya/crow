@@ -49,6 +49,10 @@ export function normalizeRelayUrl(input: string): string | null {
   const isLoopback = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '[::1]'
   if (protocol === 'ws:' && (!isLoopback || isSecurePage())) return null
 
+  // Reject loopback and private-range hosts for wss:// as well. A stranger's
+  // profile frame should not make the client probe the user's local network.
+  if (isLoopback || isPrivateIp(url.hostname)) return null
+
   url.hash = ''
   url.username = ''
   url.password = ''
@@ -62,6 +66,17 @@ export function normalizeRelayUrl(input: string): string | null {
 /** True when the app is served over HTTPS, where insecure sockets cannot work. */
 function isSecurePage(): boolean {
   return typeof location !== 'undefined' && location.protocol === 'https:'
+}
+
+/** True for IPv4/6 private/reserved ranges that should never be relay targets. */
+function isPrivateIp(hostname: string): boolean {
+  // IPv4 loopback / private ranges
+  if (/^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(hostname)) return true
+  // IPv6 loopback
+  if (hostname === '[::1]' || hostname === '::1') return true
+  // IPv6 unique local (fc00::/7)
+  if (/^(?:fc|fd)[0-9a-f]{2}(?::[0-9a-f]{0,4}){0,7}$/i.test(hostname)) return true
+  return false
 }
 
 const isDefaultPort = (protocol: string, port: string): boolean =>

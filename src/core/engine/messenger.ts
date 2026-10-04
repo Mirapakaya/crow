@@ -1121,6 +1121,11 @@ export class Messenger {
       }
 
       case 'profile': {
+        // Profile frames are only accepted from contacts the user has
+        // accepted. A stranger should not be able to update our view of their
+        // name, avatar, or — most importantly — their relay list.
+        const contact = await this.#repo.getContact(peerPubkey)
+        if (!contact?.accepted) break
         const patch: Partial<Contact> = {}
         if (frame.name) patch.remoteName = frame.name
         if (frame.about) patch.about = frame.about
