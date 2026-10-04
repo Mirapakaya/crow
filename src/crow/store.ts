@@ -26,7 +26,7 @@ import {
 } from '../core/identity/keys'
 import { createInviteAsync, decodeInvite, type Invite } from '../core/identity/invite'
 import { createIdentityHandle, type IdentityHandle } from '../core/identity/identityHandle'
-import { bytesToHex, wipe } from '../core/util/bytes'
+import { wipe } from '../core/util/bytes'
 import { createLogger } from '../core/util/log'
 import { DEFAULT_DM_RELAYS } from '../core/transport/defaultRelays'
 import { normalizeRelayList } from '../core/transport/relayUrl'
