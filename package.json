@@ -25,7 +25,8 @@
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run check:tokens",
     "gen:headers": "node scripts/gen-headers.mjs",
     "check:headers": "node scripts/check-headers.mjs",
-    "postbuild": "node scripts/postbuild-sri.mjs && node scripts/postbuild-csp.mjs"
+    "postbuild": "node scripts/postbuild-sri.mjs && node scripts/postbuild-csp.mjs",
+    "check:base-path": "node scripts/check-base-path.mjs"
   },
   "dependencies": {
     "@hpke/chacha20poly1305": "^1.8.0",
