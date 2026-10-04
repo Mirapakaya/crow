@@ -1,10 +1,11 @@
 import type { Event as NostrEvent } from 'nostr-tools/core'
 import { hexToBytes, randomBytes, bytesToHex } from '../util/bytes'
+import type { IdentityHandle } from '../identity/identityHandle'
 import { backoffDelay, MINUTE, SECOND } from '../util/time'
 import { Emitter } from '../util/emitter'
 import { createLogger } from '../util/log'
 import { coalesce, Mutex } from '../util/mutex'
-import { createRumor, giftWrap, unwrapGift, type Rumor } from '../crypto/giftwrap'
+import { createRumor, giftWrapAsync, unwrapGiftAsync, type Rumor } from '../crypto/giftwrap'
 import {
   decodeHybridBytes,
   decapsulateHybrid,
@@ -336,6 +337,7 @@ export class Messenger {
   #vault: Vault
   #repo: VaultRepo
   #secretKey: Uint8Array | null = null
+  #identityHandle: IdentityHandle | null = null
   #pubkey = ''
   #settings: AppSettings
   #direct: DirectManager | null = null
@@ -504,9 +506,10 @@ export class Messenger {
 
   // --- lifecycle ------------------------------------------------------------
 
-  async start(secretKeyHex: string, pubkey: string): Promise<void> {
+  async start(secretKeyHex: string, pubkey: string, identityHandle?: IdentityHandle): Promise<void> {
     if (this.#running) return
     this.#secretKey = hexToBytes(secretKeyHex)
+    this.#identityHandle = identityHandle ?? null
     this.#pubkey = pubkey
     this.#running = true
 
@@ -522,7 +525,7 @@ export class Messenger {
       onWrap: (wrap) => this.#ingestWrap(wrap),
     })
 
-    this.#direct = new DirectManager(this.#secretKey, this.#iceServers())
+    this.#direct = new DirectManager(this.#identityHandle!, this.#pubkey, this.#iceServers())
     this.#direct.setEnabled(this.#settings.enableDirectConnection && supportsWebRtc())
     this.#direct.events.on('rumor', ({ peerPubkey, rumor }) => {
       void this.#ingestRumor(rumor, peerPubkey, 'direct')
@@ -598,6 +601,8 @@ export class Messenger {
     this.pool.destroy()
     this.#secretKey?.fill(0)
     this.#secretKey = null
+    this.#identityHandle?.lock()
+    this.#identityHandle = null
   }
 
   async applySettings(settings: AppSettings): Promise<void> {
@@ -628,11 +633,11 @@ export class Messenger {
    * runs when the user has opted in.
    */
   async publishPublicProfile(): Promise<boolean> {
-    if (!this.#secretKey || !this.#settings.publishPublicProfile) return false
+    if (!this.#identityHandle || !this.#settings.publishPublicProfile) return false
     const identity = await this.#repo.getIdentity()
     if (!identity) return false
     try {
-      const results = await this.transport.publishProfile(this.#secretKey, {
+      const results = await this.transport.publishProfile(this.#identityHandle, {
         name: identity.name,
         about: identity.about || undefined,
         picture: identity.avatar,
@@ -685,9 +690,9 @@ export class Messenger {
   }
 
   async #announceInboxRelays(): Promise<void> {
-    if (!this.#secretKey) return
+    if (!this.#identityHandle) return
     try {
-      await this.transport.publishInboxRelays(this.#secretKey, this.pool.rankedReadRelays(6))
+      await this.transport.publishInboxRelays(this.#identityHandle, this.pool.rankedReadRelays(6))
     } catch (err) {
       log.warn('failed to announce inbox relays', err)
     }
@@ -743,7 +748,7 @@ export class Messenger {
 
   async #ingestWrap(wrap: NostrEvent): Promise<void> {
     // (Nothing older than the dedup floor gets here: `InboxSync` refuses it.)
-    if (!this.#secretKey || !this.#vault.isUnlocked) return
+    if (!this.#identityHandle || !this.#vault.isUnlocked) return
     try {
       if (await this.#repo.hasSeen(wrap.id)) return
       await this.#repo.markSeen([{ id: wrap.id, createdAt: wrap.created_at }])
@@ -754,7 +759,7 @@ export class Messenger {
 
     let rumor: Rumor
     try {
-      rumor = unwrapGift(wrap, this.#secretKey)
+      rumor = await unwrapGiftAsync(wrap, this.#identityHandle!)
     } catch (err) {
       // Expected in normal operation: relays return wraps addressed to us that
       // were sealed for a key we no longer hold, plus outright garbage.
@@ -1273,7 +1278,7 @@ export class Messenger {
    * Returns the new group conversation id, or null if the peer has no KeyPackage.
    */
   async startMls1To1(peerPubkey: string): Promise<string | null> {
-    if (!this.#secretKey) throw new Error('messenger is not running')
+    if (!this.#identityHandle) throw new Error('messenger is not running')
     if (peerPubkey === this.#pubkey) return null
     const runtime = await this.#loadMls()
     const ready = await runtime.readiness([peerPubkey])
@@ -1287,7 +1292,7 @@ export class Messenger {
   }
 
   async sendMessage(address: ChatAddress, text: string, replyTo?: string): Promise<Message> {
-    if (!this.#secretKey) throw new Error('messenger is not running')
+    if (!this.#identityHandle) throw new Error('messenger is not running')
     const body = text.trim()
     if (!body) throw new Error('message is empty')
     if (body.length > MAX_MESSAGE_CHARS) throw new Error('message is too long')
@@ -1336,7 +1341,7 @@ export class Messenger {
     },
     replyTo?: string,
   ): Promise<Message> {
-    if (!this.#secretKey) throw new Error('messenger is not running')
+    if (!this.#identityHandle) throw new Error('messenger is not running')
     if (!this.#blobs) throw new Error('attachment transport is not running')
     if (input.envelope && input.envelope.id !== blobId(input.bytes)) {
       throw new Error('that copy does not hold these bytes')
@@ -1477,7 +1482,7 @@ export class Messenger {
       location?: LocationSpec
     },
   ): Promise<Message> {
-    if (!this.#secretKey) throw new Error('messenger is not running')
+    if (!this.#identityHandle) throw new Error('messenger is not running')
     // When it was sent, in UTC epoch ms, for showing; and where it sorts: past
     // everything this conversation has seen, however this clock is set
     // (ADR-062, ADR-063).
@@ -1506,7 +1511,7 @@ export class Messenger {
         tags: chatTags(room.members, shape),
         created_at: Math.floor(sentAt / 1000),
       },
-      this.#secretKey,
+      this.#pubkey,
     )
 
     const { ts: _ts, order: _order, ...stored } = shape
@@ -1851,7 +1856,7 @@ export class Messenger {
    * than lingering as a reaction they cannot remove.
    */
   async react(address: ChatAddress, messageId: string, emoji: string): Promise<void> {
-    if (!this.#secretKey) throw new Error('messenger is not running')
+    if (!this.#identityHandle) throw new Error('messenger is not running')
     const body = emoji.trim()
     if (!isReactionBody(body)) throw new Error('not a reaction')
 
@@ -1882,7 +1887,7 @@ export class Messenger {
         tags: reactionTags(room.members, messageId),
         created_at: Math.floor(sentAt / 1000),
       },
-      this.#secretKey,
+      this.#pubkey,
     )
 
     await this.#repo.putReaction({
@@ -1964,7 +1969,7 @@ export class Messenger {
    * offline is cast when the network returns and shows on every device.
    */
   async #sendUpdate(room: Room, frame: InteractiveFrame): Promise<void> {
-    if (!this.#secretKey) throw new Error('messenger is not running')
+    if (!this.#identityHandle) throw new Error('messenger is not running')
     const sentAt = Date.now()
     const rumor = createRumor(
       {
@@ -1973,7 +1978,7 @@ export class Messenger {
         tags: [...recipientTags(room.members), timestampTag(sentAt)],
         created_at: Math.floor(sentAt / 1000),
       },
-      this.#secretKey,
+      this.#pubkey,
     )
     const targetId = frame.t === 'vote' ? frame.poll : frame.list
     await this.#repo.putUpdate({
@@ -2194,7 +2199,7 @@ export class Messenger {
       copy?: boolean
     } = {},
   ): Promise<string | null> {
-    if (!this.#secretKey || !this.#running) return null
+    if (!this.#identityHandle || !this.#running) return null
     const recipients = typeof to === 'string' ? [to] : [...to]
     // One recipient is a person; several are a group, which gets one rumor
     // naming all of them and one wrap each — never the direct channel.
@@ -2205,7 +2210,7 @@ export class Messenger {
         content: encodeControlFrame(frame),
         tags: [...recipientTags(recipients), ...(opts.tags ?? [])],
       },
-      this.#secretKey,
+      this.#pubkey,
     )
 
     if (peerPubkey && opts.viaDirect !== false && this.#direct?.send(peerPubkey, rumor)) return rumor.id
@@ -2279,7 +2284,7 @@ export class Messenger {
    * waiting for any delivery to finish; each one that does calls back in.
    */
   async #launchDueOnce(): Promise<void> {
-    if (!this.#running || !this.#secretKey || !this.#vault.isUnlocked) return
+    if (!this.#running || !this.#identityHandle || !this.#vault.isUnlocked) return
     const ids = await this.#repo.dueOutboxIds()
     for (const lane of ['priority', 'bulk'] as const) {
       for (const id of ids) {
@@ -2328,7 +2333,7 @@ export class Messenger {
    * the message when they finish.
    */
   async #deliver(item: OutboxItem): Promise<void> {
-    if (!this.#secretKey) return
+    if (!this.#identityHandle) return
     if (item.mls) {
       // Encrypted to the group at the moment of sending, never before.
       let runtime: MlsRuntime
@@ -2363,7 +2368,7 @@ export class Messenger {
       const relays = await this.#relaysFor(pubkey)
       dispatched.push({
         pubkey,
-        handle: this.pool.dispatch(giftWrap(rumor, this.#secretKey, pubkey, { expirationSec }), relays),
+        handle: this.pool.dispatch(await giftWrapAsync(rumor, this.#identityHandle!, pubkey, { expirationSec }), relays),
       })
     }
 
@@ -2374,7 +2379,7 @@ export class Messenger {
     // copies the receiving side discards unread.
     if (selfCopy) {
       void this.pool.publish(
-        giftWrap(rumor, this.#secretKey, this.#pubkey, { expirationSec }),
+        await giftWrapAsync(rumor, this.#identityHandle!, this.#pubkey, { expirationSec }),
         this.#selfCopyRelays(),
       )
     }
@@ -2501,7 +2506,7 @@ export class Messenger {
    */
   async retryMessage(messageId: string): Promise<void> {
     const message = await this.#repo.getMessage(messageId)
-    if (!message || message.direction !== 'out' || !this.#secretKey) return
+    if (!message || message.direction !== 'out' || !this.#identityHandle) return
     const conversation = await this.#repo.getConversation(message.convoId)
     if (!conversation) return
     if (conversation.mls) return (await this.#loadMls()).chat.retry(conversation, message)
@@ -2518,7 +2523,7 @@ export class Messenger {
         tags: chatTags(conversation.members, shapeOf(message)),
         created_at: Math.floor(message.ts / 1000),
       },
-      this.#secretKey,
+      this.#pubkey,
     )
     const peer = conversation.kind === 'direct' ? conversation.peerPubkey : null
     await this.#repo.enqueue({

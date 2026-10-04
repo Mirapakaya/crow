@@ -621,7 +621,7 @@ export class MlsRuntime {
       for (const invitee of pending.invited) {
         await this.#host.sendRumor(
           invitee.pubkey,
-          welcomeRumor(secretKey, pending.welcome, invitee.keyPackageEventId, held.relays, held.hybrid ?? false),
+          welcomeRumor(this.#host.pubkey, pending.welcome, invitee.keyPackageEventId, held.relays, held.hybrid ?? false),
         )
       }
     }

@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "private": false,
   "license": "AGPL-3.0-or-later",
-  "description": "Crow \u2014 a private, end-to-end-encrypted messenger that runs entirely as a static web app.",
+  "description": "Crow — a private, end-to-end-encrypted messenger that runs entirely as a static web app.",
   "type": "module",
   "engines": {
     "node": ">=20.19"
@@ -77,6 +77,7 @@
     "eslint": "^10.9.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "fake-indexeddb": "^6.2.5",
+    "fast-check": "^4.10.2",
     "happy-dom": "^20.11.15",
     "postcss": "^8.5.0",
     "prettier": "^3.9.6",

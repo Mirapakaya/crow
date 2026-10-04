@@ -1,5 +1,5 @@
-import { finalizeEvent } from 'nostr-tools/pure'
-import type { Event as NostrEvent } from 'nostr-tools/core'
+import type { Event as NostrEvent, UnsignedEvent } from 'nostr-tools/core'
+import type { IdentityHandle } from '../identity/identityHandle'
 import { nowSec } from '../util/time'
 import { KIND_GIFT_WRAP } from '../crypto/giftwrap'
 import { normalizeRelayList } from './relayUrl'
@@ -61,18 +61,16 @@ export class NostrTransport {
    * unencrypted by design — it is an address, not a message — so it lists only
    * relay URLs and nothing else.
    */
-  async publishInboxRelays(secretKey: Uint8Array, relays: string[]): Promise<PublishOutcome[]> {
+  async publishInboxRelays(handle: IdentityHandle, relays: string[]): Promise<PublishOutcome[]> {
     const urls = normalizeRelayList(relays, 6)
     if (urls.length === 0) return []
-    const event = finalizeEvent(
-      {
-        kind: KIND_DM_RELAY_LIST,
-        created_at: nowSec(),
-        tags: urls.map((url) => ['relay', url]),
-        content: '',
-      },
-      secretKey,
-    )
+    const event = await handle.sign({
+      kind: KIND_DM_RELAY_LIST,
+      created_at: nowSec(),
+      tags: urls.map((url) => ['relay', url]),
+      content: '',
+      pubkey: await handle.getPubkey(),
+    } as UnsignedEvent)
     return this.pool.publish(event, this.pool.rankedWriteRelays())
   }
 
@@ -97,11 +95,14 @@ export class NostrTransport {
   }
 
   /** Opt-in public profile. Off by default: publishing one links key to name. */
-  async publishProfile(secretKey: Uint8Array, profile: PublicProfile): Promise<PublishOutcome[]> {
-    const event = finalizeEvent(
-      { kind: KIND_METADATA, created_at: nowSec(), tags: [], content: JSON.stringify(profile) },
-      secretKey,
-    )
+  async publishProfile(handle: IdentityHandle, profile: PublicProfile): Promise<PublishOutcome[]> {
+    const event = await handle.sign({
+      kind: KIND_METADATA,
+      created_at: nowSec(),
+      tags: [],
+      content: JSON.stringify(profile),
+      pubkey: await handle.getPubkey(),
+    } as UnsignedEvent)
     return this.pool.publish(event, this.pool.rankedWriteRelays())
   }
 

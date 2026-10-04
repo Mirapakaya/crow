@@ -2,94 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-@import '../styles/theme.css';
 @import '../styles/tokens.css';
+@import '../styles/theme.css';
 @import '../styles/app.css';
 @import '../styles/chat.css';
 
-/*
- * Tailwind/shadcn colour bridge.
- *
- * HSL values derived from theme.css's Geist ramp-and-role system so that
- * Tailwind utility classes (bg-primary, text-muted-foreground, etc.) and any
- * shadcn components render the same colours as the hand-crafted CSS that uses
- * --bg, --text, --accent, etc. directly.
- */
-
 @layer base {
   :root {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 93%;
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 93%;
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 93%;
-    --primary: 0 0% 93%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 93%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 53%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 93%;
-    --destructive: 0 100% 65%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 18%;
-    --input: 0 0% 27%;
-    --ring: 0 0% 93%;
-    --success: 142 71% 47%;
-    --warning: 32 95% 52%;
+    /* shadcn/Tailwind theme variables mapped to the single Geist token source. */
+    --background: var(--ds-background-100);
+    --foreground: var(--ds-gray-1000);
+    --card: var(--ds-background-100);
+    --card-foreground: var(--ds-gray-1000);
+    --popover: var(--ds-background-100);
+    --popover-foreground: var(--ds-gray-1000);
+    --primary: var(--ds-gray-1000);
+    --primary-foreground: var(--ds-background-100);
+    --secondary: var(--ds-gray-100);
+    --secondary-foreground: var(--ds-gray-1000);
+    --muted: var(--ds-gray-100);
+    --muted-foreground: var(--ds-gray-700);
+    --accent: var(--ds-gray-200);
+    --accent-foreground: var(--ds-gray-1000);
+    --destructive: var(--ds-red-700);
+    --destructive-foreground: var(--ds-background-100);
+    --border: var(--ds-gray-300);
+    --input: var(--ds-gray-400);
+    --ring: var(--ds-gray-1000);
+    --success: var(--ds-green-700);
+    --warning: var(--ds-amber-700);
     --radius: 0.75rem;
   }
 
-  :root[data-theme='light'] {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 56%;
-    --accent: 0 0% 92%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 100% 65%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 87%;
-    --input: 0 0% 79%;
-    --ring: 0 0% 9%;
-    --success: 142 71% 47%;
-    --warning: 32 95% 52%;
-  }
-
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme='dark']) {
-      --background: 0 0% 100%;
-      --foreground: 0 0% 9%;
-      --card: 0 0% 100%;
-      --card-foreground: 0 0% 9%;
-      --popover: 0 0% 100%;
-      --popover-foreground: 0 0% 9%;
-      --primary: 0 0% 9%;
-      --primary-foreground: 0 0% 100%;
-      --secondary: 0 0% 96%;
-      --secondary-foreground: 0 0% 9%;
-      --muted: 0 0% 96%;
-      --muted-foreground: 0 0% 56%;
-      --accent: 0 0% 92%;
-      --accent-foreground: 0 0% 9%;
-      --destructive: 0 100% 65%;
-      --destructive-foreground: 0 0% 100%;
-      --border: 0 0% 87%;
-      --input: 0 0% 79%;
-      --ring: 0 0% 9%;
-      --success: 142 71% 47%;
-      --warning: 32 95% 52%;
-    }
+  [data-theme='dark'] {
+    --background: var(--ds-background-100);
+    --foreground: var(--ds-gray-1000);
+    --card: var(--ds-background-100);
+    --card-foreground: var(--ds-gray-1000);
+    --popover: var(--ds-background-100);
+    --popover-foreground: var(--ds-gray-1000);
+    --primary: var(--ds-gray-1000);
+    --primary-foreground: var(--ds-background-100);
+    --secondary: var(--ds-gray-100);
+    --secondary-foreground: var(--ds-gray-1000);
+    --muted: var(--ds-gray-100);
+    --muted-foreground: var(--ds-gray-700);
+    --accent: var(--ds-gray-200);
+    --accent-foreground: var(--ds-gray-1000);
+    --destructive: var(--ds-red-500);
+    --destructive-foreground: var(--ds-gray-1000);
+    --border: var(--ds-gray-300);
+    --input: var(--ds-gray-400);
+    --ring: var(--ds-gray-1000);
+    --success: var(--ds-green-500);
+    --warning: var(--ds-amber-500);
   }
 
   * {

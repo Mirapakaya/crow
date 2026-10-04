@@ -679,7 +679,7 @@ export async function parseKeyPackageEvent(
 
 /** The unsigned kind 444 rumor that goes inside a gift wrap to one new member. */
 export function welcomeRumor(
-  secretKey: Uint8Array,
+  senderPubkey: string,
   welcome: Welcome,
   keyPackageEventId: string,
   relays: readonly string[],
@@ -695,7 +695,7 @@ export function welcomeRumor(
         ...(hybrid ? [['hybrid', '1']] : []),
       ],
     },
-    secretKey,
+    senderPubkey,
   )
 }
 

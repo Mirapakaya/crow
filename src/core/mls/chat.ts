@@ -244,7 +244,7 @@ export class GroupChat {
         }),
         created_at: Math.floor(message.ts / 1000),
       },
-      this.#secretKey(),
+      this.host.pubkey,
     )
   }
 
@@ -253,7 +253,7 @@ export class GroupChat {
     this.#assertMember(conversation)
     const rumor = createRumor(
       { kind, content, tags, created_at: Math.floor(Date.now() / 1000) },
-      this.#secretKey(),
+      this.host.pubkey,
     )
     await this.#queue(conversation.id, `${CONTROL_PREFIX}${rumor.id}`, rumor)
     return rumor
@@ -279,9 +279,4 @@ export class GroupChat {
     if (conversation.mls?.left) throw new Error('you are no longer in this group')
   }
 
-  #secretKey(): Uint8Array {
-    const key = this.host.secretKey()
-    if (!key) throw new Error('messenger is not running')
-    return key
-  }
 }

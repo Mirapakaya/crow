@@ -1,9 +1,8 @@
 import * as nip44 from 'nostr-tools/nip44'
-import { getPublicKey } from 'nostr-tools/pure'
 import { validateRumor, type Rumor } from '../../crypto/giftwrap'
 import { createLogger } from '../../util/log'
 import { Emitter } from '../../util/emitter'
-import { bytesToHex, randomBytes, wipe } from '../../util/bytes'
+import { randomBytes, bytesToHex, wipe } from '../../util/bytes'
 import type { RtcFrame } from '../../models/protocol'
 import { PROTOCOL_VERSION } from '../../models/protocol'
 
@@ -61,7 +60,8 @@ export class DirectSession {
   #peerFingerprint: string | null = null
 
   constructor(
-    secretKey: Uint8Array,
+    conversationKey: Uint8Array,
+    ownPubkey: string,
     peerPubkey: string,
     private readonly iceServers: RTCIceServer[],
     sessionId?: string,
@@ -70,9 +70,8 @@ export class DirectSession {
     // Our own CSPRNG rather than crypto.randomUUID: same entropy, one fewer
     // API to depend on being present.
     this.sessionId = sessionId ?? bytesToHex(randomBytes(8))
-    const myPubkey = getPublicKey(secretKey)
-    this.#polite = myPubkey < peerPubkey
-    this.#conversationKey = nip44.getConversationKey(secretKey, peerPubkey)
+    this.#polite = ownPubkey < peerPubkey
+    this.#conversationKey = conversationKey
   }
 
   get state(): DirectState {

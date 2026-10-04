@@ -7,6 +7,7 @@
  *  - nip44Encrypt(plaintext, recipientPubkeyHex) -> ciphertext
  *  - nip44Decrypt(ciphertext, senderPubkeyHex) -> plaintext
  *  - getPubkey() -> hex pubkey
+ *  - getConversationKey(pubkeyHex) -> NIP-44 conversation key bytes
  *  - lock() -> zeroize and terminate the worker
  *
  * The worker is created with the secret key once, after the vault is unlocked.
@@ -27,6 +28,7 @@ export type IdentityRequest =
   | { type: 'nip44Encrypt'; plaintext: string; recipientPubkeyHex: string }
   | { type: 'nip44Decrypt'; ciphertext: string; senderPubkeyHex: string }
   | { type: 'getPubkey' }
+  | { type: 'getConversationKey'; pubkeyHex: string }
   | { type: 'lock' }
 
 export type IdentityResponse =
@@ -34,6 +36,7 @@ export type IdentityResponse =
   | { type: 'nip44Encrypt'; ciphertext: string }
   | { type: 'nip44Decrypt'; plaintext: string }
   | { type: 'getPubkey'; pubkey: string }
+  | { type: 'getConversationKey'; keyHex: string }
   | { type: 'lock' }
   | { type: 'error'; message: string }
 
@@ -90,6 +93,14 @@ function handle(req: IdentityRequest): IdentityResponse {
     }
     case 'getPubkey':
       return { type: 'getPubkey', pubkey: getPublicKey(ensureKey()) }
+    case 'getConversationKey': {
+      const key = nip44.getConversationKey(ensureKey(), req.pubkeyHex)
+      try {
+        return { type: 'getConversationKey', keyHex: bytesToHex(key) }
+      } finally {
+        key.fill(0)
+      }
+    }
     case 'lock':
       wipeKey()
       return { type: 'lock' }

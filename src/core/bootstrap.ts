@@ -44,7 +44,6 @@ function checkIntegrity(): boolean {
 function startTamperCheck(onTamper: () => void): void {
   setInterval(() => {
     if (!checkIntegrity()) {
-      // eslint-disable-next-line no-console
       console.warn('[crow] tamper check failed')
       onTamper()
     }

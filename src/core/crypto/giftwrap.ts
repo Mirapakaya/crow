@@ -1,4 +1,4 @@
-import { finalizeEvent, generateSecretKey, getEventHash, getPublicKey } from 'nostr-tools/pure'
+import { finalizeEvent, generateSecretKey, getEventHash } from 'nostr-tools/pure'
 import { schnorr } from '@noble/curves/secp256k1.js'
 import type { Event as NostrEvent, UnsignedEvent } from 'nostr-tools/core'
 import * as nip44 from 'nostr-tools/nip44'
@@ -113,7 +113,7 @@ function unwrapWrapper(value: unknown): string {
 
 /** Pad the NIP-44 plaintext so the gift-wrap or seal content length is one
  * of a small set of buckets rather than the raw message length. */
-function padPlaintext(plaintext: string): string {
+export function padPlaintext(plaintext: string): string {
   const { wrapper } = buildWrapper(plaintext)
   return JSON.stringify(wrapper)
 }
@@ -125,14 +125,14 @@ export function unpadBucket(padded: string): string {
 }
 
 /** Build an unsigned rumor carrying the real timestamp. */
-export function createRumor(template: Partial<UnsignedEvent>, senderSk: Uint8Array): Rumor {
+export function createRumor(template: Partial<UnsignedEvent>, senderPubkey: string): Rumor {
   const rumor = {
     created_at: nowSec(),
     kind: 14,
     content: '',
     tags: [] as string[][],
     ...template,
-    pubkey: getPublicKey(senderSk),
+    pubkey: senderPubkey,
   } as UnsignedEvent
   return { ...rumor, id: getEventHash(rumor) } as Rumor
 }
@@ -206,6 +206,53 @@ export function giftWrap(
 ): NostrEvent {
   if (!isHex32(recipientPk)) throw new Error('recipient pubkey must be 32-byte hex')
   return createWrap(createSeal(rumor, senderSk, recipientPk, opts.fuzzedAt), recipientPk, opts)
+}
+
+/** Async signing/encryption interface used by the async gift-wrap helpers. */
+export interface GiftWrapSigner {
+  sign(event: UnsignedEvent): Promise<NostrEvent>
+  nip44Encrypt(plaintext: string, recipientPubkeyHex: string): Promise<string>
+  nip44Decrypt(ciphertext: string, senderPubkeyHex: string): Promise<string>
+  getPubkey(): Promise<string>
+}
+
+/** Async variant of `giftWrap` that never touches the secret key directly. */
+export async function giftWrapAsync(
+  rumor: Rumor,
+  signer: GiftWrapSigner,
+  recipientPk: string,
+  opts: WrapOptions = {},
+): Promise<NostrEvent> {
+  if (!isHex32(recipientPk)) throw new Error('recipient pubkey must be 32-byte hex')
+
+  const sealContent = await signer.nip44Encrypt(padPlaintext(JSON.stringify(rumor)), recipientPk)
+  const senderPubkey = await signer.getPubkey()
+  const seal = await signer.sign({
+    kind: KIND_SEAL,
+    content: sealContent,
+    created_at: opts.fuzzedAt ?? fuzzedNow(),
+    tags: [],
+    pubkey: senderPubkey,
+  })
+
+  const ephemeralSk = generateSecretKey()
+  try {
+    const tags: string[][] = [['p', recipientPk]]
+    if (opts.expirationSec && opts.expirationSec > 0) {
+      tags.push(['expiration', String(nowSec() + opts.expirationSec)])
+    }
+    return finalizeEvent(
+      {
+        kind: KIND_GIFT_WRAP,
+        content: encryptTo(seal, ephemeralSk, recipientPk),
+        created_at: opts.fuzzedAt ?? fuzzedNow(),
+        tags,
+      },
+      ephemeralSk,
+    )
+  } finally {
+    wipe(ephemeralSk)
+  }
 }
 
 /**
@@ -287,6 +334,30 @@ export function unwrapGift(wrap: NostrEvent, recipientSk: Uint8Array): Rumor {
   if (!verifyEventSignature(seal)) throw new GiftWrapError('seal signature is invalid')
 
   const rumor = decryptFrom(seal.content, recipientSk, seal.pubkey as string)
+  return validateRumor(rumor, seal.pubkey as string)
+}
+
+/** Async variant of `unwrapGift` that delegates decryption to a handle. */
+export async function unwrapGiftAsync(wrap: NostrEvent, signer: GiftWrapSigner): Promise<Rumor> {
+  if (wrap.kind !== KIND_GIFT_WRAP) throw new GiftWrapError(`expected kind ${KIND_GIFT_WRAP}`)
+  if (typeof wrap.content !== 'string' || wrap.content.length > MAX_CONTENT_CHARS) {
+    throw new GiftWrapError('gift wrap content too large')
+  }
+  if (!verifyEventSignature(wrap)) throw new GiftWrapError('gift wrap signature is invalid')
+
+  const outerPlain = await signer.nip44Decrypt(wrap.content, wrap.pubkey)
+  const outerWrapper = JSON.parse(outerPlain)
+  const seal = JSON.parse(unwrapWrapper(outerWrapper)) as Record<string, unknown>
+  assertPlainEvent(seal, 'seal')
+  if (seal.kind !== KIND_SEAL) throw new GiftWrapError(`expected seal kind ${KIND_SEAL}`)
+  if (typeof seal.content !== 'string' || seal.content.length > MAX_CONTENT_CHARS) {
+    throw new GiftWrapError('seal content too large')
+  }
+  if (!verifyEventSignature(seal)) throw new GiftWrapError('seal signature is invalid')
+
+  const innerPlain = await signer.nip44Decrypt(seal.content, seal.pubkey as string)
+  const innerWrapper = JSON.parse(innerPlain)
+  const rumor = JSON.parse(unwrapWrapper(innerWrapper))
   return validateRumor(rumor, seal.pubkey as string)
 }
 

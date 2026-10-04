@@ -1,5 +1,6 @@
 import { Emitter } from '../../util/emitter'
 import { createLogger } from '../../util/log'
+import type { IdentityHandle } from '../../identity/identityHandle'
 import type { Rumor } from '../../crypto/giftwrap'
 import type { RtcFrame } from '../../models/protocol'
 import { DirectSession, type DirectState } from './directSession'
@@ -32,7 +33,8 @@ export class DirectManager {
   #enabled = true
 
   constructor(
-    private secretKey: Uint8Array,
+    private readonly handle: IdentityHandle,
+    private readonly ownPubkey: string,
     private iceServers: RTCIceServer[],
   ) {}
 
@@ -68,7 +70,7 @@ export class DirectManager {
     this.#lastAttempt.set(peerPubkey, Date.now())
 
     existing?.dispose()
-    const session = this.#createSession(peerPubkey)
+    const session = await this.#createSession(peerPubkey)
     await session.connect()
   }
 
@@ -80,7 +82,7 @@ export class DirectManager {
     if (!session || session.state === 'closed' || session.state === 'failed') {
       if (frame.kind !== 'offer') return
       session?.dispose()
-      session = this.#createSession(peerPubkey, frame.sid)
+      session = await this.#createSession(peerPubkey, frame.sid)
     }
 
     try {
@@ -110,11 +112,11 @@ export class DirectManager {
     this.closeAll()
     this.events.clear()
     this.#lastAttempt.clear()
-    this.secretKey = new Uint8Array(32)
   }
 
-  #createSession(peerPubkey: string, sessionId?: string): DirectSession {
-    const session = new DirectSession(this.secretKey, peerPubkey, this.iceServers, sessionId)
+  async #createSession(peerPubkey: string, sessionId?: string): Promise<DirectSession> {
+    const conversationKey = await this.handle.getConversationKey(peerPubkey)
+    const session = new DirectSession(conversationKey, this.ownPubkey, peerPubkey, this.iceServers, sessionId)
     session.events.on('signal', (frame) => this.events.emit('signal', { peerPubkey, frame }))
     session.events.on('rumor', (rumor) => this.events.emit('rumor', { peerPubkey, rumor }))
     session.events.on('stateChanged', (state) => {

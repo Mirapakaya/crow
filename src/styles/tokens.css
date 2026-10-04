@@ -1,41 +1,334 @@
 /**
  * Geist design tokens — canonical single source for all colour ramps.
  *
- * This file maps the existing hand-maintained ramps to the --ds-* naming
- * convention required by the Geist UI rebuild. Over time, components should
- * reference only --ds-* variables and the legacy --n-* / --blue-* names should
- * be removed.
+ * The values below are derived from the Vercel Geist colour system. Where an
+ * exact public source was not available the closest approximation is used and
+ * marked /* approx */.
+ *
+ * Layers:
+ *   1. Ramps      raw colour steps (--ds-gray-100 .. --ds-pink-1000).
+ *   2. Roles      semantic names (--bg, --surface, --text, --accent, etc.)
+ *                 mapped from ramps. Components reference roles.
  */
 
 :root {
   /* Backgrounds */
-  --ds-background-100: var(--n-0, #ffffff);
-  --ds-background-200: var(--n-25, #fafafa);
+  --ds-background-100: #ffffff; /* approx */
+  --ds-background-200: #fafafa; /* approx */
 
-  /* Gray scale (light) */
-  --ds-gray-100: var(--n-100, #f8f8f8);
-  --ds-gray-200: var(--n-150, #e6e6e6);
-  --ds-gray-300: var(--n-200, #d5d5d5);
-  --ds-gray-400: var(--n-300, #b1b1b1);
-  --ds-gray-500: var(--n-350, #a1a1a1);
-  --ds-gray-600: var(--n-400, #909090);
-  --ds-gray-700: var(--n-500, #6d6d6d);
-  --ds-gray-800: var(--n-600, #555555);
-  --ds-gray-900: var(--n-700, #464646);
-  --ds-gray-1000: var(--n-800, #222222);
+  /* Gray (light) */
+  --ds-gray-100: #f2f2f2; /* approx */
+  --ds-gray-200: #ebebeb; /* approx */
+  --ds-gray-300: #e6e6e6; /* approx */
+  --ds-gray-400: #ebebeb; /* approx */
+  --ds-gray-500: #c9c9c9; /* approx */
+  --ds-gray-600: #a8a8a8; /* approx */
+  --ds-gray-700: #8f8f8f; /* approx */
+  --ds-gray-800: #7d7d7d; /* approx */
+  --ds-gray-900: #666666; /* approx */
+  --ds-gray-1000: #171717; /* approx */
+
+  /* Blue */
+  --ds-blue-100: #f0f7ff; /* approx */
+  --ds-blue-200: #ebf5ff; /* approx */
+  --ds-blue-300: #e0f0ff; /* approx */
+  --ds-blue-400: #cce6ff; /* approx */
+  --ds-blue-500: #99ceff; /* approx */
+  --ds-blue-600: #52aeff; /* approx */
+  --ds-blue-700: #0072f5; /* approx, near #0070f3 */
+  --ds-blue-800: #0062d1; /* approx */
+  --ds-blue-900: #0068d6; /* approx */
+  --ds-blue-1000: #00254d; /* approx */
+
+  /* Red */
+  --ds-red-100: #fff0f0; /* approx */
+  --ds-red-200: #ffebeb; /* approx */
+  --ds-red-300: #ffe5e5; /* approx */
+  --ds-red-400: #fdd8d8; /* approx */
+  --ds-red-500: #f8b9b9; /* approx */
+  --ds-red-600: #f87275; /* approx */
+  --ds-red-700: #e5484d; /* approx */
+  --ds-red-800: #da2f35; /* approx */
+  --ds-red-900: #cb2a2f; /* approx */
+  --ds-red-1000: #391417; /* approx */
+
+  /* Amber */
+  --ds-amber-100: #fff6e5; /* approx */
+  --ds-amber-200: #fff4d6; /* approx */
+  --ds-amber-300: #fef0cd; /* approx */
+  --ds-amber-400: #ffdd8f; /* approx */
+  --ds-amber-500: #ffc96b; /* approx */
+  --ds-amber-600: #f5b047; /* approx */
+  --ds-amber-700: #ffb224; /* approx */
+  --ds-amber-800: #ff990a; /* approx */
+  --ds-amber-900: #a35200; /* approx */
+  --ds-amber-1000: #4e2009; /* approx */
+
+  /* Green */
+  --ds-green-100: #effbef; /* approx */
+  --ds-green-200: #ebfaeb; /* approx */
+  --ds-green-300: #daf6da; /* approx */
+  --ds-green-400: #c6f1c7; /* approx */
+  --ds-green-500: #99e69e; /* approx */
+  --ds-green-600: #6cda75; /* approx */
+  --ds-green-700: #45a557; /* approx */
+  --ds-green-800: #398e4a; /* approx */
+  --ds-green-900: #297a3a; /* approx */
+  --ds-green-1000: #1b311e; /* approx */
+
+  /* Teal */
+  --ds-teal-100: #eefcf9; /* approx */
+  --ds-teal-200: #e5faf6; /* approx */
+  --ds-teal-300: #d4f7f0; /* approx */
+  --ds-teal-400: #bef4eb; /* approx */
+  --ds-teal-500: #86ead9; /* approx */
+  --ds-teal-600: #45dec5; /* approx */
+  --ds-teal-700: #12a594; /* approx */
+  --ds-teal-800: #0d8c7d; /* approx */
+  --ds-teal-900: #067a6e; /* approx */
+  --ds-teal-1000: #073c34; /* approx */
+
+  /* Purple */
+  --ds-purple-100: #f9f0ff; /* approx */
+  --ds-purple-200: #f9f1fe; /* approx */
+  --ds-purple-300: #f4e8fc; /* approx */
+  --ds-purple-400: #eddcf9; /* approx */
+  --ds-purple-500: #d5b1f1; /* approx */
+  --ds-purple-600: #bf89ec; /* approx */
+  --ds-purple-700: #8e4ec6; /* approx */
+  --ds-purple-800: #763da9; /* approx */
+  --ds-purple-900: #7820bc; /* approx */
+  --ds-purple-1000: #2e004d; /* approx */
+
+  /* Pink */
+  --ds-pink-100: #ffebf5; /* approx */
+  --ds-pink-200: #feecf2; /* approx */
+  --ds-pink-300: #fce3ec; /* approx */
+  --ds-pink-400: #f9d7e2; /* approx */
+  --ds-pink-500: #f5b8cc; /* approx */
+  --ds-pink-600: #ee87a7; /* approx */
+  --ds-pink-700: #ea3e83; /* approx */
+  --ds-pink-800: #df2670; /* approx */
+  --ds-pink-900: #bd2864; /* approx */
+  --ds-pink-1000: #430a23; /* approx */
 }
 
 [data-theme='dark'] {
-  --ds-background-100: var(--n-dark-50, #0a0a0a);
-  --ds-background-200: var(--n-dark-100, #151515);
-  --ds-gray-100: var(--n-dark-200, #222222);
-  --ds-gray-200: var(--n-dark-250, #2a2a2a);
-  --ds-gray-300: var(--n-dark-300, #2e2e2e);
-  --ds-gray-400: var(--n-dark-350, #363636);
-  --ds-gray-500: var(--n-dark-400, #464646);
-  --ds-gray-600: var(--n-dark-500, #6d6d6d);
-  --ds-gray-700: var(--n-dark-600, #878787);
-  --ds-gray-800: var(--n-dark-700, #909090);
-  --ds-gray-900: var(--n-dark-800, #b1b1b1);
-  --ds-gray-1000: var(--n-dark-900, #d5d5d5);
+  --ds-background-100: #0a0a0a; /* approx */
+  --ds-background-200: #000000; /* approx */
+
+  /* Gray (dark) */
+  --ds-gray-100: #1a1a1a; /* approx */
+  --ds-gray-200: #1f1f1f; /* approx */
+  --ds-gray-300: #292929; /* approx */
+  --ds-gray-400: #2e2e2e; /* approx */
+  --ds-gray-500: #454545; /* approx */
+  --ds-gray-600: #878787; /* approx */
+  --ds-gray-700: #8f8f8f; /* approx */
+  --ds-gray-800: #7d7d7d; /* approx */
+  --ds-gray-900: #a1a1a1; /* approx */
+  --ds-gray-1000: #ededed; /* approx */
+
+  /* Blue (dark) */
+  --ds-blue-100: #0f1c2e; /* approx */
+  --ds-blue-200: #10233d; /* approx */
+  --ds-blue-300: #0f2f57; /* approx */
+  --ds-blue-400: #0d3868; /* approx */
+  --ds-blue-500: #0a4380; /* approx */
+  --ds-blue-600: #0090ff; /* approx */
+  --ds-blue-700: #0072f5; /* approx */
+  --ds-blue-800: #0062d1; /* approx */
+  --ds-blue-900: #52a8ff; /* approx */
+  --ds-blue-1000: #ebf6ff; /* approx */
+
+  /* Red (dark) */
+  --ds-red-100: #2a1314; /* approx */
+  --ds-red-200: #3c1618; /* approx */
+  --ds-red-300: #561a1e; /* approx */
+  --ds-red-400: #671e21; /* approx */
+  --ds-red-500: #832126; /* approx */
+  --ds-red-600: #e5484d; /* approx */
+  --ds-red-700: #e5484d; /* approx */
+  --ds-red-800: #d93036; /* approx */
+  --ds-red-900: #ff6166; /* approx */
+  --ds-red-1000: #feecee; /* approx */
+
+  /* Amber (dark) */
+  --ds-amber-100: #291800; /* approx */
+  --ds-amber-200: #331b00; /* approx */
+  --ds-amber-300: #4d2a00; /* approx */
+  --ds-amber-400: #573300; /* approx */
+  --ds-amber-500: #6b4105; /* approx */
+  --ds-amber-600: #e79d13; /* approx */
+  --ds-amber-700: #ffb224; /* approx */
+  --ds-amber-800: #ff990a; /* approx */
+  --ds-amber-900: #ff990a; /* approx */
+  --ds-amber-1000: #fef3dc; /* approx */
+
+  /* Green (dark) */
+  --ds-green-100: #0b2212; /* approx */
+  --ds-green-200: #0f2e18; /* approx */
+  --ds-green-300: #12361b; /* approx */
+  --ds-green-400: #0c451b; /* approx */
+  --ds-green-500: #126426; /* approx */
+  --ds-green-600: #1a9338; /* approx */
+  --ds-green-700: #45a557; /* approx */
+  --ds-green-800: #398e4a; /* approx */
+  --ds-green-900: #62c073; /* approx */
+  --ds-green-1000: #e5fbea; /* approx */
+
+  /* Teal (dark) */
+  --ds-teal-100: #04201b; /* approx */
+  --ds-teal-200: #062822; /* approx */
+  --ds-teal-300: #083a33; /* approx */
+  --ds-teal-400: #053d35; /* approx */
+  --ds-teal-500: #085e53; /* approx */
+  --ds-teal-600: #0c9784; /* approx */
+  --ds-teal-700: #12a594; /* approx */
+  --ds-teal-800: #0d8c7d; /* approx */
+  --ds-teal-900: #0ac7b4; /* approx */
+  --ds-teal-1000: #e0faf4; /* approx */
+
+  /* Purple (dark) */
+  --ds-purple-100: #231528; /* approx */
+  --ds-purple-200: #2e1938; /* approx */
+  --ds-purple-300: #422154; /* approx */
+  --ds-purple-400: #4f2768; /* approx */
+  --ds-purple-500: #5f2e85; /* approx */
+  --ds-purple-600: #8e4ec6; /* approx */
+  --ds-purple-700: #8e4ec6; /* approx */
+  --ds-purple-800: #763da9; /* approx */
+  --ds-purple-900: #bf7af0; /* approx */
+  --ds-purple-1000: #f8edfc; /* approx */
+
+  /* Pink (dark) */
+  --ds-pink-100: #28151d; /* approx */
+  --ds-pink-200: #3a1726; /* approx */
+  --ds-pink-300: #4f1c31; /* approx */
+  --ds-pink-400: #551b33; /* approx */
+  --ds-pink-500: #6c1e3e; /* approx */
+  --ds-pink-600: #b31957; /* approx */
+  --ds-pink-700: #ea3e83; /* approx */
+  --ds-pink-800: #df2670; /* approx */
+  --ds-pink-900: #f75f8f; /* approx */
+  --ds-pink-1000: #feecf4; /* approx */
+}
+
+/* ------------------------------------------------------------------ roles --
+ *
+ * These aliases are the only variables components should reference directly.
+ * They point into the --ds-* ramps above so there is one source of truth.
+ */
+
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: var(--ds-background-100);
+  --surface: var(--ds-background-100);
+  --surface-2: var(--ds-gray-100);
+  --surface-3: var(--ds-gray-200);
+  --surface-hover: var(--ds-gray-100);
+  --surface-active: var(--ds-gray-200);
+  --surface-sunken: var(--ds-gray-100);
+
+  --border-subtle: var(--ds-gray-200);
+  --border: var(--ds-gray-300);
+  --border-strong: var(--ds-gray-500);
+
+  --text: var(--ds-gray-1000);
+  --text-muted: var(--ds-gray-800);
+  --text-faint: var(--ds-gray-500);
+  --text-inverse: var(--ds-background-100);
+
+  --accent: var(--ds-gray-1000);
+  --accent-hover: var(--ds-gray-900);
+  --accent-active: var(--ds-gray-1000);
+  --accent-fg: var(--ds-background-100);
+  --accent-soft: var(--ds-gray-200);
+  --accent-soft-hover: var(--ds-gray-300);
+  --accent-border: var(--ds-gray-300);
+  --accent-text: var(--ds-gray-800);
+  --ring: var(--ds-gray-1000);
+
+  --success: var(--ds-green-700);
+  --success-soft: var(--ds-green-100);
+  --warning: var(--ds-amber-700);
+  --warning-soft: var(--ds-amber-100);
+  --danger: var(--ds-red-700);
+  --danger-hover: var(--ds-red-800);
+  --danger-fg: var(--ds-background-100);
+  --danger-soft: var(--ds-red-100);
+
+  --bubble-out: var(--ds-gray-1000);
+  --bubble-out-text: var(--ds-background-100);
+  --bubble-in: var(--ds-background-100);
+  --bubble-in-text: var(--ds-gray-1000);
+
+  --overlay: color-mix(in srgb, var(--ds-gray-1000) 25%, transparent);
+  --shadow-color: var(--ds-gray-1000);
+  --shadow-strength: 1;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: var(--ds-background-100);
+  --surface: var(--ds-background-100);
+  --surface-2: var(--ds-gray-100);
+  --surface-3: var(--ds-gray-200);
+  --surface-hover: var(--ds-gray-100);
+  --surface-active: var(--ds-gray-200);
+  --surface-sunken: var(--ds-background-200);
+
+  --border-subtle: var(--ds-gray-200);
+  --border: var(--ds-gray-300);
+  --border-strong: var(--ds-gray-500);
+
+  --text: var(--ds-gray-1000);
+  --text-muted: var(--ds-gray-700);
+  --text-faint: var(--ds-gray-600);
+  --text-inverse: var(--ds-background-100);
+
+  --accent: var(--ds-gray-1000);
+  --accent-hover: var(--ds-gray-900);
+  --accent-active: var(--ds-gray-1000);
+  --accent-fg: var(--ds-background-200);
+  --accent-soft: var(--ds-gray-200);
+  --accent-soft-hover: var(--ds-gray-300);
+  --accent-border: var(--ds-gray-500);
+  --accent-text: var(--ds-gray-800);
+  --ring: var(--ds-gray-1000);
+
+  --success: var(--ds-green-500);
+  --success-soft: var(--ds-green-100);
+  --warning: var(--ds-amber-500);
+  --warning-soft: var(--ds-amber-100);
+  --danger: var(--ds-red-500);
+  --danger-hover: var(--ds-red-600);
+  --danger-fg: var(--ds-gray-1000);
+  --danger-soft: var(--ds-red-100);
+
+  --bubble-out: var(--ds-gray-1000);
+  --bubble-out-text: var(--ds-background-200);
+  --bubble-in: var(--ds-gray-200);
+  --bubble-in-text: var(--ds-gray-1000);
+
+  --overlay: color-mix(in srgb, var(--ds-background-200) 50%, transparent);
+  --shadow-color: var(--ds-background-200);
+  --shadow-strength: 2;
+}
+
+/* ------------------------------------------------------------- elevation -- */
+
+:root {
+  --shadow-sm:
+    0 1px 2px color-mix(in srgb, var(--shadow-color) calc(6% * var(--shadow-strength)), transparent),
+    0 1px 3px color-mix(in srgb, var(--shadow-color) calc(8% * var(--shadow-strength)), transparent);
+  --shadow-md:
+    0 4px 6px color-mix(in srgb, var(--shadow-color) calc(5% * var(--shadow-strength)), transparent),
+    0 8px 16px -4px color-mix(in srgb, var(--shadow-color) calc(10% * var(--shadow-strength)), transparent);
+  --shadow-lg:
+    0 8px 16px color-mix(in srgb, var(--shadow-color) calc(5% * var(--shadow-strength)), transparent),
+    0 24px 48px -12px color-mix(in srgb, var(--shadow-color) calc(12% * var(--shadow-strength)), transparent);
 }

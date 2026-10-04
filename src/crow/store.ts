@@ -25,6 +25,7 @@ import {
   toNpub,
 } from '../core/identity/keys'
 import { createInvite, decodeInvite, type Invite } from '../core/identity/invite'
+import { createIdentityHandle } from '../core/identity/identityHandle'
 import { bytesToHex, wipe } from '../core/util/bytes'
 import { createLogger } from '../core/util/log'
 import { DEFAULT_DM_RELAYS } from '../core/transport/defaultRelays'
@@ -1229,7 +1230,8 @@ async function startSession(set: Setter, get: Getter): Promise<void> {
 
   messenger.events.on('callSignal', (signal) => routeCallSignal(signal, set, get))
 
-  await messenger.start(identity.secretKeyHex, identity.pubkey)
+  const identityHandle = createIdentityHandle({ secretKeyHex: identity.secretKeyHex })
+  await messenger.start(identity.secretKeyHex, identity.pubkey, identityHandle)
 
   // Live locations that were going when the vault last closed go on, or end
   // if their time ran out meanwhile (ADR-064).
