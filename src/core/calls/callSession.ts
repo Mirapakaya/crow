@@ -215,8 +215,8 @@ export class CallSession {
       return null
     }
 
-    await pc.setRemoteDescription({ type, sdp })
     if (!this.#checkFingerprint(sdp, fingerprint)) return null
+    await pc.setRemoteDescription({ type, sdp })
     for (const candidate of candidatesInSdp(sdp)) this.#remoteCandidates.add(candidate)
     await this.#drainHeld()
 

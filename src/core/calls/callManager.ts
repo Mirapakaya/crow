@@ -365,6 +365,12 @@ export class CallManager {
     callId: string,
     at: number,
   ): Promise<void> {
+    // Reject offers dated more than 60 s in the future to prevent replay or
+    // clock-manipulation attacks.
+    if (at > Date.now() + 60_000) {
+      log.warn('incoming call offer dated too far in the future; dropping')
+      return
+    }
     const current = this.#call
     if (current?.id === callId) return // the same offer, delivered twice
 

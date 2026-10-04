@@ -51,12 +51,10 @@ export const SUGGESTED_RELAYS: readonly string[] = [
 ]
 
 /**
- * Public STUN only. Running a TURN server would mean running a server, which
- * this project does not do; when NAT traversal fails the conversation simply
- * stays on the relay path, which always works. Users can add their own TURN
- * server in settings.
+ * No built-in STUN/TURN servers. Crow avoids leaking the user's IP to any
+ * third party. Users can add their own STUN/TURN servers in settings. Calls
+ * between devices on the same private network or with direct public IPs still
+ * work without any ICE server; calls behind restrictive NAT require a user-set
+ * TURN server.
  */
-export const DEFAULT_ICE_SERVERS: readonly RTCIceServer[] = [
-  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
-  { urls: ['stun:stun.cloudflare.com:3478'] },
-]
+export const DEFAULT_ICE_SERVERS: readonly RTCIceServer[] = []
