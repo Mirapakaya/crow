@@ -1,0 +1,41 @@
+/**
+ * Geist design tokens — canonical single source for all colour ramps.
+ *
+ * This file maps the existing hand-maintained ramps to the --ds-* naming
+ * convention required by the Geist UI rebuild. Over time, components should
+ * reference only --ds-* variables and the legacy --n-* / --blue-* names should
+ * be removed.
+ */
+
+:root {
+  /* Backgrounds */
+  --ds-background-100: var(--n-0, #ffffff);
+  --ds-background-200: var(--n-25, #fafafa);
+
+  /* Gray scale (light) */
+  --ds-gray-100: var(--n-100, #f8f8f8);
+  --ds-gray-200: var(--n-150, #e6e6e6);
+  --ds-gray-300: var(--n-200, #d5d5d5);
+  --ds-gray-400: var(--n-300, #b1b1b1);
+  --ds-gray-500: var(--n-350, #a1a1a1);
+  --ds-gray-600: var(--n-400, #909090);
+  --ds-gray-700: var(--n-500, #6d6d6d);
+  --ds-gray-800: var(--n-600, #555555);
+  --ds-gray-900: var(--n-700, #464646);
+  --ds-gray-1000: var(--n-800, #222222);
+}
+
+[data-theme='dark'] {
+  --ds-background-100: var(--n-dark-50, #0a0a0a);
+  --ds-background-200: var(--n-dark-100, #151515);
+  --ds-gray-100: var(--n-dark-200, #222222);
+  --ds-gray-200: var(--n-dark-250, #2a2a2a);
+  --ds-gray-300: var(--n-dark-300, #2e2e2e);
+  --ds-gray-400: var(--n-dark-350, #363636);
+  --ds-gray-500: var(--n-dark-400, #464646);
+  --ds-gray-600: var(--n-dark-500, #6d6d6d);
+  --ds-gray-700: var(--n-dark-600, #878787);
+  --ds-gray-800: var(--n-dark-700, #909090);
+  --ds-gray-900: var(--n-dark-800, #b1b1b1);
+  --ds-gray-1000: var(--n-dark-900, #d5d5d5);
+}
