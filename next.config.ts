@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version ?? '3.0.0',
     NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
     NEXT_PUBLIC_SOURCE_URL: 'https://github.com/Mirapakaya/crow',
+    NEXT_PUBLIC_CROW_BASE_PATH: process.env.CROW_BASE_PATH || '',
   },
   async headers() {
     return [

@@ -329,7 +329,7 @@ export class MlsRuntime {
     }
     await this.#refreshConversation(held, {
       accepted: true,
-      protection: { forwardSecrecy: true, hybridPQ: !!opts.hybrid },
+      protection: { forwardSecrecy: true, hybridPQ: false },
     })
     this.#subscribe()
     return { convoId, missing }
@@ -456,7 +456,7 @@ export class MlsRuntime {
     await this.#refreshConversation(held, {
       accepted: (await this.#host.standing(inviter)) === 'accepted',
       at: rumor.created_at * 1000,
-      protection: { forwardSecrecy: true, hybridPQ: parsed.hybrid },
+      protection: { forwardSecrecy: true, hybridPQ: false },
     })
     this.#subscribe()
     await this.#backfill(held)

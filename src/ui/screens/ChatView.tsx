@@ -494,8 +494,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
                 <>
                   {secure ? (
                     <>
-                      <LockIcon size={11} /> {t('groups.secure')}
-                      {conversation?.protection?.hybridPQ ? ` · ${t('chat.hybridPQ')}` : ''} ·{' '}
+                      <LockIcon size={11} /> {t('groups.secure')} ·{' '}
                     </>
                   ) : null}
                   {/* Everyone, counting you: the number the limit is stated in. */}
@@ -508,7 +507,6 @@ export function ChatView({ address }: { address: ChatAddress }) {
                   {conversation?.protection?.forwardSecrecy ? (
                     <>
                       <LockIcon size={11} /> {t('chat.forwardSecret')}
-                      {conversation.protection.hybridPQ ? ` · ${t('chat.hybridPQ')}` : ''}
                     </>
                   ) : (
                     <>

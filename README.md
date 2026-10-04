@@ -4,6 +4,8 @@ A private, end-to-end encrypted messenger that runs in the browser. No accounts,
 no phone numbers, no server we control — your identity is a key on your device
 and your messages are encrypted before they leave it.
 
+**Crow has not been independently audited.**
+
 ## What Crow is
 
 - **Static web app**: one HTML/JS bundle, served from anywhere, no backend.
@@ -26,12 +28,19 @@ and your messages are encrypted before they leave it.
 
 | Purpose | Implementation |
 |---|---|
-| Key agreement | secp256k1 ECDH (@noble/curves) |
+| Identity / signing | secp256k1 Schnorr (@noble/curves) |
+| 1:1 key agreement | secp256k1 ECDH (@noble/curves) |
 | Symmetric encryption | XChaCha20-Poly1305 and ChaCha20 + HMAC-SHA256 (@noble/ciphers) |
 | Key derivation | scrypt, Argon2id, HKDF-SHA-256 (@noble/hashes) |
 | Hashing | SHA-256, SHA-512 (@noble/hashes) |
 | Group key management | MLS / ts-mls (RFC 9420) |
-| Hybrid key exchange | X25519 + ML-KEM-768 (@noble/post-quantum) |
+
+**Note on post-quantum claims:** A post-quantum hybrid handshake (X25519 +
+ML-KEM-768) is used only as a secondary entropy source when creating an MLS
+group; the MLS key schedule itself remains classical X25519-only. The "Hybrid
+PQ" label in the app is premature and will be removed until the secret is bound
+into the actual ciphertext. See [docs/AUDIT-FIX.md](./docs/AUDIT-FIX.md) C1 and
+[docs/PROTOCOL.md](./docs/PROTOCOL.md) for the exact construction and limitations.
 
 ## Tech stack
 
@@ -44,7 +53,7 @@ and your messages are encrypted before they leave it.
 ## Development
 
 ```bash
-npm install --legacy-peer-deps
+npm ci
 npm run dev
 ```
 
@@ -69,6 +78,12 @@ GitHub Pages instructions.
 - [THREAT-MODEL.md](./THREAT-MODEL.md) — adversaries and residual risks
 - [PRIVACY.md](./PRIVACY.md) — what data leaves the device and when
 - [LEGAL.md](./LEGAL.md) — licensing and legal overview
+
+## Independent security audit
+
+Crow has **not** been independently audited. The cryptography has not been
+professionally reviewed. See [SECURITY.md](./SECURITY.md) for the architecture
+and known limitations.
 
 ## License
 

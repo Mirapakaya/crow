@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "private": false,
   "license": "AGPL-3.0-or-later",
-  "description": "Crow — a private, end-to-end-encrypted messenger that runs entirely as a static web app.",
+  "description": "Crow \u2014 a private, end-to-end-encrypted messenger that runs entirely as a static web app.",
   "type": "module",
   "engines": {
     "node": ">=20.19"
@@ -22,7 +22,10 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/**/*.mjs\" \"*.{json,md}\" \"docs/*.md\"",
     "generate:icons": "node scripts/generate-icons.mjs",
     "check:tokens": "node scripts/check-tokens.mjs",
-    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run check:tokens"
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run check:tokens",
+    "gen:headers": "node scripts/gen-headers.mjs",
+    "check:headers": "node scripts/check-headers.mjs",
+    "postbuild": "node scripts/postbuild-sri.mjs && node scripts/postbuild-csp.mjs"
   },
   "dependencies": {
     "@hpke/chacha20poly1305": "^1.8.0",
@@ -32,7 +35,7 @@
     "@noble/ciphers": "2.1.1",
     "@noble/curves": "2.0.1",
     "@noble/hashes": "2.0.1",
-    "@noble/post-quantum": "^0.7.1",
+    "@noble/post-quantum": "0.5.2",
     "@radix-ui/react-avatar": "^1.2.6",
     "@radix-ui/react-checkbox": "^1.3.11",
     "@radix-ui/react-dialog": "^1.1.23",

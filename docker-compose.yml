@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  crow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: crow:latest
+    container_name: crow
+    read_only: true
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    volumes:
+      - type: tmpfs
+        target: /tmp
+      - type: tmpfs
+        target: /var/cache/nginx
+      - type: tmpfs
+        target: /var/run
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  # Optional: self-hosted strfry relay behind Caddy
+  # relay:
+  #   image: docker.io/hoytech/strfry:latest
+  #   container_name: crow-relay
+  #   volumes:
+  #     - ./strfry.conf:/etc/strfry.conf:ro
+  #   command: ["relay", "--config", "/etc/strfry.conf"]
+  #   ports:
+  #     - "7777:7777"
+
+  # caddy:
+  #   image: caddy:2-alpine
+  #   container_name: crow-caddy
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./Caddyfile:/etc/caddy/Caddyfile:ro

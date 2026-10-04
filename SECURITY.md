@@ -1,12 +1,15 @@
 # Crow Security Documentation
 
-> **Version:** 3.0.0 · **Last updated:** 2026-10-01
+> **Version:** 3.0.0 · **Last updated:** 2026-10-04
 
 Crow is a private, end-to-end-encrypted messenger that runs entirely as a static
 web app. There is no Crow server, no account database, and no analytics. This
-document describes the security architecture, cryptographic primitives, and known
-limitations. For a detailed analysis of adversaries and what each can see, see
-[THREAT-MODEL.md](./THREAT-MODEL.md).
+document describes the security architecture, cryptographic primitives, and
+**known limitations and implementation gaps**. For a detailed analysis of
+adversaries and what each can see, see [THREAT-MODEL.md](./THREAT-MODEL.md).
+
+**Crow has not been independently audited.** The claims below describe the
+design intent and current implementation; they are not a security guarantee.
 
 ---
 
@@ -30,8 +33,8 @@ encrypted under the recipient's key.
 ## 2. Cryptographic Primitives
 
 All primitives come from the `@noble` family—pure JavaScript, constant-time
-where applicable, zero WASM, audited, and compatible with a strict Content
-Security Policy.
+where applicable, zero WASM, and compatible with a strict Content Security
+Policy.
 
 | Primitive | Library | Purpose |
 |---|---|---|
@@ -119,8 +122,13 @@ protocol:
   key at epoch *n* does **not** reveal messages at epoch *n − 1* or earlier.
 - **Key refresh:** Automatic every 14 days (7-day grace) to limit exposure
   from a live key compromise.
-- **Max members:** Capped for performance; each member still receives a
-  personal copy.
+- **Hybrid PQ note:** An X25519 + ML-KEM-768 handshake is performed when
+  creating some MLS groups, but the resulting 32-byte secret is currently used
+  only as additional creation entropy; it is **not** bound into the MLS key
+  schedule or ciphertext. The MLS key schedule remains classical X25519-only.
+  The "Hybrid PQ" label in the app is therefore premature and will be removed
+  until the secret is actually bound into the encryption. See
+  [docs/AUDIT-FIX.md](./docs/AUDIT-FIX.md) C1.
 
 > **Note:** Forward secrecy applies **only** to MLS groups. One-to-one
 > conversations use static Diffie-Hellman and do **not** provide forward
@@ -145,13 +153,16 @@ protocol:
 | Limitation | Detail |
 |---|---|
 | **No push notifications** | Crow only rings while it is open in a browser tab. Delivering notifications to a closed app would require a server, which Crow does not operate. |
-| **Relay metadata exposure** | Relays see the recipient's public key, the gift-wrap timestamp (hour-fuzzed), and the encrypted payload size. They do **not** see the sender or the plaintext. |
+| **Relay metadata exposure** | Relays see the recipient's public key, the gift-wrap timestamp (fuzzed up to 2 days backward), and the encrypted payload size. They do **not** see the sender or the plaintext. |
 | **IP exposure on direct connections** | Direct WebRTC connections reveal the peer's IP address. The user can disable direct connections in Settings → Privacy. |
 | **No forward secrecy for 1:1** | One-to-one conversations use static DH. Compromise of either party's identity key reveals all past and future messages in that conversation. MLS groups are the forward-secret alternative. |
 | **Browser storage can be cleared** | Browsers may evict IndexedDB under storage pressure (especially Safari after ~7 days without visits). No server-side backup exists. |
 | **No protection against device compromise** | If the device or browser is compromised, all secrets in memory are accessible. Crow's encryption only protects data at rest and in transit. |
 | **TURN server IP visibility** | If a TURN server is used for call relay, it sees the IP addresses of both parties and encrypted media traffic. |
 | **PIN brute force if vault exfiltrated** | If the raw IndexedDB files are copied off-device, an attacker can brute-force a PIN offline. Passphrase and biometric keyslots resist this better. |
+| **Identity secret on main thread** | The Nostr signing secret is currently held in the main-thread Zustand store. Until it is moved into a dedicated worker (see [docs/AUDIT-FIX.md](./docs/AUDIT-FIX.md) C4), a same-page script or extension with page access can read it. |
+| **CSP is not yet strict** | The current Content Security Policy allows `'unsafe-inline'` for scripts and styles and permits `connect-src wss: https:`. A strict, hash-based CSP is planned (see [docs/AUDIT-FIX.md](./docs/AUDIT-FIX.md) C3). |
+| **Padding is broken** | The bucket padding added to gift-wrap ciphertexts uses null bytes that relays strip, so the buckets do not actually hide length. See [docs/AUDIT-FIX.md](./docs/AUDIT-FIX.md) C2. |
 
 ---
 
@@ -176,6 +187,7 @@ security issue in Crow, please report it responsibly.
 
 - [THREAT-MODEL.md](./THREAT-MODEL.md) — detailed adversary analysis and residual risks
 - [PRIVACY.md](./PRIVACY.md) — data handling and privacy practices
+- [docs/AUDIT-FIX.md](./docs/AUDIT-FIX.md) — verified findings and remediation status
 - [NIP-44](https://github.com/nostr-protocol/nips/blob/master/44.md) — version 2 encrypted direct message spec
 - [NIP-59](https://github.com/nostr-protocol/nips/blob/master/59.md) — gift-wrap and seal spec
 - [NIP-17](https://github.com/nostr-protocol/nips/blob/master/17.md) — private direct messages and groups
