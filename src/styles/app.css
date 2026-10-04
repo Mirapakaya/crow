@@ -952,9 +952,9 @@ time,
 
 /* While it shows, the bar is the top of the screen: it takes the inset under
    a notch or status bar, and the header below gives its own up. */
-/* .app-shell:has(> .connection-bar) :is(.app-header, .chat-header) {
+.has-connection-bar :is(.app-header, .chat-header) {
   padding-top: var(--space-2);
-} */
+}
 
 .connection-bar-body {
   flex: 1;

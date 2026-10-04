@@ -627,7 +627,7 @@ export function ChatView({ address }: { address: ChatAddress }) {
       ) : null}
 
       <div className="message-list" ref={listRef} onScroll={onScroll} role="log" aria-live="polite">
-        <div className={selecting ? 'message-stream selecting' : 'message-stream'}>
+        <div className={selecting ? 'message-stream selecting' : messages.length === 0 ? 'message-stream empty' : 'message-stream'}>
           {messages.length === 0 ? (
             <EmptyState title={t('chats.noMessages')} body={t('chat.encryptedNote')} />
           ) : hasEarlierMessages ? (

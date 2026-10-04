@@ -97,9 +97,9 @@
   padding-block: var(--space-4);
 }
 
-/* .message-stream:has(> .empty) {
+.message-stream.empty {
   margin-block: auto;
-} */
+}
 
 .message-stream > .btn,
 .message-stream > .faint {

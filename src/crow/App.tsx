@@ -143,7 +143,7 @@ function Shell({ phase }: { phase: ReturnType<typeof useApp.getState>['phase'] }
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell has-connection-bar">
       <CallLayer />
       <ConnectionBar />
       <BackupGate />
